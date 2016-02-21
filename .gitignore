@@ -22,3 +22,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
+indexer/indexer.log
+indexer/indexer
+tools/tools
