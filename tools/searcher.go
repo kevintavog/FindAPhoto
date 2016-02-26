@@ -25,16 +25,16 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewTermQuery("path.raw", "1\\2001\\PDRM0300.JPG") // Search for a given path (can use _id instead...)
 	//	query := elastic.NewGeoDistanceQuery("location").Lat(47.60863888888889).Lon(-122.43516666666666).Distance("20km")
 	//	query := elastic.NewTermQuery("path", "2005") // 'path' is analyzed, so partial matches work
-	//	query := elastic.NewMatchAllQuery()
+	query := elastic.NewTermQuery("path", "2")
 	//	query := elastic.NewQueryStringQuery("path:2005 AND filename:100*") // A direct query, as typed in - good for adhoc/from or from search box in UI
 	//	query := elastic.NewRangeQuery("datetime").Gte("2014/01/01").Lte("2014/12/31").Format("yyyy/MM/dd")
 	//	query := elastic.NewWildcardQuery("date", "20140*")
 	//	query := elastic.NewQueryStringQuery("monthname:September")	// string query is analyzed, so can find 'Sep' and 'sep'
 	//	query := elastic.NewQueryStringQuery("filename:DSCN3380")
 	//	query := elastic.NewQueryStringQuery("DSCN3380").Field("path").Field("monthname").Field("dayname").Field("keyword").Field("placename")
-	//	query := elastic.NewQueryStringQuery("canada").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
+	//	query := elastic.NewQueryStringQuery("seattle").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
-	query := elastic.NewWildcardQuery("date", "*0220") // All matches for a given day
+	//	query := elastic.NewWildcardQuery("date", "*0220") // All matches for a given day
 
 	//	query := addDateRangeQuery(search)
 
@@ -88,7 +88,7 @@ func main() {
 	client := common.CreateClient()
 
 	search := client.Search().
-		Index(common.MediaIndexName).
+		Index("dev-" + common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true)
 
@@ -113,7 +113,7 @@ func main() {
 			if err != nil {
 				log.Error("Failed deserializing search result: %s", err.Error())
 			} else {
-				log.Info("  %d: %q", index+1, media)
+				log.Info("  %d: %#v", index+1, media)
 			}
 		}
 

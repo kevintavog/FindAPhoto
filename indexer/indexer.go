@@ -109,6 +109,7 @@ func configureLogging() {
 
 	rolling := appenders.RollingFile("indexer.log", true)
 	rolling.MaxBackupIndex = 10
+	rolling.MaxFileSize = 5 * 1024 * 1024
 	rolling.SetLayout(lyt)
 
 	console := appenders.Console()

@@ -64,6 +64,8 @@ func populate(candidate *common.CandidateFile) *common.Media {
 		Signature:     candidate.Signature,
 		LengthInBytes: candidate.LengthInBytes,
 
+		MimeType: candidate.Exif.File.MIMEType,
+
 		ApertureValue:   strconv.FormatFloat(float64(candidate.Exif.EXIF.ApertureValue), 'f', -1, 32),
 		ExposureProgram: candidate.Exif.EXIF.ExposureProgram,
 		Flash:           candidate.Exif.EXIF.Flash,
@@ -81,8 +83,30 @@ func populate(candidate *common.CandidateFile) *common.Media {
 	populateKeywords(media, candidate)
 	populateDateTime(media, candidate)
 	populateLocation(media, candidate)
+	populateDimensions(media, candidate)
 
 	return media
+}
+
+func populateDimensions(media *common.Media, candidate *common.CandidateFile) {
+	if candidate.Exif.File.ImageWidth != 0 && candidate.Exif.File.ImageHeight != 0 {
+		media.Width = candidate.Exif.File.ImageWidth
+		media.Height = candidate.Exif.File.ImageHeight
+	} else if candidate.Exif.Quicktime.ImageWidth != 0 && candidate.Exif.Quicktime.ImageHeight != 0 {
+		media.Width = candidate.Exif.Quicktime.ImageWidth
+		media.Height = candidate.Exif.Quicktime.ImageHeight
+	}
+
+	if candidate.Exif.Quicktime.Duration != "" {
+		// 10.15 s
+		tokens := strings.Split(candidate.Exif.Quicktime.Duration, " ")
+		if len(tokens) >= 1 {
+			v, err := strconv.ParseFloat(tokens[0], 32)
+			if err == nil {
+				media.DurationSeconds = float32(v)
+			}
+		}
+	}
 }
 
 func populateKeywords(media *common.Media, candidate *common.CandidateFile) {
@@ -134,7 +158,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	var dateTime time.Time
 	var err error
 
-	if len(candidate.Exif.Quicktime.ContentCreateDate) > 0 {
+	if candidate.Exif.Quicktime.ContentCreateDate != "" {
 		dateTime, err = time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.Quicktime.ContentCreateDate)
 		if err != nil {
 			log.Warn("Failed parsing ContentCreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.ContentCreateDate, err.Error(), candidate.FullPath)
@@ -150,13 +174,13 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 
 	if dateTime.IsZero() {
 		exifDateTime := candidate.Exif.EXIF.CreateDate
-		if len(exifDateTime) < 1 {
+		if exifDateTime == "" {
 			exifDateTime = candidate.Exif.EXIF.DateTimeOriginal
 		}
-		if len(exifDateTime) < 1 {
+		if exifDateTime == "" {
 			exifDateTime = candidate.Exif.EXIF.ModifyDate
 		}
-		if len(exifDateTime) > 0 {
+		if exifDateTime != "" {
 			dateTime, err = time.ParseInLocation("2006:01:02 15:04:05", exifDateTime, time.Local)
 			if err != nil {
 				log.Warn("Failed parsing '%s': %s (in %s)", exifDateTime, err.Error(), candidate.FullPath)

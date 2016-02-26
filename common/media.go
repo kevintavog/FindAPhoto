@@ -14,6 +14,11 @@ type Media struct {
 	Path          string `json:"path"`
 	LengthInBytes int64  `json:"lengthinbytes"`
 
+	MimeType        string  `json:"mimetype,omitempty"`
+	Width           int     `json:"width,omitempty"`
+	Height          int     `json:"height,omitempty"`
+	DurationSeconds float32 `json:"durationseconds,omitempty"`
+
 	// EXIF info
 	ApertureValue   string `json:"aperture,omitempty"`
 	ExposureProgram string `json:"exposureprogram,omitempty"`
@@ -102,6 +107,9 @@ type ExifOutputQuicktime struct {
 	ContentCreateDate string
 	CreateDate        string
 	ModifyDate        string
+	ImageWidth        int
+	ImageHeight       int
+	Duration          string
 }
 
 type ExifOutputComposite struct {
