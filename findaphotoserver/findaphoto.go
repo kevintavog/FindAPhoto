@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 
 	"github.com/go-playground/lars"
-	"github.com/ian-kent/go-log/appenders"
-	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
 	"gopkg.in/olivere/elastic.v3"
@@ -24,7 +21,7 @@ var logDirectory = ""
 
 func main() {
 	configuration.ReadConfiguration()
-	configureLogging()
+	common.ConfigureLogging(common.LogDirectory, "findaphotoserver")
 
 	app := cli.App("findaphotoserver", "The FindAPhoto server")
 	app.Spec = "[-d]"
@@ -45,24 +42,32 @@ func run(debugMode bool) {
 		easyExit = true
 	}
 
-	fmt.Printf("Listening on port %d, using %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
-	fmt.Println()
-	fmt.Printf(" Using %s for openmap reverse lookups", configuration.Current.OpenMapUrl)
-	fmt.Println()
+	log.Info("Listening on port %d, using %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
+	log.Info(" Using %s for openmap reverse lookups", configuration.Current.OpenMapUrl)
 
 	common.ElasticSearchServer = configuration.Current.ElasticSearchUrl
 
 	checkElasticServerAndIndex()
 	checkOpenMapServer()
 
+	wd, _ := os.Getwd()
+	log.Info("Serving html/css/js content from %s/%s", wd, "content")
+	contentDir := http.Dir("./content/")
+	_, e := contentDir.Open("index.html")
+	if e != nil {
+		log.Fatal("Unable to get files from the './content' folder: %s\n", e.Error())
+	}
+	fs := http.FileServer(contentDir)
+
 	l := configureApplicationGlobals()
 	l.Get("/", Home)
+	l.Get("/content/*", http.StripPrefix("/content/", fs))
 	api.ConfigureRouting(l)
 
 	startServerFunc := func() {
 		err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), l.Serve())
 		if err != nil {
-			fmt.Println("Failed starting the service: %s", err.Error())
+			log.Fatal("Failed starting the service: %s", err.Error())
 		}
 	}
 
@@ -124,36 +129,4 @@ func checkOpenMapServer() {
 	if err != nil {
 		log.Fatal("The open street map values seem to be wrong, a location lookup failed: %s", err.Error())
 	}
-}
-
-func configureLogging() {
-
-	err := createDirectory(logDirectory)
-	if err != nil {
-		log.Fatal("Unable to create logging directory (%s): %s", logDirectory, err.Error())
-	}
-
-	logger := log.Logger("")
-
-	lyt := layout.Pattern("%d %p: %m")
-	layout.DefaultTimeLayout = "15:04:05.000000"
-
-	rolling := appenders.RollingFile(path.Join(logDirectory, "findaphotoService.log"), true)
-	rolling.MaxBackupIndex = 10
-	rolling.MaxFileSize = 5 * 1024 * 1024
-	rolling.SetLayout(lyt)
-
-	console := appenders.Console()
-	console.SetLayout(lyt)
-
-	logger.SetAppender(appenders.Multiple(lyt, rolling, console))
-}
-
-func createDirectory(directory string) error {
-	_, err := os.Stat(directory)
-	if err != nil {
-		return nil
-	}
-
-	return os.MkdirAll(directory, os.ModeDir)
 }

@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
+
+	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/ian-kent/go-log/log"
 	"github.com/spf13/viper"
@@ -24,24 +25,11 @@ type PathAndAliasConfiguration struct {
 }
 
 var Current Configuration
-var LogDirectory string
 
 func ReadConfiguration() {
 
-	// require: open map url, open map key, elastic search url
-
-	var configDirectory string
-
-	if runtime.GOOS == "darwin" {
-		homeDirectory := os.Getenv("HOME")
-		LogDirectory = path.Join(homeDirectory, "Library", "Logs", "FindAPhoto")
-		configDirectory = path.Join(homeDirectory, "Library", "Preferences")
-
-	} else if runtime.GOOS == "linux" {
-		log.Fatal("Come up with directories for Linux!")
-	} else {
-		log.Fatal("Come up with directories for: %v", runtime.GOOS)
-	}
+	common.InitDirectories("FindAPhoto")
+	configDirectory := common.ConfigDirectory
 
 	configFile := path.Join(configDirectory, "rangic.findaphotoService")
 	_, err := os.Stat(configFile)

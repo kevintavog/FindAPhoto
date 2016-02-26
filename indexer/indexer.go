@@ -12,8 +12,6 @@ import (
 	"github.com/kevintavog/findaphoto/indexer/steps/resolveplacename"
 	"github.com/kevintavog/findaphoto/indexer/steps/scanner"
 
-	"github.com/ian-kent/go-log/appenders"
-	"github.com/ian-kent/go-log/layout"
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
 	"gopkg.in/olivere/elastic.v3"
@@ -21,7 +19,8 @@ import (
 
 func main() {
 	runtime.GOMAXPROCS(4)
-	configureLogging()
+	common.InitDirectories("FindAPhoto")
+	common.ConfigureLogging(common.LogDirectory, "findaphotoindexer")
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
 	app.Spec = "-p -s -a -o -k [-i]"
@@ -32,7 +31,6 @@ func main() {
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
 	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
 	app.Action = func() {
-
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 
 		log.Info("%s: FindAPhoto scanning %s, alias=%s) and indexing to %s/%s",
@@ -98,22 +96,4 @@ func checkServerAndIndex() {
 			log.Fatal("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
 		}
 	}
-}
-
-func configureLogging() {
-
-	logger := log.Logger("")
-
-	lyt := layout.Pattern("%d %p: %m")
-	layout.DefaultTimeLayout = "15:04:05.000000"
-
-	rolling := appenders.RollingFile("indexer.log", true)
-	rolling.MaxBackupIndex = 10
-	rolling.MaxFileSize = 5 * 1024 * 1024
-	rolling.SetLayout(lyt)
-
-	console := appenders.Console()
-	console.SetLayout(lyt)
-
-	logger.SetAppender(appenders.Multiple(lyt, rolling, console))
 }
