@@ -2,8 +2,6 @@ package api
 
 import (
 	"fmt"
-	"net/http"
-	//	"runtime"
 	"strconv"
 	"strings"
 
@@ -14,6 +12,35 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
 )
 
+/*
+ q=<query>; count=<per page>; first=<index of first, 1-based>; sort=<ReverseDate is all that's used currently>
+ group=<yes or no - group by folder>; properties=<id,formattedCreatedDate,keywords,city,thumbUrl,imageName,mediaType>
+ categories=<keywords,placename,date>; max=<max category count>
+ drilldown=
+
+ response:
+ int totalMatches
+ string oldestDateOnPage
+ string newestDateOnPage
+ GroupResult groups[]
+ Category categories[]
+
+ GroupResult:
+ string name
+ Image images[]
+
+ Category:
+ string field
+ bool isHierarchical
+ CategoryDetail details[]
+
+ CategoryDetail:
+ CategoryDetail children[]
+ string value
+ int count
+
+*/
+
 func Search(c *lars.Context) {
 
 	searchOptions := populateSearchOptions(c)
@@ -21,46 +48,19 @@ func Search(c *lars.Context) {
 
 	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
 
-	var searchResult *search.SearchResult
-	var err error
-	app.FieldLogger.Time("search", func() { searchResult, err = searchOptions.Search() })
+	app.FieldLogger.Time("search", func() {
+		searchResult, err := searchOptions.Search()
 
-	if err != nil {
-		app.Error(http.StatusInternalServerError, "SearchFailed", "", err)
-		return
-	}
+		if err != nil {
+			panic(&InternalError{message: "SearchFailed", err: err})
+		}
 
-	app.FieldLogger.Add("totalMatches", fmt.Sprintf("%d", searchResult.TotalMatches))
-	app.FieldLogger.Add("itemCount", strconv.Itoa(len(searchResult.Items)))
-	// q=<query>; count=<per page>; first=<index of first, 1-based>; sort=<ReverseDate is all that's used currently>
-	// group=<yes or no - group by folder>; properties=<id,formattedCreatedDate,keywords,city,thumbUrl,imageName,mediaType>
-	// categories=<keywords,placename,date>; max=<max category count>
-	// drilldown=
+		app.FieldLogger.Add("totalMatches", fmt.Sprintf("%d", searchResult.TotalMatches))
+		app.FieldLogger.Add("itemCount", strconv.Itoa(len(searchResult.Items)))
 
-	// response:
-	// int totalMatches
-	// string oldestDateOnPage
-	// string newestDateOnPage
-	// GroupResult groups[]
-	// Category categories[]
+		app.WriteResponse(filterResults(searchResult, propertiesFilter))
+	})
 
-	// GroupResult:
-	// string name
-	// Image images[]
-
-	// Category:
-	// string field
-	// bool isHierarchical
-	// CategoryDetail details[]
-
-	// CategoryDetail:
-	// CategoryDetail children[]
-	// string value
-	// int count
-
-	response := filterResults(searchResult, propertiesFilter)
-
-	app.WriteResponse(response)
 }
 
 func filterResults(searchResult *search.SearchResult, propertiesFilter []string) map[string]interface{} {
@@ -99,21 +99,18 @@ func property(name string, media *common.Media) interface{} {
 		return media.Filename
 	case "keywords":
 		return media.Keywords
-	case "bad":
-		panic("bad")
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
 }
 
 func populateSearchOptions(c *lars.Context) *search.SearchOptions {
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
 
 	// TODO: Is this a LARS bug? The examples don't show a call to ParseForm being required to get query parameters
 	// Even with this, the query param example isn't working for me
 	err := c.ParseForm()
 	if err != nil {
-		app.FieldLogger.Add("parseFormError", err.Error())
+		panic(&InvalidRequest{message: "parseFormError", err: err})
 	}
 
 	// defaults: query all, return 20 results, sort by reverse date, return image id's only
@@ -124,26 +121,22 @@ func populateSearchOptions(c *lars.Context) *search.SearchOptions {
 	if count != "" {
 		searchOptions.Count, err = strconv.Atoi(count)
 		if err != nil {
-			app.Error(http.StatusBadRequest, "InvalidRequest", "count is not an int", err)
-			return nil
+			panic(&InvalidRequest{message: "count is not an int"})
 		}
 	}
 
-	// TODO: Enforced here or in search? Likely better in search...
 	if searchOptions.Count < 1 || searchOptions.Count > 100 {
-		app.Error(http.StatusBadRequest, "InvalidRequest", "count must be between 1 and 100, inclusive", nil)
-		return nil
+		panic(&InvalidRequest{message: "count must be between 1 and 100, inclusive"})
 	}
 
 	index := c.Request.Form.Get("first")
 	if index != "" {
 		v, err := strconv.Atoi(index)
 		if err != nil {
-			app.Error(http.StatusBadRequest, "InvalidRequest", "first is not an int", err)
-			return nil
+			panic(&InvalidRequest{message: "first is not an int", err: err})
 		}
 		if v < 1 {
-			app.Error(http.StatusBadRequest, "InvalidRequest", "first must be 1 or greater", nil)
+			panic(&InvalidRequest{message: "first must be 1 or greater"})
 		}
 		searchOptions.Index = v - 1
 	}

@@ -4,19 +4,28 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
-	"time"
 
 	"github.com/go-playground/lars"
 
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 )
 
+type InternalError struct {
+	message string
+	err     error
+}
+
 type InvalidRequest struct {
 	message string
+	err     error
 }
 
 func (ir *InvalidRequest) Error() string {
 	return ir.message
+}
+
+func (ie *InternalError) Error() string {
+	return ie.message
 }
 
 func ConfigureRouting(l *lars.LARS) {
@@ -31,8 +40,10 @@ func HandleErrors(c *lars.Context) {
 	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
 	defer func() {
 		if r := recover(); r != nil {
-			if ir, ok := r.(InvalidRequest); ok {
-				app.Error(http.StatusInternalServerError, "InvalidRequest", ir.Error(), nil)
+			if ie, ok := r.(InternalError); ok {
+				app.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
+			} else if ir, ok := r.(InvalidRequest); ok {
+				app.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
 			} else if e, ok := r.(runtime.Error); ok {
 				app.Error(http.StatusInternalServerError, "UnhandledError", "", e)
 			} else if s, ok := r.(string); ok {
@@ -44,11 +55,4 @@ func HandleErrors(c *lars.Context) {
 	}()
 
 	c.Next()
-}
-
-func Error(c *lars.Context) {
-
-	time.Sleep(time.Second / 10)
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
-	app.Error(http.StatusInternalServerError, "bogus", "This is the message", nil)
 }
