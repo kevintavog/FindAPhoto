@@ -40,9 +40,9 @@ func HandleErrors(c *lars.Context) {
 	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
 	defer func() {
 		if r := recover(); r != nil {
-			if ie, ok := r.(InternalError); ok {
+			if ie, ok := r.(*InternalError); ok {
 				app.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
-			} else if ir, ok := r.(InvalidRequest); ok {
+			} else if ir, ok := r.(*InvalidRequest); ok {
 				app.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
 			} else if e, ok := r.(runtime.Error); ok {
 				app.Error(http.StatusInternalServerError, "UnhandledError", "", e)

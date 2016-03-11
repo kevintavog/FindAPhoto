@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/resolveplacename"
 
 	"github.com/ian-kent/go-log/log"
@@ -54,6 +55,7 @@ func dequeue() {
 	for candidate := range queue {
 		media := populate(candidate)
 		resolveplacename.Enqueue(media)
+		checkthumbnail.Enqueue(candidate.FullPath, candidate.AliasedPath, media.MimeType)
 	}
 }
 
@@ -165,7 +167,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 		}
 	}
 	if dateTime.IsZero() && len(candidate.Exif.Quicktime.CreateDate) > 0 {
-		// UTC according to spec - not timezone like there is for 'ContentCreateDate'
+		// UTC according to spec - no timezone like there is for 'ContentCreateDate'
 		dateTime, err = time.Parse("2006:01:02 15:04:05", candidate.Exif.Quicktime.CreateDate)
 		if err != nil {
 			log.Warn("Failed parsing CreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.CreateDate, err.Error(), candidate.FullPath)
@@ -181,6 +183,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 			exifDateTime = candidate.Exif.EXIF.ModifyDate
 		}
 		if exifDateTime != "" {
+			// No timezone - and the spec doesn't specify.
 			dateTime, err = time.ParseInLocation("2006:01:02 15:04:05", exifDateTime, time.Local)
 			if err != nil {
 				log.Warn("Failed parsing '%s': %s (in %s)", exifDateTime, err.Error(), candidate.FullPath)
@@ -189,11 +192,10 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	}
 
 	if dateTime.IsZero() {
-		//		log.Warn("Retrieving timestamp from OS file metadata for %s", candidate.FullPath) // TODO: this likely indicates a bug you need to fix
 		fileInfo, fiErr := os.Stat(candidate.FullPath)
 		if fiErr == nil {
 			stat := fileInfo.Sys().(*syscall.Stat_t)
-			dateTime = time.Unix(int64(stat.Ctimespec.Sec), int64(stat.Ctimespec.Nsec))
+			dateTime = time.Unix(int64(stat.Mtimespec.Sec), int64(stat.Mtimespec.Nsec))
 		}
 	}
 

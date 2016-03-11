@@ -14,6 +14,7 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/api"
+	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 )
 
 var _ lars.IAppContext = &applicationglobals.ApplicationGlobals{} // ensures ApplicationGlobals complies with lasr.IGlobals at compile time
@@ -60,9 +61,12 @@ func run(debugMode bool) {
 	fs := http.FileServer(contentDir)
 
 	l := configureApplicationGlobals()
-	l.Get("/", Home)
-	l.Get("/content/*", http.StripPrefix("/content/", fs))
+	l.Get("/", fs)
+	l.Get("/*", fs)
+	l.Get("/search", redirectToTop)  // '/search' is an Angular route
+	l.Get("/slide/*", redirectToTop) // '/slide/' is an Angular route
 	api.ConfigureRouting(l)
+	files.ConfigureRouting(l)
 
 	startServerFunc := func() {
 		err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), l.Serve())
@@ -83,9 +87,12 @@ func run(debugMode bool) {
 }
 
 func Home(c *lars.Context) {
-
 	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
 	app.Error(http.StatusForbidden, "", "", nil)
+}
+
+func redirectToTop(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
 }
 
 func configureApplicationGlobals() *lars.LARS {

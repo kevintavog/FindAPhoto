@@ -36,7 +36,11 @@ func (fl *FieldLogger) Error(message string, err error) {
 }
 
 func (fl *FieldLogger) Add(name, value string) {
-	fl.fields[name] = value
+	if strings.Contains(value, " ") {
+		fl.fields[name] = "\"" + value + "\""
+	} else {
+		fl.fields[name] = value
+	}
 }
 
 func (fl *FieldLogger) Close(httpStatusCode int) {
@@ -55,5 +59,8 @@ func (fl *FieldLogger) Close(httpStatusCode int) {
 }
 
 func (fl *FieldLogger) Time(name string, action func()) {
+	startTime := time.Now()
 	action()
+	durationMsecs := time.Now().Sub(startTime).Seconds() * 1000
+	fl.Add(name+"Msec", fmt.Sprintf("%01.3f", durationMsecs))
 }

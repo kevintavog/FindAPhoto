@@ -107,7 +107,6 @@ func dequeue() {
 
 		atomic.AddInt64(&ExifToolInvocations, 1)
 
-		// TODO: Need to associate exif data with each file (or be able to look it up later)
 		exifOutput, err := getDirectoryExif(exifForDirectory.Directory)
 		if err != nil {
 			atomic.AddInt64(&ExifToolFailed, 1)
@@ -150,7 +149,7 @@ func getDirectoryExif(directory string) ([]common.ExifOutput, error) {
 	//	log.Error("Getting exif for %s", directory)
 	//	defer log.Error(" ... => finished getting exif for %s", directory)
 
-	out, err := exec.Command("/usr/local/bin/exiftool", "-a", "-j", "-g", "-x", "Directory", "-x", "FileAccessDate", "-x", "FileInodeChangeDate", directory).Output()
+	out, err := exec.Command(common.ExifToolPath, "-a", "-j", "-g", "-x", "Directory", "-x", "FileAccessDate", "-x", "FileInodeChangeDate", directory).Output()
 	if err != nil {
 		log.Fatal("Failed executing exiftool for '%s': %s", directory, err.Error())
 	}

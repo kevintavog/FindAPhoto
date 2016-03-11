@@ -1,6 +1,8 @@
 package search
 
 import (
+	"strings"
+
 	"encoding/json"
 
 	"gopkg.in/olivere/elastic.v3"
@@ -16,8 +18,13 @@ type SearchOptions struct {
 
 type SearchResult struct {
 	TotalMatches int64
-	Items        []*common.Media
-	Count        int
+	Groups       []*SearchGroup
+	ResultCount  int
+}
+
+type SearchGroup struct {
+	Name  string
+	Items []*common.Media
 }
 
 func New(query string) *SearchOptions {
@@ -54,24 +61,41 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 		return nil, err
 	}
 
-	sr := &SearchResult{
-		TotalMatches: result.TotalHits(),
-	}
-
+	sr := &SearchResult{TotalMatches: result.TotalHits()}
 	if sr.TotalMatches > 0 {
-		sr.Items = make([]*common.Media, len(result.Hits.Hits))
-		for index, hit := range result.Hits.Hits {
+		var lastGroup = ""
+		sr.Groups = []*SearchGroup{}
+		var group *SearchGroup
+
+		for _, hit := range result.Hits.Hits {
 			media := &common.Media{}
 			err := json.Unmarshal(*hit.Source, media)
 			if err != nil {
 				return nil, err
-			} else {
-				sr.Items[index] = media
-				sr.Count += 1
 			}
-		}
 
+			groupName := groupName(media)
+
+			if lastGroup == "" || lastGroup != groupName {
+				group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
+				lastGroup = groupName
+				sr.Groups = append(sr.Groups, group)
+			}
+
+			group.Items = append(group.Items, media)
+			sr.ResultCount += 1
+		}
 	}
 
 	return sr, nil
+}
+
+func groupName(media *common.Media) string {
+	// Skip to first '\', take up to last '\'
+	components := strings.Split(media.Path, "\\")
+
+	if len(components) > 2 {
+		return strings.Join(components[1:len(components)-1], "\\")
+	}
+	return ""
 }

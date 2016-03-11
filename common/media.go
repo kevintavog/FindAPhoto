@@ -1,12 +1,34 @@
 package common
 
 import (
+	"strings"
 	"time"
 )
 
 var MediaIndexName = "media-index"
 
 const MediaTypeName = "media"
+const (
+	MediaTypeImage   = "image"
+	MediaTypeVideo   = "video"
+	MediaTypeUnknown = "unknown"
+)
+
+func (m *Media) MediaType() string {
+	var mediaType = strings.Split(m.MimeType, "/")
+	if len(mediaType) < 1 {
+		return MediaTypeUnknown
+	}
+
+	switch strings.ToLower(mediaType[0]) {
+	case "video":
+		return MediaTypeVideo
+	case "image":
+		return MediaTypeImage
+	default:
+		return MediaTypeUnknown
+	}
+}
 
 type Media struct {
 	Signature     string `json:"signature"`

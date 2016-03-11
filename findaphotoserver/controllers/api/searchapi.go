@@ -9,36 +9,26 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
 )
 
-/*
- q=<query>; count=<per page>; first=<index of first, 1-based>; sort=<ReverseDate is all that's used currently>
- group=<yes or no - group by folder>; properties=<id,formattedCreatedDate,keywords,city,thumbUrl,imageName,mediaType>
- categories=<keywords,placename,date>; max=<max category count>
- drilldown=
+/* -- missing
+categories=<keywords,placename,date>; max=<max category count>
+drilldown=
 
- response:
- int totalMatches
- string oldestDateOnPage
- string newestDateOnPage
- GroupResult groups[]
- Category categories[]
+response:
+Category categories[]
 
- GroupResult:
- string name
- Image images[]
+Category:
+string field
+bool isHierarchical
+CategoryDetail details[]
 
- Category:
- string field
- bool isHierarchical
- CategoryDetail details[]
-
- CategoryDetail:
- CategoryDetail children[]
- string value
- int count
-
+CategoryDetail:
+CategoryDetail children[]
+string value
+int count
 */
 
 func Search(c *lars.Context) {
@@ -50,26 +40,37 @@ func Search(c *lars.Context) {
 
 	app.FieldLogger.Time("search", func() {
 		searchResult, err := searchOptions.Search()
-
 		if err != nil {
 			panic(&InternalError{message: "SearchFailed", err: err})
 		}
 
-		app.FieldLogger.Add("totalMatches", fmt.Sprintf("%d", searchResult.TotalMatches))
-		app.FieldLogger.Add("itemCount", strconv.Itoa(len(searchResult.Items)))
+		app.FieldLogger.Add("totalMatches", strconv.FormatInt(searchResult.TotalMatches, 10))
+		app.FieldLogger.Add("itemCount", strconv.Itoa(searchResult.ResultCount))
 
 		app.WriteResponse(filterResults(searchResult, propertiesFilter))
 	})
-
 }
 
 func filterResults(searchResult *search.SearchResult, propertiesFilter []string) map[string]interface{} {
 
 	filtered := make(map[string]interface{})
 	filtered["totalMatches"] = searchResult.TotalMatches
-	filtered["items"] = filteredItems(searchResult.Items, propertiesFilter)
+	filtered["resultCount"] = searchResult.ResultCount
+	filtered["groups"] = filteredGroups(searchResult.Groups, propertiesFilter)
 
 	return filtered
+}
+
+func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) interface{} {
+
+	list := make([]map[string]interface{}, len(groups))
+	for index, group := range groups {
+		listItem := make(map[string]interface{})
+		list[index] = listItem
+		listItem["name"] = group.Name
+		listItem["items"] = filteredItems(group.Items, propertiesFilter)
+	}
+	return list
 }
 
 func filteredItems(items []*common.Media, propertiesFilter []string) interface{} {
@@ -99,6 +100,24 @@ func property(name string, media *common.Media) interface{} {
 		return media.Filename
 	case "keywords":
 		return media.Keywords
+	case "latitude":
+		return media.Location.Latitude
+	case "locationname":
+		return media.LocationPlaceName
+	case "longitude":
+		return media.Location.Longitude
+	case "mediatype":
+		return media.MediaType()
+	case "mediaurl":
+		return files.ToMediaUrl(media.Path)
+	case "mimetype":
+		return media.MimeType
+	case "path":
+		return media.Path
+	case "thumburl":
+		return files.ToThumbUrl(media.Path)
+	case "slideurl":
+		return files.ToSlideUrl(media.Path)
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})

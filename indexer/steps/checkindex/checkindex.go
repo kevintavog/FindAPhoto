@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
+	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/getexif"
 
 	"github.com/ian-kent/go-log/log"
@@ -28,6 +30,7 @@ var waitGroup sync.WaitGroup
 
 func Start() {
 	getexif.Start()
+	checkthumbnail.Start()
 
 	waitGroup.Add(numConsumers)
 	for idx := 0; idx < numConsumers; idx++ {
@@ -46,6 +49,8 @@ func Wait() {
 	waitGroup.Wait()
 	getexif.Done()
 	getexif.Wait()
+	checkthumbnail.Done()
+	checkthumbnail.Wait()
 }
 
 func Enqueue(fullFilename, aliasedFilename string, lengthInBytes int64) {
@@ -61,7 +66,6 @@ func dequeue() {
 	client := common.CreateClient()
 
 	for candidateFile := range queue {
-		//		log.Error("Check %s", candidateFile.AliasedPath)
 
 		// We need the signature & length for further validation, below - and another step needs it
 		// if the file is added to the index. Essentially, we need it most of the time - calculate it now
@@ -77,7 +81,6 @@ func dequeue() {
 			log.Error("Checking [%d] for %s", ChecksMade, candidateFile.AliasedPath)
 		}
 
-		// TODO: Should use path instead?
 		termQuery := elastic.NewTermQuery("_id", candidateFile.AliasedPath)
 		searchResult, err := client.Search().
 			Index(common.MediaIndexName).
@@ -103,6 +106,11 @@ func dequeue() {
 			} else {
 				if media.Signature != candidateFile.Signature || media.LengthInBytes != candidateFile.LengthInBytes {
 					getexif.Enqueue(candidateFile)
+
+					// Because it's an update, ask to generate the thumbnail rather than check if it exists
+					generatethumbnail.Enqueue(candidateFile.FullPath, candidateFile.AliasedPath, media.MimeType)
+				} else {
+					checkthumbnail.Enqueue(candidateFile.FullPath, candidateFile.AliasedPath, media.MimeType)
 				}
 			}
 		}

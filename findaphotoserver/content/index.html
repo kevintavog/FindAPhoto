@@ -1,25 +1,34 @@
 <!DOCTYPE html>
-<html ng-app="findAPhotoApp">
-    <head>
-        <meta charset="UTF-8">
-        <title>Find A Photo</title>
-        <script src="http://d3js.org/d3.v3.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
-        <link rel="stylesheet" href="/fp/app.css">
-        <script src="/fp/js/angular-recursion.min.js"></script>
-        <script src="/fp/js/geo.js"></script>
-        <script src="/fp/js/app.js"></script>
-        <script src="/fp/js/services.js"></script>
-        <script src="/fp/js/controllers.js"></script>
+<html>
+  <head>
+    <script>document.write('<base href="' + document.location + '" />');</script>
+    <title>Find A Photo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <base href="/fp/">
-        <meta name="viewport" content="width=device-width" />
-    </head>
+    <link rel="stylesheet" href="styles.css">
+    <!-- IE required polyfills, in this exact order -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.33.3/es6-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.19.20/system-polyfills.js"></script>
 
-    <body style="background-color:#101010;color:#ffffff" >
+    <script src="https://code.angularjs.org/2.0.0-beta.7/angular2-polyfills.js"></script>
+    <script src="https://code.angularjs.org/tools/system.js"></script>
+    <script src="https://code.angularjs.org/tools/typescript.js"></script>
+    <script src="https://code.angularjs.org/2.0.0-beta.7/Rx.js"></script>
+    <script src="https://code.angularjs.org/2.0.0-beta.7/angular2.dev.js"></script>
+    <script src="https://code.angularjs.org/2.0.0-beta.7/router.dev.js"></script>
+    <script src="https://code.angularjs.org/2.0.0-beta.7/http.js"></script>
+    <script>
+      System.config({
+        transpiler: 'typescript',
+        typescriptOptions: { emitDecoratorMetadata: true },
+        packages: {'app': {defaultExtension: 'ts'}}
+      });
+      System.import('app/main')
+            .then(null, console.error.bind(console));
+    </script>
+  </head>
 
-        <div ng-view></div>
-
-    </body>
+  <body style="background-color:#101010;color:#ffffff">
+    <find-a-photo>Loading...</find-a-photo>
+  </body>
 </html>

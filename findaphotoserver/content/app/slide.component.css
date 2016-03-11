@@ -1,0 +1,25 @@
+.selected {
+  background-color: #CFD8DC !important;
+  color: #000;
+}
+#singleimage{
+    float:left;
+    margin-top:4px;
+    margin-right:4px;
+    text-align:center;
+    background: #282828;
+}
+.imageListInfoTable {
+    width: 100%;
+}
+.imageListInfoTable tr{
+    padding: 0px;
+}
+.imageListInfoTable td:first-child {
+    text-align: left;
+    padding: 0px 5px 0px 3px;
+}
+.imageListInfoTable td:first-child + td {
+    text-align: right;
+    padding: 0px 3px 0px 5px;
+}

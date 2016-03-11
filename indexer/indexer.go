@@ -7,6 +7,8 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkindex"
+	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
+	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/getexif"
 	"github.com/kevintavog/findaphoto/indexer/steps/indexmedia"
 	"github.com/kevintavog/findaphoto/indexer/steps/resolveplacename"
@@ -71,6 +73,9 @@ func emitStats(seconds float64) {
 
 	log.Info("%d locations lookup attempts, %d location lookup failures, %d server errors, %d other failures",
 		resolveplacename.PlacenameLookups, resolveplacename.FailedLookups, resolveplacename.ServerErrors, resolveplacename.Failures)
+
+	log.Info("%d image thumbnails created, %d failed; %d video thumbnails created, %d failed; %d failed thumbnail checks",
+		generatethumbnail.GeneratedImage, generatethumbnail.FailedImage, generatethumbnail.GeneratedVideo, generatethumbnail.FailedVideo, checkthumbnail.FailedChecks)
 
 	log.Info("%d files indexed, %d failed and %d were added due to detected changes",
 		indexmedia.IndexedFiles, indexmedia.FailedIndexAttempts, indexmedia.ChangedFiles)

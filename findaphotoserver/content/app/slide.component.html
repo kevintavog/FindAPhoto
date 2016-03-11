@@ -1,0 +1,51 @@
+- Back to list
+- Next slide
+- Previous slide
+
+<div *ngIf="slideInfo == null && error == null">
+    Loading the slide...
+</div>
+
+<div *ngIf="slideInfo != null">
+    <center>
+
+        <div *ngIf="slideInfo.mediaType == 'image'" >
+<!--            <a href="{{slideInfo.fullUrl}}"><img src="{{slideInfo.slideUrl}}" style="max-height:1000; max-width:1000" /></a> -->
+            <picture>
+                <source srcset="{{slideInfo.slideUrl}}" />
+                <img srcset="{{slideInfo.slideUrl}}" />
+            </picture>
+        </div>
+        <div *ngIf="slideInfo.mediaType == 'video'" >
+            Video gunk goes here
+        </div>
+
+        <table id="slideInfo" cellspacing=5 >
+            <tr>
+                <td class="tdright">Name:</td>      <td class="tdleft">{{slideInfo.imageName}}</td>
+                <td class="tdright">Keywords:</td>  <td class="tdleft">{{slideInfo.keywords}}</td>
+            </tr>
+
+            <tr>
+                <td class="tdright">Path:</td>      <td class="tdleft">{{slideInfo.path}}</td>
+                <td class="tdright">Location: </td> <td class="tdleft">{{slideInfo.locationName}}</td>
+            </tr>
+
+            <tr>
+                <td class="tdright">Date:</td>      <td class="tdleft"> {{slideInfo.createdDate | DateStringToLocaleDatePipe }} </td>
+                <td class="tdright">Geo: </td> <td class="tdleft">
+                    <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
+                        <h3>
+                        <pre>{{slideInfo.latitude}}, {{slideInfo.longitude}}</pre>
+                        </h3>
+                    </a>
+                </td>
+            </tr>
+        </table>
+
+    </center>
+</div>
+
+<div *ngIf="error != null">
+    An error was encountered: {{error}}
+</div>

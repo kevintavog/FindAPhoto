@@ -1,7 +1,6 @@
 package common
 
 import (
-	"os"
 	"path"
 
 	"github.com/ian-kent/go-log/appenders"
@@ -11,7 +10,7 @@ import (
 
 func ConfigureLogging(logDirectory, appName string) {
 
-	err := createDirectory(logDirectory)
+	err := CreateDirectory(logDirectory)
 	if err != nil {
 		log.Fatal("Unable to create logging directory (%s): %s", logDirectory, err.Error())
 	}
@@ -30,13 +29,4 @@ func ConfigureLogging(logDirectory, appName string) {
 	console.SetLayout(lyt)
 
 	logger.SetAppender(appenders.Multiple(lyt, rolling, console))
-}
-
-func createDirectory(directory string) error {
-	_, err := os.Stat(directory)
-	if err != nil {
-		return nil
-	}
-
-	return os.MkdirAll(directory, os.ModeDir)
 }
