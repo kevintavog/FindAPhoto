@@ -25,3 +25,8 @@ _testmain.go
 indexer/indexer.log
 indexer/indexer
 tools/tools
+findaphotoserver/content/node_modules
+findaphotoserver/content/typings
+npm-debug.log
+*.js.map
+findaphotoserver/findaphotoserver
