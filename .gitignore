@@ -28,6 +28,6 @@ tools/tools
 findaphotoserver/content/node_modules
 findaphotoserver/content/typings
 npm-debug.log
-app/*.js
-app/*.js.map
+findaphotoserver/content/app/*.js
+findaphotoserver/content/app/*.js.map
 findaphotoserver/findaphotoserver
