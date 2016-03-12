@@ -1,16 +1,17 @@
-- Back to list
-- Next slide
-- Previous slide
+<a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a>
 
 <div *ngIf="slideInfo == null && error == null">
     Loading the slide...
 </div>
 
 <div *ngIf="slideInfo != null">
+    <button (click)="previousSlide()" *ngIf="slideIndex > 1"  >« Prev</button>
+    {{slideIndex}} of {{totalSearchMatches}}
+    <button (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches" >Next »</button>
+
     <center>
 
         <div *ngIf="slideInfo.mediaType == 'image'" >
-<!--            <a href="{{slideInfo.fullUrl}}"><img src="{{slideInfo.slideUrl}}" style="max-height:1000; max-width:1000" /></a> -->
             <picture>
                 <source srcset="{{slideInfo.slideUrl}}" />
                 <img srcset="{{slideInfo.slideUrl}}" />

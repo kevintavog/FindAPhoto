@@ -6,10 +6,22 @@
   </form>
 </div>
 
+<div *ngIf="serverError != undefined" >
+    <br>
+    <h2 class="server-error">{{serverError}}</h2>
+</div>
+
 <div *ngIf="searchResults != null">
-  <h2 *ngIf="searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'!</h2>
-  <h2 *ngIf="searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
-  <h2 *ngIf="searchResults.resultCount != searchResults.totalMatches" >Showing {{searchResults.resultCount}} items out of {{searchResults.totalMatches}} total items</h2>
+  <br>
+  <h2 class="search-results" *ngIf="searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'!</h2>
+  <h2 class="search-results" *ngIf="searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
+  <h2 class="search-results" *ngIf="searchResults.resultCount != searchResults.totalMatches" >Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items</h2>
+
+  <div id="paging" *ngIf="totalPages > 1" >
+      <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>
+      Page {{currentPage}} of {{totalPages}}
+      <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
+  </div>
 
   <div *ngFor="#group of searchResults.groups">
     <div style="clear:both;"></div>
@@ -39,5 +51,12 @@
         </table>
     </div>
   </div>
+
+  <div id="paging" *ngIf="totalPages > 1" >
+      <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>
+      Page {{currentPage}} of {{totalPages}}
+      <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
+  </div>
+  
 </div>
 <br>

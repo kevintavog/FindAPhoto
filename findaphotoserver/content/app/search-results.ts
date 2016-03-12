@@ -1,6 +1,4 @@
 export interface SearchResults {
-  errorCode: string;
-  errorMessage: string;
   totalMatches: number;
   resultCount: number;
   groups: SearchGroup[];

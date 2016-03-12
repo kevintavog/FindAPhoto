@@ -17,12 +17,13 @@ export class SearchService {
   }
 
   private handleError(response: Response) {
-      console.error("Server returned " + response)
-      console.error("Server error as json " + response.json())
+      console.error("Server returned an error: ", response.statusText, ": ", response.text())
+
       let error = response.json()
-      if (error != undefined) {
-          return Observable.throw(error.errorCode + "; " + error.errorMessage);
+      if (!error) {
+          return Observable.throw(response.text());
       }
-      return Observable.throw(response.text());
+
+      return Observable.throw(error.errorCode + "; " + error.errorMessage);
   }
 }

@@ -17,9 +17,14 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 
 export class SearchComponent implements OnInit {
     private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl"
+    public static ItemsPerPage: number = 30
+
+    serverError: string
     searchRequest: SearchRequest;
     searchResults: SearchResults;
     resultsSearchText: string;
+    currentPage: number;
+    totalPages: number;
 
   constructor(
     private _router: Router,
@@ -28,16 +33,20 @@ export class SearchComponent implements OnInit {
     private _location: Location) { }
 
   ngOnInit() {
-    let autoSearch = ("q" in this._routeParams.params)
-    let firstItem = 1
-    let pageCount = 20
-
     let searchText = this._routeParams.get("q")
     if (!searchText) {
         searchText = ""
     }
 
-    this.searchRequest = { searchText: searchText, first: firstItem, pageCount: pageCount, properties: SearchComponent.QueryProperties };
+    let pageNumber = +this._routeParams.get("p")
+    if (!pageNumber || pageNumber < 1) {
+        pageNumber = 1
+    }
+
+    let firstItem = 1 + ((pageNumber - 1) * SearchComponent.ItemsPerPage)
+    this.searchRequest = { searchText: searchText, first: firstItem, pageCount: SearchComponent.ItemsPerPage, properties: SearchComponent.QueryProperties };
+
+    let autoSearch = ("q" in this._routeParams.params)
     if (autoSearch) {
         this.internalSearch(false)
     }
@@ -53,12 +62,29 @@ export class SearchComponent implements OnInit {
       this.internalSearch(true)
   }
 
-  internalSearch(updateUrl: boolean) {
-      if (updateUrl) {
-          this._location.go("/search", "q=" + this.searchRequest.searchText)
+  previousPage() {
+      if (this.currentPage > 1) {
+          let zeroBasedPage = this.currentPage - 1
+          this.searchRequest.first = 1 + ((zeroBasedPage - 1) * SearchComponent.ItemsPerPage)
+          this.internalSearch(true)
       }
+  }
 
-      this.searchResults = undefined;
+  nextPage() {
+      if (this.currentPage < this.totalPages) {
+          let zeroBasedPage = this.currentPage - 1
+          this.searchRequest.first = 1 + ((zeroBasedPage + 1) * SearchComponent.ItemsPerPage)
+          this.internalSearch(true)
+      }
+  }
+
+  updateUrl() {
+      this._location.go("/search", "q=" + this.searchRequest.searchText + "&p=" + this.currentPage)
+  }
+
+  internalSearch(updateUrl: boolean) {
+      this.searchResults = undefined
+      this.serverError = undefined
       this._searchService.search(this.searchRequest).subscribe(
           results => {
               this.searchResults = results
@@ -69,7 +95,14 @@ export class SearchComponent implements OnInit {
                   group.resultIndex = resultIndex
                   resultIndex += group.items.length
               }
+
+              let pageCount = this.searchResults.totalMatches / SearchComponent.ItemsPerPage
+              this.totalPages = ((pageCount) | 0) + (pageCount > Math.floor(pageCount) ? 1 : 0)
+              this.currentPage = 1 + (this.searchRequest.first / SearchComponent.ItemsPerPage) | 0
+
+              if (updateUrl) { this.updateUrl() }
           },
-          error => console.log("Handle error: " + error) );
+          error => this.serverError = "The server returned an error: " + error
+     );
   }
 }
