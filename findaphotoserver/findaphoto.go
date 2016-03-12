@@ -63,8 +63,6 @@ func run(debugMode bool) {
 	l := configureApplicationGlobals()
 	l.Get("/", fs)
 	l.Get("/*", fs)
-	l.Get("/search", redirectToRoot)  // '/search' is a FindAPhoto Angular route
-	l.Get("/slide/*", redirectToRoot) // '/slide/' is a FindAPhoto Angular route
 	api.ConfigureRouting(l)
 	files.ConfigureRouting(l)
 
@@ -84,10 +82,6 @@ func run(debugMode bool) {
 	} else {
 		startServerFunc()
 	}
-}
-
-func redirectToRoot(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/?"+r.URL.RawQuery, http.StatusMovedPermanently)
 }
 
 func configureApplicationGlobals() *lars.LARS {
