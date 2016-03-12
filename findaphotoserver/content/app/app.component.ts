@@ -2,6 +2,7 @@ import { Component } from 'angular2/core';
 import { RouteConfig, ROUTER_DIRECTIVES, ROUTER_PROVIDERS } from 'angular2/router';
 import { HTTP_PROVIDERS } from 'angular2/http'
 
+import { RootComponent } from './root.component.ts';
 import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';
 import { SlideComponent } from './slide.component';
@@ -24,10 +25,15 @@ import { SlideComponent } from './slide.component';
 
 @RouteConfig([
   {
+      path: '/',
+      name: 'Root',
+      component: RootComponent
+  },
+  {
     path: '/search',
     name: 'Search',
     component: SearchComponent,
-    useAsDefault: true
+//    useAsDefault: true
   },
   {
     path: '/slide/:id',

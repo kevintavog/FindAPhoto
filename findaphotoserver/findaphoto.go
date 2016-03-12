@@ -63,8 +63,8 @@ func run(debugMode bool) {
 	l := configureApplicationGlobals()
 	l.Get("/", fs)
 	l.Get("/*", fs)
-	l.Get("/search", redirectToTop)  // '/search' is an Angular route
-	l.Get("/slide/*", redirectToTop) // '/slide/' is an Angular route
+	l.Get("/search", redirectToRoot)  // '/search' is a FindAPhoto Angular route
+	l.Get("/slide/*", redirectToRoot) // '/slide/' is a FindAPhoto Angular route
 	api.ConfigureRouting(l)
 	files.ConfigureRouting(l)
 
@@ -86,13 +86,8 @@ func run(debugMode bool) {
 	}
 }
 
-func Home(c *lars.Context) {
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
-	app.Error(http.StatusForbidden, "", "", nil)
-}
-
-func redirectToTop(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+func redirectToRoot(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/?"+r.URL.RawQuery, http.StatusMovedPermanently)
 }
 
 func configureApplicationGlobals() *lars.LARS {
