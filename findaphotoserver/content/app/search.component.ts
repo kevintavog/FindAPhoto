@@ -16,9 +16,10 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 })
 
 export class SearchComponent implements OnInit {
-  searchRequest: SearchRequest;
-  searchResults: SearchResults;
-  resultsSearchText: string;
+    private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl"
+    searchRequest: SearchRequest;
+    searchResults: SearchResults;
+    resultsSearchText: string;
 
   constructor(
     private _router: Router,
@@ -27,17 +28,16 @@ export class SearchComponent implements OnInit {
     private _location: Location) { }
 
   ngOnInit() {
-    let autoSearch = true
+    let autoSearch = ("q" in this._routeParams.params)
     let firstItem = 1
     let pageCount = 20
 
     let searchText = this._routeParams.get("q")
     if (!searchText) {
-        autoSearch = false
         searchText = ""
     }
-    this.searchRequest = { searchText: searchText, first: firstItem, pageCount: pageCount, properties: "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl" };
-console.log("search init; search text is '" + this.searchRequest.searchText + "'; " + autoSearch)
+
+    this.searchRequest = { searchText: searchText, first: firstItem, pageCount: pageCount, properties: SearchComponent.QueryProperties };
     if (autoSearch) {
         this.internalSearch(false)
     }
@@ -63,6 +63,12 @@ console.log("search init; search text is '" + this.searchRequest.searchText + "'
           results => {
               this.searchResults = results
               this.resultsSearchText = this.searchRequest.searchText
+
+              let resultIndex = 0
+              for (var group of this.searchResults.groups) {
+                  group.resultIndex = resultIndex
+                  resultIndex += group.items.length
+              }
           },
           error => console.log("Handle error: " + error) );
   }

@@ -9,6 +9,7 @@ export interface SearchResults {
 export interface SearchGroup {
   name: string;
   items: SearchItem[];
+  resultIndex: number;
 }
 
 export interface SearchItem {

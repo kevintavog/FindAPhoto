@@ -16,7 +16,7 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 })
 
 export class SlideComponent implements OnInit {
-  public static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl"
+  private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl"
 
   searchRequest: SearchRequest;
   slideInfo: SearchItem;
@@ -37,17 +37,15 @@ export class SlideComponent implements OnInit {
     this.searchRequest.searchText = this._routeParams.get('q');
     this.searchRequest.first = +this._routeParams.get('i');
 
-    console.log("first is " + this.searchRequest.first)
     this._searchService.search(this.searchRequest).subscribe(
         results => {
             if (results.groups.length > 0 && results.groups[0].items.length > 0) {
                 this.slideInfo = results.groups[0].items[0]
-                console.log("found slide: " + this.slideInfo.imageName)
             } else {
-                console.log("No search results returned")
+                this.error = "That slide cannot be found"
             }
         },
-        error => this.error = error
+        error => this.error = "The server returned an error: " + error
     );
   }
 }
