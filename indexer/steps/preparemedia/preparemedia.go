@@ -195,6 +195,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	}
 
 	if dateTime.IsZero() {
+		candidate.AddWarning("No usable date in EXIF, using file timestamp")
 		fileInfo, fiErr := os.Stat(candidate.FullPath)
 		if fiErr == nil {
 			stat := fileInfo.Sys().(*syscall.Stat_t)
@@ -209,7 +210,6 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 }
 
 func populateLocation(media *common.Media, candidate *common.CandidateFile) {
-
 	if candidate.Exif.Composite.GPSPosition != "" {
 		if populateWithGpsPosition(media, candidate, candidate.Exif.Composite.GPSPosition) {
 			return
@@ -221,6 +221,7 @@ func populateLocation(media *common.Media, candidate *common.CandidateFile) {
 
 func populateWithGpsPosition(media *common.Media, candidate *common.CandidateFile, gpsPosition string) bool {
 	// 47 deg 37' 23.06" N, 122 deg 20' 59.08" W
+	// 47 deg 35' 50.66" N, 122 deg 19' 59.50" W == 47.597389 -122.333194
 	latAndLongTokens := strings.Split(gpsPosition, ",")
 	if len(latAndLongTokens) != 2 {
 		candidate.AddWarning(fmt.Sprintf("Unsupported GPSPosition: '%s'", gpsPosition))
@@ -304,6 +305,7 @@ func populateWithGpsAndRef(media *common.Media, candidate *common.CandidateFile,
 func dmsToFloat(dms string) (float64, error) {
 	// 47 deg 37' 23.06"
 	// 122 deg 20' 59.08"
+
 	tokens := strings.Split(dms, " ")
 	if len(tokens) == 4 {
 		strMinutes := tokens[2][:len(tokens[2])-1]
@@ -314,7 +316,7 @@ func dmsToFloat(dms string) (float64, error) {
 		seconds, sErr := strconv.ParseFloat(strSeconds, 64)
 
 		if dErr == nil && mErr == nil && sErr == nil {
-			return float64(degrees) + (float64(minutes) / 60.0) + (seconds / 360.0), nil
+			return float64(degrees) + (float64(minutes) / 60.0) + (seconds / 3600.0), nil
 		} else {
 			return math.NaN(), errors.New(fmt.Sprintf("Unable to convert: %q, %q, %q", dErr, mErr, sErr))
 		}

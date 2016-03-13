@@ -55,6 +55,8 @@
     </div>
   </div>
 
+  <br>
+  <div style="clear:both;"></div>
   <div id="paging" *ngIf="totalPages > 1" >
       <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>
       Page {{currentPage}} of {{totalPages}}

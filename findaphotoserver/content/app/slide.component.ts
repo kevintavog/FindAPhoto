@@ -68,7 +68,7 @@ export class SlideComponent implements OnInit {
               this.slideInfo = results.groups[0].items[0]
               this.totalSearchMatches = results.totalMatches
           } else {
-              this.error = "That slide cannot be found"
+              this.error = "The slide cannot be found"
           }
       },
       error => this.error = "The server returned an error: " + error

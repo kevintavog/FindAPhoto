@@ -55,7 +55,7 @@ export class SearchComponent implements OnInit {
   userSearch() {
       // If the search is new or different, navigate so we can use browser back to get to previous search results
       if (this.resultsSearchText && this.resultsSearchText != this.searchRequest.searchText) {
-          this._router.navigate( ['Search', { q: this.searchRequest.searchText }] );
+          this._router.navigate( ['Search', { q: this.searchRequest.searchText, p: 1 }] );
           return
       }
 

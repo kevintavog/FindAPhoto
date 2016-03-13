@@ -1,6 +1,7 @@
 package resolveplacename
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/kevintavog/findaphoto/indexer/steps/indexmedia"
 
 	"github.com/Jeffail/gabs"
+	"github.com/ian-kent/go-log/log"
 )
 
 var PlacenameLookups int64
@@ -54,13 +56,33 @@ func Enqueue(media *common.Media) {
 
 func dequeue() {
 	for media := range queue {
-		resolvePlacename(media)
+		lookupInCache(media)
+		//		resolvePlacename(media)
 		indexmedia.Enqueue(media)
 	}
 }
 
 func addWarning(media *common.Media, warning string) {
+	log.Warn("%q - %q; %f, %f", media.Path, warning, media.Location.Latitude, media.Location.Longitude)
 	media.Warnings = append(media.Warnings, warning)
+}
+
+func lookupInCache(media *common.Media) bool {
+	if media.Location.Latitude == 0 && media.Location.Longitude == 0 {
+		return false
+	}
+
+	json, err := placenameFromLocalCache(media.Location.Latitude, media.Location.Longitude)
+	if err != nil {
+		addWarning(media, fmt.Sprintf("Failed looking up via cache: %v", err.Error()))
+		return false
+	}
+	if len(json) == 0 {
+		return false
+	}
+
+	placenameFromText(media, bytes.NewBufferString(json).Bytes())
+	return true
 }
 
 func resolvePlacename(media *common.Media) {
@@ -88,11 +110,15 @@ func resolvePlacename(media *common.Media) {
 		return
 	}
 
-	json, err := gabs.ParseJSON(body)
+	placenameFromText(media, body)
+}
+
+func placenameFromText(media *common.Media, blob []byte) {
+	json, err := gabs.ParseJSON(blob)
 	if err != nil {
 		atomic.AddInt64(&Failures, 1)
 		addWarning(media, fmt.Sprintf(
-			"Failed deserializing json: %s: ('%s', %f, %f in %s)", err.Error(), body, media.Location.Latitude, media.Location.Longitude, media.Path))
+			"Failed deserializing json: %s: ('%s', %f, %f in %s)", err.Error(), blob, media.Location.Latitude, media.Location.Longitude, media.Path))
 		return
 	}
 
@@ -104,7 +130,7 @@ func resolvePlacename(media *common.Media) {
 
 	if !json.Exists("address") {
 		atomic.AddInt64(&ServerErrors, 1)
-		addWarning(media, fmt.Sprintf("Reverse lookup didn't return an address: %s", body))
+		addWarning(media, fmt.Sprintf("Reverse lookup didn't return an address: %v", json))
 		return
 	}
 
