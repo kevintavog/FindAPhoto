@@ -114,10 +114,12 @@ func property(name string, media *common.Media) interface{} {
 		return media.MimeType
 	case "path":
 		return media.Path
-	case "thumburl":
-		return files.ToThumbUrl(media.Path)
 	case "slideurl":
 		return files.ToSlideUrl(media.Path)
+	case "thumburl":
+		return files.ToThumbUrl(media.Path)
+	case "warnings":
+		return media.Warnings
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})

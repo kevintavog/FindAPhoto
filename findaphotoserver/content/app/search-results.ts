@@ -25,4 +25,5 @@ export interface SearchItem {
   path: string;
   slideUrl: string;
   thumbUrl: string;
+  warnings: string[];
 }

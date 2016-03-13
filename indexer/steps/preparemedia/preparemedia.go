@@ -16,8 +16,6 @@ import (
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/resolveplacename"
-
-	"github.com/ian-kent/go-log/log"
 )
 
 const numConsumers = 8
@@ -87,6 +85,8 @@ func populate(candidate *common.CandidateFile) *common.Media {
 	populateLocation(media, candidate)
 	populateDimensions(media, candidate)
 
+	media.Warnings = candidate.Warnings
+
 	return media
 }
 
@@ -114,7 +114,7 @@ func populateDimensions(media *common.Media, candidate *common.CandidateFile) {
 func populateKeywords(media *common.Media, candidate *common.CandidateFile) {
 	switch keyType := candidate.Exif.IPTC.Keywords.(type) {
 	default:
-		log.Warn("Unexpected keyword type %T (%q)", keyType, candidate.Exif.IPTC.Keywords)
+		candidate.AddWarning(fmt.Sprintf("Unexpected keyword type %T (%q)", keyType, candidate.Exif.IPTC.Keywords))
 	case []interface{}:
 		for _, s := range candidate.Exif.IPTC.Keywords.([]interface{}) {
 			media.Keywords = append(media.Keywords, s.(string))
@@ -129,7 +129,7 @@ func populateKeywords(media *common.Media, candidate *common.CandidateFile) {
 func populateIso(media *common.Media, candidate *common.CandidateFile) {
 	switch isoType := candidate.Exif.EXIF.ISO.(type) {
 	default:
-		log.Warn("Unexpected ISO type: %T (%q)", isoType, candidate.Exif.EXIF.ISO)
+		candidate.AddWarning(fmt.Sprintf("Unexpected ISO type: %T (%q)", isoType, candidate.Exif.EXIF.ISO))
 	case int:
 		media.Iso = strconv.FormatInt(int64(candidate.Exif.EXIF.ISO.(int)), 10)
 	case float64:
@@ -146,7 +146,7 @@ func populateIso(media *common.Media, candidate *common.CandidateFile) {
 func populateExposureTime(media *common.Media, candidate *common.CandidateFile) {
 	switch etType := candidate.Exif.EXIF.ExposureTime.(type) {
 	default:
-		log.Warn("Unexpected ExposureTime type: %T", etType)
+		candidate.AddWarning(fmt.Sprintf("Unexpected ExposureTime type: %T", etType))
 	case float64:
 		media.ExposureTime = strconv.FormatFloat(candidate.Exif.EXIF.ExposureTime.(float64), 'f', -1, 64)
 	case string:
@@ -163,14 +163,16 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	if candidate.Exif.Quicktime.ContentCreateDate != "" {
 		dateTime, err = time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.Quicktime.ContentCreateDate)
 		if err != nil {
-			log.Warn("Failed parsing ContentCreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.ContentCreateDate, err.Error(), candidate.FullPath)
+			candidate.AddWarning(fmt.Sprintf(
+				"Failed parsing ContentCreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.ContentCreateDate, err.Error(), candidate.FullPath))
 		}
 	}
 	if dateTime.IsZero() && len(candidate.Exif.Quicktime.CreateDate) > 0 {
 		// UTC according to spec - no timezone like there is for 'ContentCreateDate'
 		dateTime, err = time.Parse("2006:01:02 15:04:05", candidate.Exif.Quicktime.CreateDate)
 		if err != nil {
-			log.Warn("Failed parsing CreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.CreateDate, err.Error(), candidate.FullPath)
+			candidate.AddWarning(fmt.Sprintf(
+				"Failed parsing CreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.CreateDate, err.Error(), candidate.FullPath))
 		}
 	}
 
@@ -186,7 +188,8 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 			// No timezone - and the spec doesn't specify.
 			dateTime, err = time.ParseInLocation("2006:01:02 15:04:05", exifDateTime, time.Local)
 			if err != nil {
-				log.Warn("Failed parsing '%s': %s (in %s)", exifDateTime, err.Error(), candidate.FullPath)
+				candidate.AddWarning(fmt.Sprintf(
+					"Failed parsing '%s': %s (in %s)", exifDateTime, err.Error(), candidate.FullPath))
 			}
 		}
 	}
@@ -208,33 +211,34 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 func populateLocation(media *common.Media, candidate *common.CandidateFile) {
 
 	if candidate.Exif.Composite.GPSPosition != "" {
-		if populateWithGpsPosition(media, candidate.Exif.Composite.GPSPosition) {
+		if populateWithGpsPosition(media, candidate, candidate.Exif.Composite.GPSPosition) {
 			return
 		}
 	}
 
-	populateWithGpsAndRef(media, candidate.Exif.EXIF.GPSLatitude, candidate.Exif.EXIF.GPSLatitudeRef, candidate.Exif.EXIF.GPSLongitude, candidate.Exif.EXIF.GPSLongitudeRef)
+	populateWithGpsAndRef(media, candidate, candidate.Exif.EXIF.GPSLatitude, candidate.Exif.EXIF.GPSLatitudeRef, candidate.Exif.EXIF.GPSLongitude, candidate.Exif.EXIF.GPSLongitudeRef)
 }
 
-func populateWithGpsPosition(media *common.Media, gpsPosition string) bool {
+func populateWithGpsPosition(media *common.Media, candidate *common.CandidateFile, gpsPosition string) bool {
 	// 47 deg 37' 23.06" N, 122 deg 20' 59.08" W
 	latAndLongTokens := strings.Split(gpsPosition, ",")
 	if len(latAndLongTokens) != 2 {
-		log.Warn("Unsupported GPSPosition: '%s'", gpsPosition)
+		candidate.AddWarning(fmt.Sprintf("Unsupported GPSPosition: '%s'", gpsPosition))
 		return false
 	}
 
 	latitudeValue := strings.Trim(latAndLongTokens[0], " ")
 	latitudeTokens := strings.Split(latitudeValue, " ")
 	if len(latitudeTokens) != 5 {
-		log.Warn("Unsupported GPSPosition (latitude): '%s'", gpsPosition)
+		candidate.AddWarning(fmt.Sprintf("Unsupported GPSPosition (latitude): '%s'", gpsPosition))
 		return false
 	}
 
 	longitudeValue := strings.Trim(latAndLongTokens[1], " ")
 	longitudeTokens := strings.Split(longitudeValue, " ")
 	if len(longitudeTokens) != 5 {
-		log.Warn("Unsupported GPSPosition (longitude): '%s' - %s - %s", gpsPosition, latAndLongTokens[1], strings.Join(longitudeTokens, ", "))
+		candidate.AddWarning(fmt.Sprintf(
+			"Unsupported GPSPosition (longitude): '%s' - %s - %s", gpsPosition, latAndLongTokens[1], strings.Join(longitudeTokens, ", ")))
 		return false
 	}
 
@@ -245,7 +249,7 @@ func populateWithGpsPosition(media *common.Media, gpsPosition string) bool {
 	case "S":
 		latRef = "South"
 	default:
-		log.Warn("Unsupported GPSPosition (latitude ref): '%s'", gpsPosition)
+		candidate.AddWarning(fmt.Sprintf("Unsupported GPSPosition (latitude ref): '%s'", gpsPosition))
 		return false
 	}
 	var lonRef string
@@ -255,14 +259,14 @@ func populateWithGpsPosition(media *common.Media, gpsPosition string) bool {
 	case "E":
 		lonRef = "East"
 	default:
-		log.Warn("Unsupported GPSPosition (longitude ref): '%s'", gpsPosition)
+		candidate.AddWarning(fmt.Sprintf("Unsupported GPSPosition (longitude ref): '%s'", gpsPosition))
 		return false
 	}
 
-	return populateWithGpsAndRef(media, strings.TrimRight(latitudeValue, "NSEW "), latRef, strings.TrimRight(longitudeValue, "NSEW "), lonRef)
+	return populateWithGpsAndRef(media, candidate, strings.TrimRight(latitudeValue, "NSEW "), latRef, strings.TrimRight(longitudeValue, "NSEW "), lonRef)
 }
 
-func populateWithGpsAndRef(media *common.Media, gpsLatitude, gpsLatitudeRef, gpsLongitude, gpsLongitudeRef string) bool {
+func populateWithGpsAndRef(media *common.Media, candidate *common.CandidateFile, gpsLatitude, gpsLatitudeRef, gpsLongitude, gpsLongitudeRef string) bool {
 	// all or nothing for location
 	if gpsLatitude == "" && gpsLatitudeRef == "" && gpsLongitude == "" && gpsLongitudeRef == "" {
 		return false
@@ -270,18 +274,18 @@ func populateWithGpsAndRef(media *common.Media, gpsLatitude, gpsLatitudeRef, gps
 
 	location := fmt.Sprintf("%s %s, %s %s", gpsLatitude, gpsLatitudeRef, gpsLongitude, gpsLongitudeRef)
 	if gpsLatitude == "" || gpsLatitudeRef == "" || gpsLongitude == "" || gpsLongitudeRef == "" {
-		log.Warn("Ignoring poorly formed location: %s", location)
+		candidate.AddWarning(fmt.Sprintf("Ignoring poorly formed location: %s", location))
 		return false
 	}
 	if (gpsLatitudeRef != "North" && gpsLatitudeRef != "South") || (gpsLongitudeRef != "West" && gpsLongitudeRef != "East") {
-		log.Warn("Ignoring poorly formed location - invalid reference: '%s', '%s' (%s)", gpsLatitudeRef, gpsLongitudeRef, location)
+		candidate.AddWarning(fmt.Sprintf("Ignoring poorly formed location - invalid reference: '%s', '%s' (%s)", gpsLatitudeRef, gpsLongitudeRef, location))
 		return false
 	}
 
 	latFloat, laErr := dmsToFloat(gpsLatitude)
 	lonFloat, loErr := dmsToFloat(gpsLongitude)
 	if laErr != nil || loErr != nil {
-		log.Warn("Ignoring location, unable to parse lat/lon %q, %q (%s)", laErr, loErr, location)
+		candidate.AddWarning(fmt.Sprintf("Ignoring location, unable to parse lat/lon %q, %q (%s)", laErr, loErr, location))
 		return false
 	}
 

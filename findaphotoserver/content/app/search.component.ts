@@ -16,7 +16,7 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 })
 
 export class SearchComponent implements OnInit {
-    private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl"
+    private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 30
 
     serverError: string

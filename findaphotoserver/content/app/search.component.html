@@ -49,6 +49,9 @@
                 <td> {{item.keywords}} </td>
             </tr>
         </table>
+        <div *ngIf="item.warnings != udefined">
+            <span class="numberCircle">{{item.warnings.length}}</span>
+        </div>
     </div>
   </div>
 
@@ -57,6 +60,5 @@
       Page {{currentPage}} of {{totalPages}}
       <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
   </div>
-  
 </div>
 <br>

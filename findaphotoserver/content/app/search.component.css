@@ -39,7 +39,33 @@
     display:inline;
     color: #CCC;
 }
+
 #paging{
     float: right;
     color: #CCC;
+}
+
+
+.numberCircle {
+    display:inline-block;
+
+    border-radius:50%;
+    border:2px solid;
+
+	color:#C00;
+}
+.numberCircle:before,
+.numberCircle:after {
+    content:'\200B';
+    display:inline-block;
+    line-height:0px;
+
+    padding-top:50%;
+    padding-bottom:50%;
+}
+.numberCircle:before {
+    padding-left:8px;
+}
+.numberCircle:after {
+    padding-right:8px;
 }

@@ -73,6 +73,8 @@ type Media struct {
 	Date      string    `json:"date"`      // yyyyMMdd - for aggregating by date
 	DayName   string    `json:"dayname"`   // (Wed, Wednesday)
 	MonthName string    `json:"monthname"` // (Apr, April)
+
+	Warnings []string `json:"warnings,omitempty"`
 }
 
 type GeoPoint struct {
@@ -86,6 +88,7 @@ type CandidateFile struct {
 	Signature     string
 	LengthInBytes int64
 	Exif          ExifOutput
+	Warnings      []string
 }
 
 type ExifOutput struct {
@@ -140,4 +143,8 @@ type ExifOutputComposite struct {
 
 type ExifOutputIptc struct {
 	Keywords interface{} // Some are []string - others are string. Exiftool seems to be the source
+}
+
+func (cf *CandidateFile) AddWarning(warning string) {
+	cf.Warnings = append(cf.Warnings, warning)
 }

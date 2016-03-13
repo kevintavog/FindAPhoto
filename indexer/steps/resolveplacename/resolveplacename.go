@@ -11,7 +11,6 @@ import (
 	"github.com/kevintavog/findaphoto/indexer/steps/indexmedia"
 
 	"github.com/Jeffail/gabs"
-	"github.com/ian-kent/go-log/log"
 )
 
 var PlacenameLookups int64
@@ -60,6 +59,10 @@ func dequeue() {
 	}
 }
 
+func addWarning(media *common.Media, warning string) {
+	media.Warnings = append(media.Warnings, warning)
+}
+
 func resolvePlacename(media *common.Media) {
 	if media.Location.Latitude == 0 && media.Location.Longitude == 0 {
 		return
@@ -72,7 +75,7 @@ func resolvePlacename(media *common.Media) {
 	response, err := http.Get(url)
 	if err != nil {
 		atomic.AddInt64(&FailedLookups, 1)
-		log.Error("Failed getting placename (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error())
+		addWarning(media, fmt.Sprintf("Failed getting placename (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
 		return
 	}
 
@@ -81,26 +84,27 @@ func resolvePlacename(media *common.Media) {
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		atomic.AddInt64(&Failures, 1)
-		log.Error("Failed reading body of response (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error())
+		addWarning(media, fmt.Sprintf("Failed reading body of response (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
 		return
 	}
 
 	json, err := gabs.ParseJSON(body)
 	if err != nil {
 		atomic.AddInt64(&Failures, 1)
-		log.Error("Failed deserializing json: %s: ('%s', %f, %f in %s)", err.Error(), body, media.Location.Latitude, media.Location.Longitude, media.Path)
+		addWarning(media, fmt.Sprintf(
+			"Failed deserializing json: %s: ('%s', %f, %f in %s)", err.Error(), body, media.Location.Latitude, media.Location.Longitude, media.Path))
 		return
 	}
 
 	if json.Exists("error") {
 		atomic.AddInt64(&ServerErrors, 1)
-		log.Error("Reverse lookup returned an error: %s", json.Path("error").Data().(string))
+		addWarning(media, fmt.Sprintf("Reverse lookup returned an error: %s", json.Path("error").Data().(string)))
 		return
 	}
 
 	if !json.Exists("address") {
 		atomic.AddInt64(&ServerErrors, 1)
-		log.Error("Reverse lookup didn't return an address: %s", body)
+		addWarning(media, fmt.Sprintf("Reverse lookup didn't return an address: %s", body))
 		return
 	}
 

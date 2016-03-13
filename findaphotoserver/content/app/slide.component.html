@@ -45,6 +45,13 @@
         </table>
 
     </center>
+
+    <div *ngIf="slideInfo.warnings != undefined">
+        <ol *ngFor="#warning of slideInfo.warnings">
+            <li>{{warning}}</li>
+        </ol>
+    </div>
+
 </div>
 
 <div *ngIf="error != null">

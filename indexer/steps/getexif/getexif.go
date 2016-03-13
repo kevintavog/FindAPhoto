@@ -125,6 +125,8 @@ func dequeue() {
 			ex, err := exifForFile(exifForDirectory, path.Base(candidate.FullPath))
 			if err == nil {
 				candidate.Exif = *ex
+			} else {
+				candidate.AddWarning(err.Error())
 			}
 			preparemedia.Enqueue(candidate)
 		}
@@ -146,9 +148,6 @@ func exifForFile(exifForDirectory *ExifForDirectory, filename string) (*common.E
 }
 
 func getDirectoryExif(directory string) ([]common.ExifOutput, error) {
-	//	log.Error("Getting exif for %s", directory)
-	//	defer log.Error(" ... => finished getting exif for %s", directory)
-
 	out, err := exec.Command(common.ExifToolPath, "-a", "-j", "-g", "-x", "Directory", "-x", "FileAccessDate", "-x", "FileInodeChangeDate", directory).Output()
 	if err != nil {
 		log.Fatal("Failed executing exiftool for '%s': %s", directory, err.Error())

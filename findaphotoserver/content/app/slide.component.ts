@@ -18,7 +18,7 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 })
 
 export class SlideComponent implements OnInit {
-  private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl"
+  private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings"
 
   searchRequest: SearchRequest;
   slideInfo: SearchItem;
@@ -46,14 +46,14 @@ export class SlideComponent implements OnInit {
   }
 
   previousSlide() {
-    if (this.slideIndex < this.totalSearchMatches) {
+      if (this.slideIndex > 1) {
         let index = this.searchRequest.first - 1
         this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] );
     }
   }
 
   nextSlide() {
-      if (this.slideIndex > 1) {
+      if (this.slideIndex < this.totalSearchMatches) {
           let index = this.searchRequest.first + 1
           this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] );
       }
