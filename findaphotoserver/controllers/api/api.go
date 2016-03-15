@@ -35,24 +35,23 @@ func ConfigureRouting(l *lars.LARS) {
 	api.Get("/search", Search)
 }
 
-func HandleErrors(c *lars.Context) {
-
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
+func HandleErrors(c lars.Context) {
+	fc := c.(*applicationglobals.FpContext)
 	defer func() {
 		if r := recover(); r != nil {
 			if ie, ok := r.(*InternalError); ok {
-				app.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
+				fc.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
 			} else if ir, ok := r.(*InvalidRequest); ok {
-				app.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
+				fc.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
 			} else if e, ok := r.(runtime.Error); ok {
-				app.Error(http.StatusInternalServerError, "UnhandledError", "", e)
+				fc.Error(http.StatusInternalServerError, "UnhandledError", "", e)
 			} else if s, ok := r.(string); ok {
-				app.Error(http.StatusInternalServerError, "UnhandledError", s, nil)
+				fc.Error(http.StatusInternalServerError, "UnhandledError", s, nil)
 			} else {
-				app.Error(http.StatusInternalServerError, "UnhandledError", fmt.Sprintf("%v", r), nil)
+				fc.Error(http.StatusInternalServerError, "UnhandledError", fmt.Sprintf("%v", r), nil)
 			}
 		}
 	}()
 
-	c.Next()
+	fc.Ctx.Next()
 }

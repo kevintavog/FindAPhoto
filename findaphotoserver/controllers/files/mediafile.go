@@ -18,14 +18,13 @@ func ToMediaUrl(aliasedPath string) string {
 	return baseMediaUrl + url.QueryEscape(strings.Replace(aliasedPath, "\\", "/", -1))
 }
 
-func Media(c *lars.Context) {
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
-
-	app.FieldLogger.Time("media", func() {
-		mediaUrl := c.Request.URL.Path
+func Media(c lars.Context) {
+	fc := c.(*applicationglobals.FpContext)
+	fc.AppContext.FieldLogger.Time("media", func() {
+		mediaUrl := fc.Ctx.Request().URL.Path
 		if !strings.HasPrefix(strings.ToLower(mediaUrl), baseMediaUrl) {
-			app.FieldLogger.Add("missingMediaPrefix", "true")
-			c.Response.WriteHeader(http.StatusNotFound)
+			fc.AppContext.FieldLogger.Add("missingMediaPrefix", "true")
+			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
 			return
 		}
 
@@ -33,7 +32,7 @@ func Media(c *lars.Context) {
 		mediaPath := mediaUrl[len(baseMediaUrl):]
 		mediaId, err := toRepositoryId(mediaPath)
 		if err != nil {
-			app.Error(http.StatusNotFound, "invalidMediaId", "", err)
+			fc.Error(http.StatusNotFound, "invalidMediaId", "", err)
 			return
 		}
 
@@ -44,29 +43,29 @@ func Media(c *lars.Context) {
 			Query(elastic.NewTermQuery("_id", mediaId)).
 			Do()
 		if err != nil {
-			app.FieldLogger.Add("invalidMediaPrefix", "true")
-			c.Response.WriteHeader(http.StatusNotFound)
+			fc.AppContext.FieldLogger.Add("invalidMediaPrefix", "true")
+			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
 			return
 		}
 
 		if searchResult.TotalHits() == 0 {
-			app.FieldLogger.Add("notInRepository", "true")
-			c.Response.WriteHeader(http.StatusNotFound)
+			fc.AppContext.FieldLogger.Add("notInRepository", "true")
+			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
 			return
 		}
 
 		mediaFilename, err := aliasedToFullPath(mediaPath)
 		if err != nil {
-			app.Error(http.StatusNotFound, "badAlias", "", err)
+			fc.Error(http.StatusNotFound, "badAlias", "", err)
 			return
 		}
 
 		if exists, _ := common.FileExists(mediaFilename); !exists {
-			app.FieldLogger.Add("missingMedia", "true")
-			c.Response.WriteHeader(http.StatusNotFound)
+			fc.AppContext.FieldLogger.Add("missingMedia", "true")
+			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		http.ServeFile(c.Response.ResponseWriter, c.Request, mediaFilename)
+		http.ServeFile(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), mediaFilename)
 	})
 }

@@ -31,23 +31,21 @@ string value
 int count
 */
 
-func Search(c *lars.Context) {
+func Search(c lars.Context) {
+	fc := c.(*applicationglobals.FpContext)
+	searchOptions := populateSearchOptions(fc)
+	propertiesFilter := getPropertiesFilter(fc.Ctx.Request().Form.Get("properties"))
 
-	searchOptions := populateSearchOptions(c)
-	propertiesFilter := getPropertiesFilter(c.Request.Form.Get("properties"))
-
-	app := c.AppContext.(*applicationglobals.ApplicationGlobals)
-
-	app.FieldLogger.Time("search", func() {
+	fc.AppContext.FieldLogger.Time("search", func() {
 		searchResult, err := searchOptions.Search()
 		if err != nil {
 			panic(&InternalError{message: "SearchFailed", err: err})
 		}
 
-		app.FieldLogger.Add("totalMatches", strconv.FormatInt(searchResult.TotalMatches, 10))
-		app.FieldLogger.Add("itemCount", strconv.Itoa(searchResult.ResultCount))
+		fc.AppContext.FieldLogger.Add("totalMatches", strconv.FormatInt(searchResult.TotalMatches, 10))
+		fc.AppContext.FieldLogger.Add("itemCount", strconv.Itoa(searchResult.ResultCount))
 
-		app.WriteResponse(filterResults(searchResult, propertiesFilter))
+		fc.WriteResponse(filterResults(searchResult, propertiesFilter))
 	})
 }
 
@@ -125,20 +123,20 @@ func property(name string, media *common.Media) interface{} {
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
 }
 
-func populateSearchOptions(c *lars.Context) *search.SearchOptions {
+func populateSearchOptions(fc *applicationglobals.FpContext) *search.SearchOptions {
 
 	// TODO: Is this a LARS bug? The examples don't show a call to ParseForm being required to get query parameters
 	// Even with this, the query param example isn't working for me
-	err := c.ParseForm()
+	err := fc.Ctx.ParseForm()
 	if err != nil {
 		panic(&InvalidRequest{message: "parseFormError", err: err})
 	}
 
 	// defaults: query all, return 20 results, sort by reverse date, return image id's only
-	q := c.Request.Form.Get("q") // Grumble grumble - should be 'query := c.Param("q")'
+	q := fc.Ctx.Request().Form.Get("q") // Grumble grumble - should be 'query := c.Param("q")'
 	searchOptions := search.New(q)
 
-	count := c.Request.Form.Get("count")
+	count := fc.Ctx.Request().Form.Get("count")
 	if count != "" {
 		searchOptions.Count, err = strconv.Atoi(count)
 		if err != nil {
@@ -150,7 +148,7 @@ func populateSearchOptions(c *lars.Context) *search.SearchOptions {
 		panic(&InvalidRequest{message: "count must be between 1 and 100, inclusive"})
 	}
 
-	index := c.Request.Form.Get("first")
+	index := fc.Ctx.Request().Form.Get("first")
 	if index != "" {
 		v, err := strconv.Atoi(index)
 		if err != nil {

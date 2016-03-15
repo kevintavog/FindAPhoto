@@ -17,7 +17,6 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 )
 
-var _ lars.IAppContext = &applicationglobals.ApplicationGlobals{} // ensures ApplicationGlobals complies with lasr.IGlobals at compile time
 var logDirectory = ""
 
 func main() {
@@ -85,12 +84,8 @@ func run(debugMode bool) {
 }
 
 func configureApplicationGlobals() *lars.LARS {
-	globalsFn := func() lars.IAppContext {
-		return &applicationglobals.ApplicationGlobals{}
-	}
-
 	l := lars.New()
-	l.RegisterAppContext(globalsFn)
+	l.RegisterContext(applicationglobals.NewContext)
 	return l
 }
 
