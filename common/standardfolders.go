@@ -27,11 +27,10 @@ func InitDirectories(appName string) {
 			FfmpegPath = "/usr/local/bin/ffmpeg"
 			ExifToolPath = "/usr/local/bin/exiftool"
 		} else if runtime.GOOS == "linux" {
-			log.Fatal("Come up with directories for Linux!")
-
 			HomeDirectory = os.Getenv("HOME")
 			ThumbnailDirectory = path.Join(HomeDirectory, ".findaphoto", "thumbnails")
-			ConfigDirectory = path.Join(HomeDirectory, ".findaphoto", "preferences")
+			LogDirectory = path.Join(HomeDirectory, ".findaphoto", "logs")
+			ConfigDirectory = path.Join(HomeDirectory, ".findaphoto")
 			LocationCacheDirectory = path.Join(HomeDirectory, ".findaphoto")
 			FfmpegPath = "/usr/bin/ffmpeg"
 			ExifToolPath = "/usr/bin/exiftool"

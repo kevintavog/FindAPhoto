@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
@@ -198,8 +197,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 		candidate.AddWarning("No usable date in EXIF, using file timestamp")
 		fileInfo, fiErr := os.Stat(candidate.FullPath)
 		if fiErr == nil {
-			stat := fileInfo.Sys().(*syscall.Stat_t)
-			dateTime = time.Unix(int64(stat.Mtimespec.Sec), int64(stat.Mtimespec.Nsec))
+			dateTime = time.Unix(int64(fileInfo.ModTime().Second()), int64(fileInfo.ModTime().Nanosecond()))
 		}
 	}
 
