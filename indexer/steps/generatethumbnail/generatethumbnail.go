@@ -26,7 +26,7 @@ type ThumbnailInfo struct {
 	MimeType    string
 }
 
-const numConsumers = 8
+const numConsumers = 2
 const thumbnailMaxHeightDimension = 170
 
 var queue = make(chan *ThumbnailInfo, numConsumers)

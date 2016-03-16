@@ -25,10 +25,10 @@ type ExifForDirectory struct {
 	Files     *list.List
 	lock      sync.Mutex
 	dequeued  bool
-	Exif      []common.ExifOutput
+	Exif      []*common.ExifOutput
 }
 
-const numConsumers = 8
+const numConsumers = 4
 
 var queue = make(chan *ExifForDirectory, numConsumers)
 var waitGroup sync.WaitGroup
@@ -140,20 +140,20 @@ func exifForFile(exifForDirectory *ExifForDirectory, filename string) (*common.E
 
 	for _, ex := range exifForDirectory.Exif {
 		if filename == path.Base(ex.SourceFile) {
-			return &ex, nil
+			return ex, nil
 		}
 	}
 
 	return nil, errors.New(fmt.Sprintf("No exif for %s", filename))
 }
 
-func getDirectoryExif(directory string) ([]common.ExifOutput, error) {
+func getDirectoryExif(directory string) ([]*common.ExifOutput, error) {
 	out, err := exec.Command(common.ExifToolPath, "-a", "-j", "-g", "-x", "Directory", "-x", "FileAccessDate", "-x", "FileInodeChangeDate", directory).Output()
 	if err != nil {
 		log.Fatal("Failed executing exiftool for '%s': %s", directory, err.Error())
 	}
 
-	var response []common.ExifOutput
+	var response []*common.ExifOutput
 	decoder := json.NewDecoder(bytes.NewReader(out))
 	err = decoder.Decode(&response)
 	if err != nil {
