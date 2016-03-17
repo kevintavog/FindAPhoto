@@ -24,10 +24,6 @@ func toRepositoryId(itemUrl string) (string, error) {
 }
 
 func aliasedToFullPath(aliasedPath string) (string, error) {
-	// 1\2014\IMG_8489.JPG
-	// Grab string up to first '\' (excluding '\')
-	// Find matching alias
-	// Append remaining string to path
 	aliasIndex := strings.Index(aliasedPath, "/")
 	if aliasIndex < 1 {
 		return "", errors.New("Can't find alias token: '" + aliasedPath + "'")
@@ -36,7 +32,11 @@ func aliasedToFullPath(aliasedPath string) (string, error) {
 	alias := aliasedPath[0:aliasIndex]
 	for _, pathAndAlias := range configuration.Current.PathAndAliases {
 		if alias == pathAndAlias.Alias {
-			return path.Join(pathAndAlias.Path, aliasedPath[aliasIndex+1:]), nil
+			unescapedPath, err := url.QueryUnescape(aliasedPath[aliasIndex+1:])
+			if err != nil {
+				return "", errors.New("Badly escaped alias '" + aliasedPath + "'; " + err.Error())
+			}
+			return path.Join(pathAndAlias.Path, unescapedPath), nil
 		}
 	}
 

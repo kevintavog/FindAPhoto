@@ -40,6 +40,14 @@ func Thumbs(c lars.Context) {
 			return
 		}
 
+		thumbFilename, err := url.QueryUnescape(thumbFilename)
+		if err != nil {
+			fc.AppContext.FieldLogger.Add("badlyEscaped", "true")
+			fc.AppContext.FieldLogger.Add("badlyEscapedError", err.Error())
+			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		if exists, _ := common.FileExists(thumbFilename); !exists {
 			fc.AppContext.FieldLogger.Add("missingThumbnail", "true")
 			http.ServeFile(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), "./content/images/MissingThumbnail.png")
