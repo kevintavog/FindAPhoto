@@ -17,8 +17,6 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 )
 
-var logDirectory = ""
-
 func main() {
 	configuration.ReadConfiguration()
 	common.ConfigureLogging(common.LogDirectory, "findaphotoserver")
@@ -51,7 +49,7 @@ func run(debugMode bool) {
 	checkOpenMapServer()
 
 	wd, _ := os.Getwd()
-	log.Info("Serving html/css/js content from %s/%s", wd, "content")
+	log.Info("Serving site content from %s/%s", wd, "content")
 	contentDir := http.Dir("./content/")
 	_, e := contentDir.Open("index.html")
 	if e != nil {
@@ -90,7 +88,7 @@ func configureApplicationGlobals() *lars.LARS {
 }
 
 func checkElasticServerAndIndex() {
-	client, err := elastic.NewClient(
+	client, err := elastic.NewSimpleClient(
 		elastic.SetURL(common.ElasticSearchServer),
 		elastic.SetSniff(false))
 
@@ -112,7 +110,6 @@ func checkElasticServerAndIndex() {
 }
 
 func checkOpenMapServer() {
-
 	url := fmt.Sprintf("%s/nominatim/v1/reverse?key=%s&format=json&lat=%f&lon=%f&addressdetails=1&zoom=18&accept-language=en-us",
 		configuration.Current.OpenMapUrl, configuration.Current.OpenMapKey, 47.6216, -122.348133)
 

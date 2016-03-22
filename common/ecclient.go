@@ -18,7 +18,7 @@ type warningUpdate struct {
 }
 
 func CreateClient() *elastic.Client {
-	client, err := elastic.NewClient(
+	client, err := elastic.NewSimpleClient(
 		elastic.SetURL(ElasticSearchServer),
 		elastic.SetSniff(false),
 		elastic.SetErrorLog(log.New(os.Stderr, "ELASTIC-error ", log.LstdFlags)),

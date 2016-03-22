@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"runtime"
 	"time"
@@ -17,7 +18,11 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
 	"gopkg.in/olivere/elastic.v3"
+
+	"runtime/pprof"
 )
+
+var memprofile = flag.String("memprofile", "", "write memory profile to this file")
 
 func main() {
 	runtime.GOMAXPROCS(4)
@@ -53,6 +58,16 @@ func main() {
 		scanner.Scan(*scanPath, *alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)
+
+		if *memprofile != "" {
+			log.Info("Emitting memory dump to %v", *memprofile)
+			f, err := os.Create(*memprofile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			pprof.WriteHeapProfile(f)
+			f.Close()
+		}
 	}
 
 	app.Run(os.Args)
@@ -82,7 +97,7 @@ func emitStats(seconds float64) {
 }
 
 func checkServerAndIndex() {
-	client, err := elastic.NewClient(
+	client, err := elastic.NewSimpleClient(
 		elastic.SetURL(common.ElasticSearchServer),
 		elastic.SetSniff(false))
 

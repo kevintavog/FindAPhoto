@@ -20,19 +20,25 @@ func addDateRangeQuery(search *elastic.SearchService) *elastic.BoolQuery {
 }
 
 func addQuery(search *elastic.SearchService) {
+	hasSort := false
 	// Good, useful queries
 	//	query := elastic.NewTermQuery("_id", "1\\2001\\PDRM0300.JPG")
 	//	query := elastic.NewTermQuery("path.raw", "1\\2001\\PDRM0300.JPG") // Search for a given path (can use _id instead...)
-	//	query := elastic.NewGeoDistanceQuery("location").Lat(47.60863888888889).Lon(-122.43516666666666).Distance("20km")
+	//	query := elastic.NewGeoDistanceQuery("location").Lat(47.60863888888889).Lon(-122.43516666666666).Distance("7km")
+
+	sort := elastic.NewGeoDistanceSort("location").Point(47.608638, -122.43516).Order(false).Unit("km")
+	//	hasSort = true
+
 	//	query := elastic.NewTermQuery("path", "2005") // 'path' is analyzed, so partial matches work
-	query := elastic.NewTermQuery("path", "2")
+	//	query := elastic.NewTermQuery("path", "2")
 	//	query := elastic.NewQueryStringQuery("path:2005 AND filename:100*") // A direct query, as typed in - good for adhoc/from or from search box in UI
 	//	query := elastic.NewRangeQuery("datetime").Gte("2014/01/01").Lte("2014/12/31").Format("yyyy/MM/dd")
 	//	query := elastic.NewWildcardQuery("date", "20140*")
-	//	query := elastic.NewQueryStringQuery("monthname:September")	// string query is analyzed, so can find 'Sep' and 'sep'
+	query := elastic.NewWildcardQuery("date", "*0904") // All matches on a given month/day, across all years
+	//	query := elastic.NewQueryStringQuery("monthname:august") // string query is analyzed, so can find 'Sep' and 'sep'
 	//	query := elastic.NewQueryStringQuery("filename:DSCN3380")
 	//	query := elastic.NewQueryStringQuery("DSCN3380").Field("path").Field("monthname").Field("dayname").Field("keyword").Field("placename")
-	//	query := elastic.NewQueryStringQuery("seattle").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
+	//	query := elastic.NewQueryStringQuery("mural").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
 	//	query := elastic.NewWildcardQuery("date", "*0220") // All matches for a given day
 
@@ -45,8 +51,6 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
 
 	// Useful queries, but with problems (likely case-sensitive issues)
-	//	query := elastic.NewTermQuery("monthname", "September") // use string query instead: only lower case matches - as if query isn't being analyzed prior to search
-	//	query := elastic.NewTermQuery("dayname", "saturday")	// use string query instead: only lower case matches - as if query isn't being analyzed prior to search
 	//	query := elastic.NewWildcardQuery("filename", "dscn3*") // only lower case matches - as if query isn't being analyzed prior to search
 	//	query := elastic.NewTermQuery("filename", "100_0304")
 
@@ -56,16 +60,23 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewTermQuery("path", "100_0304")
 
 	if query != nil {
-		search.Query(query).
-			Size(10).
-			Sort("datetime", false)
+		search.Query(query).Size(10)
+		if hasSort {
+			search.SortBy(sort)
+		} else {
+			search.Sort("datetime", false)
+		}
 	} else {
 		search.Size(0)
 	}
 }
 
 func addAggregate(search *elastic.SearchService) {
-	//	search.Aggregation("countryName", elastic.NewTermsAggregation().Field("countryname.value").Size(30))
+	search.Aggregation("countryName", elastic.NewTermsAggregation().Field("countryname.value").Size(30).
+		SubAggregation("stateName", elastic.NewTermsAggregation().Field("statename.value").Size(10).
+		SubAggregation("cityName", elastic.NewTermsAggregation().Field("cityname.value").Size(10).
+		SubAggregation("siteName", elastic.NewTermsAggregation().Field("sitename.value").Size(10)))))
+
 	//	search.Aggregation("siteName", elastic.NewTermsAggregation().Field("sitename.value").Size(30))
 	//	search.Aggregation("cityName", elastic.NewTermsAggregation().Field("cityname.value").Size(30))
 
@@ -89,6 +100,7 @@ func main() {
 
 	search := client.Search().
 		Index("dev-" + common.MediaIndexName).
+		//		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true)
 
@@ -119,29 +131,38 @@ func main() {
 
 		if searchResult.Aggregations != nil {
 			log.Info("Aggregation results:")
-			for key, _ := range searchResult.Aggregations {
-				terms, ok := searchResult.Aggregations.Terms(key)
-				if ok {
-					log.Info(" %s", key)
-					for index, bucket := range terms.Buckets {
+			emitAggregations(&searchResult.Aggregations, "")
+		}
+	}
+}
 
-						v := ""
-						switch bucket.Key.(type) {
-						case string:
-							v = bucket.Key.(string)
-						case float64:
-							// Assume it's a time, specifically, milliseconds since the epoch
-							msec := int64(bucket.Key.(float64))
-							v = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
+func emitAggregations(aggs *elastic.Aggregations, prefix string) {
+	for key, _ := range *aggs {
+		terms, ok := aggs.Terms(key)
+		if ok {
+			log.Info("%s %s", prefix, key)
+			for index, bucket := range terms.Buckets {
 
-							if bucket.DocCount == 0 {
-								continue
-							}
-						}
-						log.Info("   %d: %s - %d", index+1, v, bucket.DocCount)
+				v := ""
+				switch bucket.Key.(type) {
+				case string:
+					v = bucket.Key.(string)
+				case float64:
+					// Assume it's a time, specifically, milliseconds since the epoch
+					msec := int64(bucket.Key.(float64))
+					v = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
+
+					if bucket.DocCount == 0 {
+						continue
 					}
+				}
+				log.Info("%s   %d: %s - %d", prefix, index+1, v, bucket.DocCount)
+
+				if bucket.Aggregations != nil {
+					emitAggregations(&bucket.Aggregations, prefix+"  ")
 				}
 			}
 		}
 	}
+
 }

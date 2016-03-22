@@ -1,6 +1,8 @@
 package resolveplacename
 
 import (
+	"strings"
+
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/Jeffail/gabs"
@@ -17,16 +19,20 @@ func generatePlacename(media *common.Media, address *gabs.Container) {
 	}
 	media.LocationCityName = firstMatch(prioritizedCityNameComponents, address)
 	media.LocationSiteName = firstMatch(prioritizedSiteComponents, address)
+	media.LocationStateName = firstMatch(prioritizedStateNameComponents, address)
+
+	media.LocationHierarchicalName = joinSkipEmpty(",", media.LocationSiteName, media.LocationCityName, media.LocationStateName, media.LocationCountryName)
 	media.LocationPlaceName = placename(address)
 }
 
-func placename(address *gabs.Container) string {
-	placename := ""
-	children, _ := address.ChildrenMap()
-	for _, value := range children {
-		placename += value.Data().(string) + " "
+func joinSkipEmpty(separator string, items ...string) string {
+	list := []string{}
+	for _, s := range items {
+		if s != "" {
+			list = append(list, s)
+		}
 	}
-	return placename
+	return strings.Join(list, ", ")
 }
 
 func firstMatch(list []string, address *gabs.Container) string {
@@ -40,10 +46,25 @@ func firstMatch(list []string, address *gabs.Container) string {
 	return ""
 }
 
-// For 'cityname'
+func placename(address *gabs.Container) string {
+	placename := ""
+	children, _ := address.ChildrenMap()
+	for _, value := range children {
+		placename += value.Data().(string) + " "
+	}
+	return placename
+}
+
+// For 'state' name
+var prioritizedStateNameComponents = []string{
+	"state",
+	"state_district",
+}
+
+// For 'city' name
 var prioritizedCityNameComponents = []string{
 	"city",
-	"city_district", // Perhaps shortest of this & city?
+	"city_district",
 	"town",
 	"hamlet",
 	"locality",
@@ -58,20 +79,26 @@ var prioritizedSiteComponents = []string{
 	"playground",
 
 	"aerodrome",
+	"address100",
 	"archaeological_site",
 	"arts_centre",
+	"artwork",
 	"attraction",
 	"bakery",
 	"bar",
 	"basin",
-	"building",
+	"bay",
+	"beach",
 	"cafe",
 	"car_wash",
-	"chemist",
+	"castle",
+	"cemetery",
 	"cinema",
+	"community_centre",
 	"cycleway",
 	"department_store",
-	"fast_food",
+	"farmyard",
+	"forest",
 	"furniture",
 	"garden",
 	"garden_centre",
@@ -79,7 +106,6 @@ var prioritizedSiteComponents = []string{
 	"grave_yard",
 	"hospital",
 	"hotel",
-	"house",
 	"information",
 	"library",
 	"mall",
@@ -97,8 +123,8 @@ var prioritizedSiteComponents = []string{
 	"place_of_worship",
 	"pub",
 	"public_building",
-	"restaurant",
 	"roman_road",
+	"ruins",
 	"school",
 	"slipway",
 	"sports_centre",
@@ -110,6 +136,8 @@ var prioritizedSiteComponents = []string{
 	"water",
 	"zoo",
 
+	"bus_stop",
 	"footway",
 	"nature_reserve",
+	"wetland",
 }

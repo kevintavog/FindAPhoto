@@ -1,6 +1,7 @@
 package search
 
 import (
+	"fmt"
 	"strings"
 
 	"encoding/json"
@@ -27,7 +28,19 @@ type SearchGroup struct {
 	Items []*common.Media
 }
 
-func New(query string) *SearchOptions {
+type NearbyOptions struct {
+	Latitude, Longitude float64
+	Distance            string
+}
+
+type ByDayOptions struct {
+	Month      int
+	DayOfMonth int
+	Count      int
+}
+
+//-------------------------------------------------------------------------------------------------
+func NewSearchOptions(query string) *SearchOptions {
 	return &SearchOptions{
 		Query: query,
 		Index: 0,
@@ -36,7 +49,6 @@ func New(query string) *SearchOptions {
 }
 
 func (so *SearchOptions) Search() (*SearchResult, error) {
-
 	client := common.CreateClient()
 	search := client.Search().
 		Index(common.MediaIndexName).
@@ -55,7 +67,57 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	}
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
+	return invokeSearch(search, false)
+}
 
+//-------------------------------------------------------------------------------------------------
+func NewNearbyOptions(lat, lon float64, distance string) *NearbyOptions {
+	return &NearbyOptions{
+		Latitude:  lat,
+		Longitude: lon,
+		Distance:  distance,
+	}
+}
+
+func (no *NearbyOptions) Search() (*SearchResult, error) {
+	client := common.CreateClient() // consider using elastic.NewSimpleClient
+	search := client.Search().
+		Index(common.MediaIndexName).
+		Type(common.MediaTypeName).
+		Pretty(true).
+		Size(10)
+
+	search.Query(elastic.NewGeoDistanceQuery("location").Lat(no.Latitude).Lon(no.Longitude).Distance(no.Distance))
+	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
+
+	return invokeSearch(search, true)
+}
+
+//-------------------------------------------------------------------------------------------------
+func NewByDayOptions(month, dayOfMonth int) *ByDayOptions {
+	return &ByDayOptions{
+		Month:      month,
+		DayOfMonth: dayOfMonth,
+		Count:      25,
+	}
+}
+
+func (bdo *ByDayOptions) Search() (*SearchResult, error) {
+	client := common.CreateClient() // consider using elastic.NewSimpleClient
+	search := client.Search().
+		Index(common.MediaIndexName).
+		Type(common.MediaTypeName).
+		Pretty(true).
+		Size(bdo.Count)
+
+	search.Query(elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth)))
+	search.Sort("datetime", false)
+
+	return invokeSearch(search, true)
+}
+
+//-------------------------------------------------------------------------------------------------
+func invokeSearch(search *elastic.SearchService, singleGroup bool) (*SearchResult, error) {
 	result, err := search.Do()
 	if err != nil {
 		return nil, err
@@ -67,6 +129,13 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 		sr.Groups = []*SearchGroup{}
 		var group *SearchGroup
 
+		if singleGroup {
+			tempName := "all"
+			lastGroup = tempName
+			group = &SearchGroup{Name: tempName, Items: []*common.Media{}}
+			sr.Groups = append(sr.Groups, group)
+		}
+
 		for _, hit := range result.Hits.Hits {
 			media := &common.Media{}
 			err := json.Unmarshal(*hit.Source, media)
@@ -74,12 +143,14 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 				return nil, err
 			}
 
-			groupName := groupName(media)
+			if !singleGroup {
+				groupName := groupName(media)
 
-			if lastGroup == "" || lastGroup != groupName {
-				group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
-				lastGroup = groupName
-				sr.Groups = append(sr.Groups, group)
+				if lastGroup == "" || lastGroup != groupName {
+					group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
+					lastGroup = groupName
+					sr.Groups = append(sr.Groups, group)
+				}
 			}
 
 			group.Items = append(group.Items, media)
@@ -88,6 +159,7 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	}
 
 	return sr, nil
+
 }
 
 func groupName(media *common.Media) string {

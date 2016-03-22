@@ -28,7 +28,7 @@ type ExifForDirectory struct {
 	Exif      []*common.ExifOutput
 }
 
-const numConsumers = 4
+const numConsumers = 8
 
 var queue = make(chan *ExifForDirectory, numConsumers)
 var waitGroup sync.WaitGroup
@@ -138,8 +138,13 @@ func exifForFile(exifForDirectory *ExifForDirectory, filename string) (*common.E
 		return nil, errors.New("No exif data available")
 	}
 
-	for _, ex := range exifForDirectory.Exif {
+	for idx, ex := range exifForDirectory.Exif {
 		if filename == path.Base(ex.SourceFile) {
+
+			exifForDirectory.Exif = append(exifForDirectory.Exif[:idx], exifForDirectory.Exif[idx+1:]...)
+			directory := path.Dir(filename)
+			delete(allDirectories, directory)
+
 			return ex, nil
 		}
 	}

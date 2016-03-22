@@ -12,13 +12,13 @@
     <center>
 
         <div *ngIf="slideInfo.mediaType == 'image'" >
-            <picture>
-                <source srcset="{{slideInfo.slideUrl}}" />
-                <img srcset="{{slideInfo.slideUrl}}" />
-            </picture>
+            <a href="{{slideInfo.mediaUrl}}">
+                <img src="{{slideInfo.slideUrl}}" />
+            </a>
         </div>
         <div *ngIf="slideInfo.mediaType == 'video'" >
-            Video gunk goes here
+            <video controls autoplay src="{{slideInfo.mediaUrl}}" poster="{{slideInfo.slideUrl}}" >
+            </video>
         </div>
 
         <table id="slideInfo" cellspacing=5 >

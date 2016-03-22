@@ -13,7 +13,7 @@
 
 <div *ngIf="searchResults != null">
   <br>
-  <h2 class="search-results" *ngIf="searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'!</h2>
+  <h2 class="search-results" *ngIf="searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'</h2>
   <h2 class="search-results" *ngIf="searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
   <h2 class="search-results" *ngIf="searchResults.resultCount != searchResults.totalMatches" >Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items</h2>
 

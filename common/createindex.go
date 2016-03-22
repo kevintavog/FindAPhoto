@@ -201,7 +201,26 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 			              "index": "not_analyzed"
 			            }
 					  }
+					},
+					"statename" : {
+					  "type" : "string",
+			          "fields": {
+			            "value": { 
+			              "type":  "string",
+			              "index": "not_analyzed"
+			            }
+					  }
+					},
+					"cityname" : {
+					  "type" : "string",
+			          "fields": {
+			            "value": { 
+			              "type":  "string",
+			              "index": "not_analyzed"
+			            }
+					  }
 					}
+
 				}
 			}
 		}

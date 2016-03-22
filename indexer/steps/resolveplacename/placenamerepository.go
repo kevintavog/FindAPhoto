@@ -72,3 +72,42 @@ func generateQueryParameter(latitudeString, longitudeString string, digitsToUse 
 func databasePath() string {
 	return path.Join(common.LocationCacheDirectory, "location.cache.db")
 }
+
+func getRecords(offset, count int) (map[string]string, error) {
+
+	result := map[string]string{}
+
+	db, err := sql.Open("sqlite3", databasePath())
+	if err != nil {
+		return result, err
+	}
+	defer db.Close()
+
+	statement, err := db.Prepare("SELECT geoLocation,fullPlacename FROM LocationCache LIMIT ? OFFSET ?")
+	if err != nil {
+		return result, err
+	}
+	defer statement.Close()
+
+	rows, err := statement.Query(count, offset)
+	if err != nil {
+		return result, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var latLon, placename string
+		err = rows.Scan(&latLon, &placename)
+		if err != nil {
+			return result, err
+		}
+
+		result[latLon] = placename
+	}
+	err = rows.Err()
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
