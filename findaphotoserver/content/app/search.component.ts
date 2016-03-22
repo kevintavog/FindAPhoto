@@ -19,6 +19,7 @@ export class SearchComponent implements OnInit {
     private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 30
 
+    showSearch: boolean
     serverError: string
     searchRequest: SearchRequest;
     searchResults: SearchResults;
@@ -33,6 +34,7 @@ export class SearchComponent implements OnInit {
     private _location: Location) { }
 
   ngOnInit() {
+    this.showSearch = true
     let searchText = this._routeParams.get("q")
     if (!searchText) {
         searchText = ""

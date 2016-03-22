@@ -10,7 +10,13 @@ export class SearchService {
 
   search(request: SearchRequest) {
       var url = "/api/search?q=" + request.searchText + "&properties=" + request.properties + "&first=" + request.first + "&count=" + request.pageCount
+      return this._http.get(url)
+                  .map(response => response.json())
+                  .catch(this.handleError);
+  }
 
+  today(month: number, day: number, properties: string) {
+      var url = "/api/by-day?month=" + month + "&day=" + day + "&properties=" + properties
       return this._http.get(url)
                   .map(response => response.json())
                   .catch(this.handleError);

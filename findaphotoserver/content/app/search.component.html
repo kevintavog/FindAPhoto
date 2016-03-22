@@ -1,9 +1,13 @@
-<div class="container">
+<div class="container" *ngIf="showSearch == true">
   <form>
       <label for="search-text">Find a photo:</label>
       <input type="text" class="searchinput" [(ngModel)]="searchRequest.searchText" ngControl="searchText" >
       <button type="submit" class="btn btn-default" (click)="userSearch()">Search</button>
   </form>
+</div>
+
+<div *ngIf="pageMessage != undefined" >
+    <h2 class="page-message">{{pageMessage}}</h2>
 </div>
 
 <div *ngIf="serverError != undefined" >
@@ -13,9 +17,9 @@
 
 <div *ngIf="searchResults != null">
   <br>
-  <h2 class="search-results" *ngIf="searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'</h2>
-  <h2 class="search-results" *ngIf="searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
-  <h2 class="search-results" *ngIf="searchResults.resultCount != searchResults.totalMatches" >Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items</h2>
+  <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'</h2>
+  <h2 class="search-results" *ngIf="showSearch == true && searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
+  <h2 class="search-results" *ngIf="showSearch == true && searchResults.resultCount != searchResults.totalMatches" >Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items</h2>
 
   <div id="paging" *ngIf="totalPages > 1" >
       <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>

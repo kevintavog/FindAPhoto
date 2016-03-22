@@ -39,6 +39,12 @@ type ByDayOptions struct {
 	Count      int
 }
 
+const (
+	GroupByAll = iota
+	GroupByPath
+	GroupByDate
+)
+
 //-------------------------------------------------------------------------------------------------
 func NewSearchOptions(query string) *SearchOptions {
 	return &SearchOptions{
@@ -67,7 +73,7 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	}
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
-	return invokeSearch(search, false)
+	return invokeSearch(search, GroupByPath)
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -90,7 +96,7 @@ func (no *NearbyOptions) Search() (*SearchResult, error) {
 	search.Query(elastic.NewGeoDistanceQuery("location").Lat(no.Latitude).Lon(no.Longitude).Distance(no.Distance))
 	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
 
-	return invokeSearch(search, true)
+	return invokeSearch(search, GroupByAll)
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -113,11 +119,11 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 	search.Query(elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth)))
 	search.Sort("datetime", false)
 
-	return invokeSearch(search, true)
+	return invokeSearch(search, GroupByDate)
 }
 
 //-------------------------------------------------------------------------------------------------
-func invokeSearch(search *elastic.SearchService, singleGroup bool) (*SearchResult, error) {
+func invokeSearch(search *elastic.SearchService, groupBy int) (*SearchResult, error) {
 	result, err := search.Do()
 	if err != nil {
 		return nil, err
@@ -129,13 +135,6 @@ func invokeSearch(search *elastic.SearchService, singleGroup bool) (*SearchResul
 		sr.Groups = []*SearchGroup{}
 		var group *SearchGroup
 
-		if singleGroup {
-			tempName := "all"
-			lastGroup = tempName
-			group = &SearchGroup{Name: tempName, Items: []*common.Media{}}
-			sr.Groups = append(sr.Groups, group)
-		}
-
 		for _, hit := range result.Hits.Hits {
 			media := &common.Media{}
 			err := json.Unmarshal(*hit.Source, media)
@@ -143,14 +142,12 @@ func invokeSearch(search *elastic.SearchService, singleGroup bool) (*SearchResul
 				return nil, err
 			}
 
-			if !singleGroup {
-				groupName := groupName(media)
+			groupName := groupName(media, groupBy)
 
-				if lastGroup == "" || lastGroup != groupName {
-					group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
-					lastGroup = groupName
-					sr.Groups = append(sr.Groups, group)
-				}
+			if lastGroup == "" || lastGroup != groupName {
+				group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
+				lastGroup = groupName
+				sr.Groups = append(sr.Groups, group)
 			}
 
 			group.Items = append(group.Items, media)
@@ -162,12 +159,21 @@ func invokeSearch(search *elastic.SearchService, singleGroup bool) (*SearchResul
 
 }
 
-func groupName(media *common.Media) string {
-	// Skip to first '\', take up to last '\'
-	components := strings.Split(media.Path, "\\")
+func groupName(media *common.Media, groupBy int) string {
+	switch groupBy {
+	case GroupByAll:
+		return "all"
 
-	if len(components) > 2 {
-		return strings.Join(components[1:len(components)-1], "\\")
+	case GroupByPath:
+		// Skip to first '\', take up to last '\'
+		components := strings.Split(media.Path, "\\")
+
+		if len(components) > 2 {
+			return strings.Join(components[1:len(components)-1], "\\")
+		}
+
+	case GroupByDate:
+		return media.DateTime.Format("2006-01-02")
 	}
 	return ""
 }

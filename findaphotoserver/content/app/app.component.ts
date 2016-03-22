@@ -6,6 +6,7 @@ import { HTTP_PROVIDERS } from 'angular2/http'
 import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';
 import { SlideComponent } from './slide.component';
+import { TodayComponent } from './today.component';
 
 @Component({
   selector: 'find-a-photo',
@@ -35,7 +36,13 @@ import { SlideComponent } from './slide.component';
     path: '/slide/:id',
     name: 'Slide',
     component: SlideComponent
+  },
+  {
+    path: '/today',
+    name: 'Today',
+    component: TodayComponent
   }
+
 ])
 
 export class AppComponent {
