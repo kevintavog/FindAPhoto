@@ -1,6 +1,6 @@
 import { SearchRequest } from './search-request';
 import { Injectable } from 'angular2/core';
-import { Http, RequestOptionsArgs, Response, Headers } from 'angular2/http'
+import { Http, RequestOptionsArgs, Response, Headers, ResponseType } from 'angular2/http'
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
 
@@ -23,13 +23,15 @@ export class SearchService {
   }
 
   private handleError(response: Response) {
-      console.error("Server returned an error: ", response.statusText, ": ", response.text())
+      if (response.type == ResponseType.Error) {
+          return Observable.throw("Server not accessible");
+      }
 
       let error = response.json()
       if (!error) {
-          return Observable.throw(response.text());
+          return Observable.throw("The server returned: " + response.text());
       }
 
-      return Observable.throw(error.errorCode + "; " + error.errorMessage);
+      return Observable.throw("The server failed with: " + error.errorCode + "; " + error.errorMessage);
   }
 }

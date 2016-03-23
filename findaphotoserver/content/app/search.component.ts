@@ -104,7 +104,7 @@ export class SearchComponent implements OnInit {
 
               if (updateUrl) { this.updateUrl() }
           },
-          error => this.serverError = "The server returned an error: " + error
+          error => this.serverError = error
      );
   }
 }
