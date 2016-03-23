@@ -1,6 +1,8 @@
 package generatethumbnail
 
 import (
+	"image"
+	"image/jpeg"
 	"os"
 	"os/exec"
 	"path"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/ian-kent/go-log/log"
+	"github.com/nfnt/resize"
 	"github.com/twinj/uuid"
 )
 
@@ -26,7 +29,7 @@ type ThumbnailInfo struct {
 	MimeType    string
 }
 
-const numConsumers = 2
+const numConsumers = 4
 const thumbnailMaxHeightDimension = 170
 
 var queue = make(chan *ThumbnailInfo, numConsumers)
@@ -86,7 +89,8 @@ func dequeue() {
 }
 
 func generateImage(fullPath, thumbPath string) {
-	if resize(fullPath, thumbPath) != nil {
+	if resizeWithNfnt(fullPath, thumbPath) != nil {
+		//	if resizeWithImaging(fullPath, thumbPath) != nil {
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
 		atomic.AddInt64(&GeneratedImage, 1)
@@ -117,14 +121,15 @@ func generateVideo(fullPath, thumbPath string) {
 		}
 	}
 
-	if resize(tmpFilename, thumbPath) != nil {
+	//	if resizeWithImaging(tmpFilename, thumbPath) != nil {
+	if resizeWithNfnt(tmpFilename, thumbPath) != nil {
 		atomic.AddInt64(&FailedVideo, 1)
 	} else {
 		atomic.AddInt64(&GeneratedVideo, 1)
 	}
 }
 
-func resize(imageFilename, thumbFilename string) error {
+func resizeWithImaging(imageFilename, thumbFilename string) error {
 	image, err := imaging.Open(imageFilename)
 	if err != nil {
 		log.Error("Unable to open '%s': %s", imageFilename, err.Error())
@@ -137,6 +142,30 @@ func resize(imageFilename, thumbFilename string) error {
 		log.Error("Unable to save to '%s': %s", thumbFilename, err.Error())
 		return err
 	}
+
+	return nil
+}
+
+func resizeWithNfnt(imageFilename, thumbFilename string) error {
+	file, err := os.Open(imageFilename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	image, _, err := image.Decode(file)
+	if err != nil {
+		return err
+	}
+
+	thumb := resize.Resize(0, thumbnailMaxHeightDimension, image, resize.NearestNeighbor)
+	out, err := os.Create(thumbFilename)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	jpeg.Encode(out, thumb, &jpeg.Options{Quality: 85})
 
 	return nil
 }

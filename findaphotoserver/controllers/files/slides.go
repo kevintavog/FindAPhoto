@@ -2,13 +2,17 @@ package files
 
 import (
 	"bytes"
+	"image"
+	"image/jpeg"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/disintegration/imaging"
 	"github.com/go-playground/lars"
+	"github.com/nfnt/resize"
 	"gopkg.in/olivere/elastic.v3"
 
 	"github.com/kevintavog/findaphoto/common"
@@ -71,7 +75,8 @@ func Slides(c lars.Context) {
 			return
 		}
 
-		buffer, err := resize(slideFilename)
+		//		buffer, err := resizeImaging(slideFilename)
+		buffer, err := resizeWithNfnt(slideFilename)
 		if err != nil {
 			fc.Error(http.StatusInternalServerError, "failedSlideGeneration", "", err)
 			return
@@ -81,7 +86,7 @@ func Slides(c lars.Context) {
 	})
 }
 
-func resize(imageFilename string) (bytes.Buffer, error) {
+func resizeImaging(imageFilename string) (bytes.Buffer, error) {
 	var buffer bytes.Buffer
 
 	image, err := imaging.Open(imageFilename)
@@ -94,6 +99,26 @@ func resize(imageFilename string) (bytes.Buffer, error) {
 	if err != nil {
 		return buffer, err
 	}
+
+	return buffer, nil
+}
+
+func resizeWithNfnt(imageFilename string) (bytes.Buffer, error) {
+	var buffer bytes.Buffer
+
+	file, err := os.Open(imageFilename)
+	if err != nil {
+		return buffer, err
+	}
+	defer file.Close()
+
+	image, _, err := image.Decode(file)
+	if err != nil {
+		return buffer, err
+	}
+
+	slideImage := resize.Resize(0, slideMaxHeightDimension, image, resize.NearestNeighbor)
+	jpeg.Encode(&buffer, slideImage, &jpeg.Options{Quality: 85})
 
 	return buffer, nil
 }
