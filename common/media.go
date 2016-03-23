@@ -103,9 +103,10 @@ type ExifOutput struct {
 }
 
 type ExifOutputFile struct {
-	MIMEType    string
-	ImageHeight int
-	ImageWidth  int
+	MIMEType       string
+	ImageHeight    int
+	ImageWidth     int
+	FileModifyDate string
 }
 
 type ExifOutputExif struct {

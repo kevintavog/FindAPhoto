@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -195,9 +194,24 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 
 	if dateTime.IsZero() {
 		candidate.AddWarning("No usable date in EXIF, using file timestamp")
-		fileInfo, fiErr := os.Stat(candidate.FullPath)
-		if fiErr == nil {
-			dateTime = time.Unix(int64(fileInfo.ModTime().Second()), int64(fileInfo.ModTime().Nanosecond()))
+		dateTime, err = time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.File.FileModifyDate)
+		if err != nil {
+			candidate.AddWarning(fmt.Sprintf(
+				"Failed parsing File.FileModifyDate '%s': %s (in %s)", candidate.Exif.File.FileModifyDate, err.Error(), candidate.FullPath))
+		}
+	}
+
+	if candidate.Exif.File.FileModifyDate != "" {
+		fileModifyDateTime, err := time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.File.FileModifyDate)
+		if err != nil {
+			candidate.AddWarning(fmt.Sprintf(
+				"Failed parsing File.FileModifyDate '%s': %s (in %s)", candidate.Exif.File.FileModifyDate, err.Error(), candidate.FullPath))
+		} else {
+			// Allow a small amount of difference to account for somefile systems (FAT) that have poor timestamp granularity
+			if math.Abs(fileModifyDateTime.Sub(dateTime).Seconds()) > 2 {
+				candidate.AddWarning(fmt.Sprintf(
+					"File modify date does not match media date (%q - %q)", fileModifyDateTime, dateTime))
+			}
 		}
 	}
 

@@ -47,8 +47,8 @@
     </center>
 
     <div *ngIf="slideInfo.warnings != undefined">
-        <ol *ngFor="#warning of slideInfo.warnings">
-            <li>{{warning}}</li>
+        <ol>
+            <li *ngFor="#warning of slideInfo.warnings">{{warning}}</li>
         </ol>
     </div>
 
