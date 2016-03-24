@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/disintegration/imaging"
 	"github.com/go-playground/lars"
 	"github.com/nfnt/resize"
 	"gopkg.in/olivere/elastic.v3"
@@ -75,8 +74,7 @@ func Slides(c lars.Context) {
 			return
 		}
 
-		//		buffer, err := resizeImaging(slideFilename)
-		buffer, err := resizeWithNfnt(slideFilename)
+		buffer, err := generateSlide(slideFilename)
 		if err != nil {
 			fc.Error(http.StatusInternalServerError, "failedSlideGeneration", "", err)
 			return
@@ -86,24 +84,7 @@ func Slides(c lars.Context) {
 	})
 }
 
-func resizeImaging(imageFilename string) (bytes.Buffer, error) {
-	var buffer bytes.Buffer
-
-	image, err := imaging.Open(imageFilename)
-	if err != nil {
-		return buffer, err
-	}
-
-	slideImage := imaging.Resize(image, 0, slideMaxHeightDimension, imaging.Box)
-	err = imaging.Encode(&buffer, slideImage, imaging.JPEG)
-	if err != nil {
-		return buffer, err
-	}
-
-	return buffer, nil
-}
-
-func resizeWithNfnt(imageFilename string) (bytes.Buffer, error) {
+func generateSlide(imageFilename string) (bytes.Buffer, error) {
 	var buffer bytes.Buffer
 
 	file, err := os.Open(imageFilename)

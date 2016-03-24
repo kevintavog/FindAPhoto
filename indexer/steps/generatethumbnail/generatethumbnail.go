@@ -12,7 +12,6 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 
-	"github.com/disintegration/imaging"
 	"github.com/ian-kent/go-log/log"
 	"github.com/nfnt/resize"
 	"github.com/twinj/uuid"
@@ -89,7 +88,7 @@ func dequeue() {
 }
 
 func generateImage(fullPath, thumbPath string) {
-	if resizeWithNfnt(fullPath, thumbPath) != nil {
+	if createThumbnail(fullPath, thumbPath) != nil {
 		//	if resizeWithImaging(fullPath, thumbPath) != nil {
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
@@ -122,31 +121,14 @@ func generateVideo(fullPath, thumbPath string) {
 	}
 
 	//	if resizeWithImaging(tmpFilename, thumbPath) != nil {
-	if resizeWithNfnt(tmpFilename, thumbPath) != nil {
+	if createThumbnail(tmpFilename, thumbPath) != nil {
 		atomic.AddInt64(&FailedVideo, 1)
 	} else {
 		atomic.AddInt64(&GeneratedVideo, 1)
 	}
 }
 
-func resizeWithImaging(imageFilename, thumbFilename string) error {
-	image, err := imaging.Open(imageFilename)
-	if err != nil {
-		log.Error("Unable to open '%s': %s", imageFilename, err.Error())
-		return err
-	}
-
-	thumbImage := imaging.Resize(image, 0, thumbnailMaxHeightDimension, imaging.Lanczos)
-	err = imaging.Save(thumbImage, thumbFilename)
-	if err != nil {
-		log.Error("Unable to save to '%s': %s", thumbFilename, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func resizeWithNfnt(imageFilename, thumbFilename string) error {
+func createThumbnail(imageFilename, thumbFilename string) error {
 	file, err := os.Open(imageFilename)
 	if err != nil {
 		return err
