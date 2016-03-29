@@ -21,6 +21,7 @@ var GeneratedImage int64
 var FailedImage int64
 var GeneratedVideo int64
 var FailedVideo int64
+var ThumbnailsCreated int64
 
 type ThumbnailInfo struct {
 	FullPath    string
@@ -90,6 +91,11 @@ func dequeue() {
 			generateImage(thumbnailInfo.FullPath, thumbPath)
 		default:
 			log.Error("Unhandled mediaType: %s (%s) for %s", thumbnailInfo.MimeType, mediaType, thumbnailInfo.FullPath)
+		}
+
+		atomic.AddInt64(&ThumbnailsCreated, 1)
+		if ThumbnailsCreated%500 == 0 {
+			log.Error("Generated thumbnail %d [%s]", ThumbnailsCreated, thumbnailInfo.FullPath)
 		}
 	}
 }
