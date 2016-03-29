@@ -39,7 +39,7 @@ func Start() {
 	queue = make(chan *ThumbnailInfo, 10000)
 	waitGroup.Add(numConsumers)
 
-	log.Info("Thumbnail generate using %d consumers", numConsumers)
+	log.Info("Thumbnail generation using %d consumers", numConsumers)
 	for idx := 0; idx < numConsumers; idx++ {
 		go func() {
 			dequeue()
@@ -98,12 +98,11 @@ func dequeue() {
 		runtime.ReadMemStats(&memStats)
 		if lastHeapSys != (memStats.HeapSys / 1024) {
 			lastHeapSys = memStats.HeapSys / 1024
-			log.Info("%d from OS; %d in use; %d idle; %d num objects; %d released (%s)",
+			log.Info("Heap info: %d from OS; %d in use; %d idle; %d objects (%s)",
 				memStats.HeapSys/1024,
 				memStats.HeapInuse/1024,
 				memStats.HeapIdle/1024,
 				memStats.HeapObjects,
-				memStats.HeapReleased/1024,
 				thumbPath)
 		}
 	}
