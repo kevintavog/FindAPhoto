@@ -1,3 +1,7 @@
+a{color: green;}
+a:visited{
+    color:green;
+}
 .selected {
   background-color: #CFD8DC !important;
   color: #000;

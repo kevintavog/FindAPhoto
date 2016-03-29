@@ -1,6 +1,6 @@
 <div class="container" *ngIf="showSearch == true">
   <form>
-      <label for="search-text">Find a photo:</label>
+      <a [routerLink]="['Search']"> Find A Photo:</a>
       <input type="text" class="searchinput" [(ngModel)]="searchRequest.searchText" ngControl="searchText" >
       <button type="submit" class="btn btn-default" (click)="userSearch()">Search</button>
   </form>
@@ -49,7 +49,7 @@
                 <td> {{item.city}}  </td>
             </tr>
             <tr>
-                <td> {{item.createdDate | DateStringToLocaleDatePipe }} </td>
+                <td> {{item.createdDate | DateStringToLocaleDatePipe:'dateOnly' }} </td>
                 <td> {{item.keywords}} </td>
             </tr>
         </table>
