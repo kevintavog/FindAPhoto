@@ -67,9 +67,9 @@ func main() {
 }
 
 func emitStats(seconds float64) {
-	filesPerSecond := int64(float64(scanner.SupportedFilesFound) / seconds)
+	filesPerSecond := float64(scanner.SupportedFilesFound) / seconds
 
-	log.Info("[%01.3f seconds, %d files/second], Scanned %d folders and %d files, found %d supported files.",
+	log.Info("[%01.3f seconds, %01.2f files/second], Scanned %d folders and %d files, found %d supported files.",
 		seconds, filesPerSecond,
 		scanner.DirectoriesScanned, scanner.FilesScanned, scanner.SupportedFilesFound)
 

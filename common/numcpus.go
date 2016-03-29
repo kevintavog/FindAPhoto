@@ -1,6 +1,7 @@
 package common
 
 import (
+	"math"
 	"runtime"
 )
 
@@ -9,9 +10,22 @@ func NumCpus() int {
 }
 
 func RatioNumCpus(divisor int) int {
-	numCpus := NumCpus() / divisor
-	if numCpus < 1 {
+	cpus := NumCpus() / divisor
+	extra := math.Mod(float64(NumCpus()), float64(divisor))
+	if extra > 0.1 {
+		cpus += 1
+	}
+
+	if cpus < 1 {
 		return 1
 	}
-	return numCpus
+	return cpus
+}
+
+func MaxCpus(desired int) int {
+	numCpus := NumCpus()
+	if numCpus < desired {
+		return numCpus
+	}
+	return desired
 }

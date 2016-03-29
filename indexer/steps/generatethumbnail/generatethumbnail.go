@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -35,7 +34,7 @@ var queue chan *ThumbnailInfo
 var waitGroup sync.WaitGroup
 
 func Start() {
-	numConsumers := common.RatioNumCpus(4)
+	numConsumers := common.MaxCpus(common.RatioNumCpus(2))
 	queue = make(chan *ThumbnailInfo, 10000)
 	waitGroup.Add(numConsumers)
 
@@ -69,7 +68,6 @@ func dequeue() {
 	var mediaType []string
 	var thumbPath string
 	var err error
-	var lastHeapSys uint64
 
 	for thumbnailInfo := range queue {
 		mediaType = strings.Split(thumbnailInfo.MimeType, "/")
@@ -92,18 +90,6 @@ func dequeue() {
 			generateImage(thumbnailInfo.FullPath, thumbPath)
 		default:
 			log.Error("Unhandled mediaType: %s (%s) for %s", thumbnailInfo.MimeType, mediaType, thumbnailInfo.FullPath)
-		}
-
-		var memStats runtime.MemStats
-		runtime.ReadMemStats(&memStats)
-		if lastHeapSys != (memStats.HeapSys / 1024) {
-			lastHeapSys = memStats.HeapSys / 1024
-			log.Info("Heap info: %d from OS; %d in use; %d idle; %d objects (%s)",
-				memStats.HeapSys/1024,
-				memStats.HeapInuse/1024,
-				memStats.HeapIdle/1024,
-				memStats.HeapObjects,
-				thumbPath)
 		}
 	}
 }
@@ -132,7 +118,7 @@ func generateVideo(fullPath, thumbPath string) {
 	}
 
 	if exists, _ := common.PathExists(tmpFilename); !exists {
-		// The video may not be long enough to grab a frame at the 1 second point...
+		// The video may not be long enough to grab a frame at the 1 second...
 		out, err = exec.Command(common.FfmpegPath, "-i", fullPath, "-ss", "00:00:00.0", "-vframes", "1", tmpFilename).Output()
 		if err != nil {
 			atomic.AddInt64(&FailedVideo, 1)
