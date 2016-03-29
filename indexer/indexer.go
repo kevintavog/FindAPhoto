@@ -1,7 +1,9 @@
 package main
 
 import (
-	"flag"
+	"fmt"
+	_ "net/http"
+	_ "net/http/pprof"
 	"os"
 	"runtime"
 	"time"
@@ -19,15 +21,14 @@ import (
 	"github.com/jawher/mow.cli"
 	"gopkg.in/olivere/elastic.v3"
 
-	"runtime/pprof"
+	_ "runtime/pprof"
 )
 
-var memprofile = flag.String("memprofile", "", "write memory profile to this file")
-
 func main() {
-	runtime.GOMAXPROCS(4)
 	common.InitDirectories("FindAPhoto")
 	common.ConfigureLogging(common.LogDirectory, "findaphotoindexer")
+
+	// go http.ListenAndServe(":8080", nil)
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
 	app.Spec = "-p -s -a -o -k [-i]"
@@ -38,14 +39,17 @@ func main() {
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
 	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
 	app.Action = func() {
+
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 
-		log.Info("%s: FindAPhoto scanning %s, alias=%s) and indexing to %s/%s",
+		log.Info("%s: FindAPhoto scanning %s, alias=%s) and indexing to %s/%s; using %d/%d CPU's",
 			time.Now().Format("2006-01-02"),
 			*scanPath,
 			*alias,
 			*server,
-			common.MediaIndexName)
+			common.MediaIndexName,
+			runtime.NumCPU(),
+			runtime.GOMAXPROCS(0))
 		log.Info("Using %s to resolve locations to placename", *openStreetMapServer)
 
 		common.ElasticSearchServer = *server
@@ -58,16 +62,6 @@ func main() {
 		scanner.Scan(*scanPath, *alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)
-
-		if *memprofile != "" {
-			log.Info("Emitting memory dump to %v", *memprofile)
-			f, err := os.Create(*memprofile)
-			if err != nil {
-				log.Fatal(err)
-			}
-			pprof.WriteHeapProfile(f)
-			f.Close()
-		}
 	}
 
 	app.Run(os.Args)

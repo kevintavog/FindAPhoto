@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -28,14 +29,17 @@ type ThumbnailInfo struct {
 	MimeType    string
 }
 
-const numConsumers = 4
 const thumbnailMaxHeightDimension = 170
 
-var queue = make(chan *ThumbnailInfo, numConsumers)
+var queue chan *ThumbnailInfo
 var waitGroup sync.WaitGroup
 
 func Start() {
+	numConsumers := common.RatioNumCpus(4)
+	queue = make(chan *ThumbnailInfo, 10000)
 	waitGroup.Add(numConsumers)
+
+	log.Info("Thumbnail generate using %d consumers", numConsumers)
 	for idx := 0; idx < numConsumers; idx++ {
 		go func() {
 			dequeue()
@@ -62,15 +66,20 @@ func Enqueue(fullPath, aliasedPath, mimeType string) {
 }
 
 func dequeue() {
+	var mediaType []string
+	var thumbPath string
+	var err error
+	var lastHeapSys uint64
+
 	for thumbnailInfo := range queue {
-		var mediaType = strings.Split(thumbnailInfo.MimeType, "/")
-		thumbPath := common.ToThumbPath(thumbnailInfo.AliasedPath)
+		mediaType = strings.Split(thumbnailInfo.MimeType, "/")
+		thumbPath = common.ToThumbPath(thumbnailInfo.AliasedPath)
 		if len(mediaType) < 1 {
 			log.Error("Invalid media type: '%s' for %s", thumbnailInfo.MimeType, thumbnailInfo.FullPath)
 			continue
 		}
 
-		err := common.CreateDirectory(path.Dir(thumbPath))
+		err = common.CreateDirectory(path.Dir(thumbPath))
 		if err != nil {
 			log.Error("Unable to create directory for '%s'", thumbPath)
 			continue
@@ -84,12 +93,24 @@ func dequeue() {
 		default:
 			log.Error("Unhandled mediaType: %s (%s) for %s", thumbnailInfo.MimeType, mediaType, thumbnailInfo.FullPath)
 		}
+
+		var memStats runtime.MemStats
+		runtime.ReadMemStats(&memStats)
+		if lastHeapSys != (memStats.HeapSys / 1024) {
+			lastHeapSys = memStats.HeapSys / 1024
+			log.Info("%d from OS; %d in use; %d idle; %d num objects; %d released (%s)",
+				memStats.HeapSys/1024,
+				memStats.HeapInuse/1024,
+				memStats.HeapIdle/1024,
+				memStats.HeapObjects,
+				memStats.HeapReleased/1024,
+				thumbPath)
+		}
 	}
 }
 
 func generateImage(fullPath, thumbPath string) {
 	if createThumbnail(fullPath, thumbPath) != nil {
-		//	if resizeWithImaging(fullPath, thumbPath) != nil {
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
 		atomic.AddInt64(&GeneratedImage, 1)
@@ -141,13 +162,12 @@ func createThumbnail(imageFilename, thumbFilename string) error {
 	}
 
 	thumb := resize.Resize(0, thumbnailMaxHeightDimension, image, resize.NearestNeighbor)
-	out, err := os.Create(thumbFilename)
+	savedThumbnailFile, err := os.Create(thumbFilename)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer savedThumbnailFile.Close()
 
-	jpeg.Encode(out, thumb, &jpeg.Options{Quality: 85})
-
+	jpeg.Encode(savedThumbnailFile, thumb, &jpeg.Options{Quality: 85})
 	return nil
 }
