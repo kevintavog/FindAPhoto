@@ -34,7 +34,7 @@ var queue chan *ThumbnailInfo
 var waitGroup sync.WaitGroup
 
 func Start() {
-	numConsumers := common.MaxCpus(common.RatioNumCpus(2))
+	numConsumers := common.NumCpus()
 	queue = make(chan *ThumbnailInfo, 10000)
 	waitGroup.Add(numConsumers)
 

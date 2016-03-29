@@ -31,7 +31,7 @@ func main() {
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
 	app.Spec = "-p -s -a -o -k [-i]"
-	indexPrefix := app.StringOpt("i", "", "The prefix for the index")
+	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development)")
 	alias := app.StringOpt("a alias", "", "The alias (prefix) to use for the path")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")

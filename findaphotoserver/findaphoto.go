@@ -23,18 +23,18 @@ func main() {
 
 	app := cli.App("findaphotoserver", "The FindAPhoto server")
 	app.Spec = "[-d]"
-	debugMode := app.BoolOpt("d", false, "Debug mode (hit <enter> to exit, listen on a different port, use a different index)")
-	app.Action = func() { run(*debugMode) }
+	developmentMode := app.BoolOpt("d", false, "Development mode (hit <enter> to exit, listen on a different port, use a different index)")
+	app.Action = func() { run(*developmentMode) }
 
 	app.Run(os.Args)
 }
 
-func run(debugMode bool) {
+func run(devolopmentMode bool) {
 	listenPort := 2000
 	easyExit := false
 
-	if debugMode {
-		fmt.Println("Using debug mode")
+	if devolopmentMode {
+		fmt.Println("Using development mode")
 		common.MediaIndexName = "dev-" + common.MediaIndexName
 		listenPort = 5000
 		easyExit = true
