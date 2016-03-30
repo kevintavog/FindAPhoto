@@ -1,7 +1,7 @@
 package common
 
 import (
-	"math"
+	"fmt"
 	"runtime"
 )
 
@@ -9,9 +9,14 @@ func NumCpus() int {
 	return runtime.GOMAXPROCS(0)
 }
 
-func RatioNumCpus(divisor int) int {
-	cpus := NumCpus() / divisor
-	extra := math.Mod(float64(NumCpus()), float64(divisor))
+func RatioNumCpus(factor float32) int {
+	if factor <= 0 || factor > 1 {
+		panic(fmt.Sprintf("'factor' must be > 0 & <= 1 (%f)", factor))
+	}
+	
+	floatCpus := float32(NumCpus()) * factor
+	cpus := int(floatCpus)
+	extra := floatCpus - float32(cpus)
 	if extra > 0.1 {
 		cpus += 1
 	}
