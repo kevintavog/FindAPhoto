@@ -143,6 +143,9 @@ func exifForFile(exifForDirectory *ExifForDirectory, filename string) (*common.E
 
 			exifForDirectory.Exif = append(exifForDirectory.Exif[:idx], exifForDirectory.Exif[idx+1:]...)
 			directory := path.Dir(filename)
+
+			allLock.Lock()
+			defer allLock.Unlock()
 			delete(allDirectories, directory)
 
 			return ex, nil
