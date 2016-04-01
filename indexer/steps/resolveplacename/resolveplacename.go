@@ -113,7 +113,7 @@ func lookupInCache(media *common.Media) bool {
 		return false
 	}
 	if !jsonPlacename.Exists(("address")) {
-		log.Warn("Unable to find address in '%q'", jsonPlacename)
+		log.Warn("Unable to find cached address in '%q'", jsonPlacename)
 		return false
 	}
 
@@ -174,6 +174,12 @@ func placenameFromText(media *common.Media, blob []byte) {
 	if json.Exists("error") {
 		atomic.AddInt64(&ServerErrors, 1)
 		addWarning(media, fmt.Sprintf("Reverse lookup returned an error: %s", json.Path("error").Data().(string)))
+		return
+	}
+
+	if json.Exists("apiStatusCode") {
+		atomic.AddInt64(&ServerErrors, 1)
+		addWarning(media, fmt.Sprintf("Reverse lookup failed: %s", json.Path("apiStatusCode").Data().(string), json.Path("apiMessage").Data().(string)))
 		return
 	}
 
