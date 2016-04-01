@@ -62,13 +62,14 @@ type Media struct {
 	Location GeoPoint `json:"location,omitempty"`
 
 	// Placename, from the reverse coding of the location
-	LocationCountryName      string `json:"countryname,omitempty"`
-	LocationCountryCode      string `json:"countrycode,omitempty"`
-	LocationStateName        string `json:"statename,omitempty"`
-	LocationCityName         string `json:"cityname,omitempty"`
-	LocationSiteName         string `json:"sitename,omitempty"`
-	LocationPlaceName        string `json:"placename,omitempty"`
-	LocationHierarchicalName string `json:"hierarchicalname,omitempty"`
+	LocationCountryName          string `json:"countryname,omitempty"`
+	LocationCountryCode          string `json:"countrycode,omitempty"`
+	LocationStateName            string `json:"statename,omitempty"`
+	LocationCityName             string `json:"cityname,omitempty"`
+	LocationSiteName             string `json:"sitename,omitempty"`
+	LocationPlaceName            string `json:"placename,omitempty"`
+	LocationHierarchicalName     string `json:"hierarchicalname,omitempty"`
+	CachedLocationDistanceMeters int    `json:"cachedlocationdistancemeters,omitempty"` // # of meters away from stored location the placename came from (due to using caching server)
 
 	// Date related fields
 	DateTime  time.Time `json:"datetime"`  // 2009-06-15T13:45:30.0000000-07:00 'round trip pattern'

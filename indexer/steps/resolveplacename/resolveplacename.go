@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -22,6 +23,7 @@ var ServerErrors int64
 
 var OpenStreetMapUrl = ""
 var OpenStreetMapKey = ""
+var CachedLocationsUrl = ""
 
 const numConsumers = 8
 
@@ -56,8 +58,9 @@ func Enqueue(media *common.Media) {
 
 func dequeue() {
 	for media := range queue {
-		lookupInCache(media)
-		//		resolvePlacename(media)
+		if !lookupInCache(media) {
+			resolvePlacename(media)
+		}
 		indexmedia.Enqueue(media)
 	}
 }
@@ -72,16 +75,62 @@ func lookupInCache(media *common.Media) bool {
 		return false
 	}
 
-	json, err := placenameFromLocalCache(media.Location.Latitude, media.Location.Longitude)
-	if err != nil {
-		addWarning(media, fmt.Sprintf("Failed looking up via cache: %v", err.Error()))
-		return false
-	}
-	if len(json) == 0 {
+	if CachedLocationsUrl == "" {
 		return false
 	}
 
-	placenameFromText(media, bytes.NewBufferString(json).Bytes())
+	url := fmt.Sprintf("%s/cache/find-nearest?lat=%f&lon=%f", CachedLocationsUrl, media.Location.Latitude, media.Location.Longitude)
+	response, err := http.Get(url)
+	if err != nil {
+		addWarning(media, fmt.Sprintf("Failed getting cached placename (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
+		return false
+	}
+	defer response.Body.Close()
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		addWarning(media, fmt.Sprintf("Failed reading body of cached location response (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
+		return false
+	}
+
+	json, err := gabs.ParseJSON(body)
+	if err != nil {
+		addWarning(media, fmt.Sprintf(
+			"Failed deserializing cached location json: %s: ('%s', %f, %f in %s)",
+			err.Error(), body, media.Location.Latitude, media.Location.Longitude, media.Path))
+		return false
+	}
+
+	if !json.Exists("matchedLocation") || !json.Exists("placename") {
+		return false
+	}
+
+	jsonPlacename, err := gabs.ParseJSON(bytes.NewBufferString(json.Path("placename").Data().(string)).Bytes())
+	if err != nil {
+		addWarning(media, fmt.Sprintf(
+			"Failed deserializing cached location placename: %s: ('%s', %f, %f in %s)",
+			err.Error(), json.Path("placename").Data().(string), media.Location.Latitude, media.Location.Longitude, media.Path))
+		return false
+	}
+	if !jsonPlacename.Exists(("address")) {
+		log.Warn("Unable to find address in '%q'", jsonPlacename)
+		return false
+	}
+
+	lat, ok := json.Path("matchedLocation.latitude").Data().(float64)
+	if !ok {
+		log.Warn("Can't find latitude in '%q'", json)
+		return false
+	}
+	lon, ok := json.Path("matchedLocation.longitude").Data().(float64)
+	if !ok {
+		log.Warn("Can't find longitude")
+		return false
+	}
+
+	atomic.AddInt64(&PlacenameLookups, 1)
+	media.CachedLocationDistanceMeters = int(calcDistance(media.Location.Latitude, media.Location.Longitude, lat, lon))
+	generatePlacename(media, jsonPlacename.Path("address"))
 	return true
 }
 
@@ -136,4 +185,36 @@ func placenameFromText(media *common.Media, blob []byte) {
 
 	address := json.Path("address")
 	generatePlacename(media, address)
+}
+
+//// FROM https://gist.github.com/cdipaolo/d3f8db3848278b49db68
+
+// haversin(θ) function
+func hsin(theta float64) float64 {
+	return math.Pow(math.Sin(theta/2), 2)
+}
+
+// Distance function returns the distance (in meters) between two points of
+//     a given longitude and latitude relatively accurately (using a spherical
+//     approximation of the Earth) through the Haversin Distance Formula for
+//     great arc distance on a sphere with accuracy for small distances
+//
+// point coordinates are supplied in degrees and converted into rad. in the func
+//
+// distance returned is METERS!!!!!!
+// http://en.wikipedia.org/wiki/Haversine_formula
+func calcDistance(lat1, lon1, lat2, lon2 float64) float64 {
+	// convert to radians
+	var la1, lo1, la2, lo2, r float64
+	la1 = lat1 * math.Pi / 180
+	lo1 = lon1 * math.Pi / 180
+	la2 = lat2 * math.Pi / 180
+	lo2 = lon2 * math.Pi / 180
+
+	r = 6378100 // Earth radius in METERS
+
+	// calculate
+	h := hsin(la2-la1) + math.Cos(la1)*math.Cos(la2)*hsin(lo2-lo1)
+
+	return 2 * r * math.Asin(math.Sqrt(h))
 }

@@ -30,12 +30,13 @@ func main() {
 	// go http.ListenAndServe(":8080", nil)
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -a -o -k [-i]"
-	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development)")
+	app.Spec = "-p -s -a -o -k [-i] [-c]"
+	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	alias := app.StringOpt("a alias", "", "The alias (prefix) to use for the path")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
+	cachedLocationsServer := app.StringOpt("c", "", "The URL for the cached location server (optional)")
 	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
 	app.Action = func() {
 
@@ -54,6 +55,7 @@ func main() {
 		common.ElasticSearchServer = *server
 		resolveplacename.OpenStreetMapUrl = *openStreetMapServer
 		resolveplacename.OpenStreetMapKey = *key
+		resolveplacename.CachedLocationsUrl = *cachedLocationsServer
 
 		checkServerAndIndex()
 
