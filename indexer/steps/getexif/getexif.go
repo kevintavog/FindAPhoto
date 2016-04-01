@@ -142,11 +142,13 @@ func exifForFile(exifForDirectory *ExifForDirectory, filename string) (*common.E
 		if filename == path.Base(ex.SourceFile) {
 
 			exifForDirectory.Exif = append(exifForDirectory.Exif[:idx], exifForDirectory.Exif[idx+1:]...)
-			directory := path.Dir(filename)
+			//			directory := path.Dir(filename)
 
-			allLock.Lock()
-			defer allLock.Unlock()
-			delete(allDirectories, directory)
+			// Locking here is likely a poor idea - there's a lock on 'exifForDirectory', so a deadlock is quite possible
+			//			allLock.Lock()
+			//			defer allLock.Unlock()
+			//			log.Warn("Deleting directory fomr allDirectories: %v", directory)
+			//			delete(allDirectories, directory)
 
 			return ex, nil
 		}
