@@ -77,8 +77,8 @@ func dequeue() {
 		candidateFile.Signature = signature
 
 		atomic.AddInt64(&ChecksMade, 1)
-		if ChecksMade%500 == 0 {
-			log.Error("Checking [%d] for %s", ChecksMade, candidateFile.AliasedPath)
+		if ChecksMade%1000 == 0 {
+			log.Info("Checking [%d] for %s", ChecksMade, candidateFile.AliasedPath)
 		}
 
 		termQuery := elastic.NewTermQuery("_id", candidateFile.AliasedPath)

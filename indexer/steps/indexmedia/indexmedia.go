@@ -68,8 +68,8 @@ func dequeue() {
 			log.Warn("Updated %s", media.Path)
 		}
 
-		if IndexedFiles%500 == 0 {
-			log.Error("Indexed [%d] for %s", IndexedFiles, media.Path)
+		if IndexedFiles%1000 == 0 {
+			log.Info("Indexed [%d] for %s", IndexedFiles, media.Path)
 		}
 	}
 }
