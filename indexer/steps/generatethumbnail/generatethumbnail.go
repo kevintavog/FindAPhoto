@@ -102,7 +102,7 @@ func dequeue() {
 
 func generateImage(fullPath, thumbPath string) {
 	if err := createThumbnail(fullPath, thumbPath); err != nil {
-		log.Error("Failed thumbnail generation: %s", err.Error())
+		log.Error("Failed thumbnail generation on %s: %s", fullPath, err.Error())
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
 		atomic.AddInt64(&GeneratedImage, 1)
@@ -134,6 +134,7 @@ func generateVideo(fullPath, thumbPath string) {
 	}
 
 	if err := createThumbnail(tmpFilename, thumbPath); err != nil {
+		log.Error("Failed thumbnail generation on %s: %s", tmpFilename, err.Error())
 		atomic.AddInt64(&FailedVideo, 1)
 	} else {
 		atomic.AddInt64(&GeneratedVideo, 1)
