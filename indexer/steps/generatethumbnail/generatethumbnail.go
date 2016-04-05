@@ -101,7 +101,8 @@ func dequeue() {
 }
 
 func generateImage(fullPath, thumbPath string) {
-	if createThumbnail(fullPath, thumbPath) != nil {
+	if err := createThumbnail(fullPath, thumbPath); err != nil {
+		log.Error("Failed thumbnail generation: %s", err.Error())
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
 		atomic.AddInt64(&GeneratedImage, 1)
@@ -124,7 +125,7 @@ func generateVideo(fullPath, thumbPath string) {
 	}
 
 	if exists, _ := common.PathExists(tmpFilename); !exists {
-		// The video may not be long enough to grab a frame at the 1 second...
+		// The video may not be long enough to grab a frame at the 1 second, so try the first frame
 		out, err = exec.Command(common.FfmpegPath, "-i", fullPath, "-ss", "00:00:00.0", "-vframes", "1", tmpFilename).Output()
 		if err != nil {
 			atomic.AddInt64(&FailedVideo, 1)
@@ -132,8 +133,7 @@ func generateVideo(fullPath, thumbPath string) {
 		}
 	}
 
-	//	if resizeWithImaging(tmpFilename, thumbPath) != nil {
-	if createThumbnail(tmpFilename, thumbPath) != nil {
+	if err := createThumbnail(tmpFilename, thumbPath); err != nil {
 		atomic.AddInt64(&FailedVideo, 1)
 	} else {
 		atomic.AddInt64(&GeneratedVideo, 1)
