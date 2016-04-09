@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"encoding/json"
@@ -25,12 +26,18 @@ type SearchResult struct {
 
 type SearchGroup struct {
 	Name  string
-	Items []*common.Media
+	Items []*MediaHit
+}
+
+type MediaHit struct {
+	Media      *common.Media
+	DistanceKm *float64
 }
 
 type NearbyOptions struct {
 	Latitude, Longitude float64
 	Distance            string
+	MaxCount            int
 }
 
 type ByDayOptions struct {
@@ -44,6 +51,11 @@ const (
 	GroupByPath
 	GroupByDate
 )
+
+//-------------------------------------------------------------------------------------------------
+
+// Each search may return specific fields
+type mappingAction func(searchHit *elastic.SearchHit, mediaHit *MediaHit)
 
 //-------------------------------------------------------------------------------------------------
 func NewSearchOptions(query string) *SearchOptions {
@@ -73,7 +85,7 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	}
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
-	return invokeSearch(search, GroupByPath)
+	return invokeSearch(search, GroupByPath, nil)
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -91,12 +103,22 @@ func (no *NearbyOptions) Search() (*SearchResult, error) {
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true).
-		Size(10)
+		Size(no.MaxCount)
 
 	search.Query(elastic.NewGeoDistanceQuery("location").Lat(no.Latitude).Lon(no.Longitude).Distance(no.Distance))
 	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
 
-	return invokeSearch(search, GroupByAll)
+	return invokeSearch(search, GroupByAll, func(searchHit *elastic.SearchHit, mediaHit *MediaHit) {
+
+		// For the geo sort, the returned sort value is the distance from the given point, in kilometers
+		if len(searchHit.Sort) > 0 {
+			first := searchHit.Sort[0]
+			if reflect.TypeOf(first).Name() == "float64" {
+				v := first.(float64)
+				mediaHit.DistanceKm = &v
+			}
+		}
+	})
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -119,11 +141,11 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 	search.Query(elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth)))
 	search.Sort("datetime", false)
 
-	return invokeSearch(search, GroupByDate)
+	return invokeSearch(search, GroupByDate, nil)
 }
 
 //-------------------------------------------------------------------------------------------------
-func invokeSearch(search *elastic.SearchService, groupBy int) (*SearchResult, error) {
+func invokeSearch(search *elastic.SearchService, groupBy int, extraMapping mappingAction) (*SearchResult, error) {
 	result, err := search.Do()
 	if err != nil {
 		return nil, err
@@ -136,21 +158,25 @@ func invokeSearch(search *elastic.SearchService, groupBy int) (*SearchResult, er
 		var group *SearchGroup
 
 		for _, hit := range result.Hits.Hits {
-			media := &common.Media{}
-			err := json.Unmarshal(*hit.Source, media)
+			mh := &MediaHit{Media: &common.Media{}}
+			err := json.Unmarshal(*hit.Source, mh.Media)
 			if err != nil {
 				return nil, err
 			}
 
-			groupName := groupName(media, groupBy)
+			if extraMapping != nil {
+				extraMapping(hit, mh)
+			}
+
+			groupName := groupName(mh.Media, groupBy)
 
 			if lastGroup == "" || lastGroup != groupName {
-				group = &SearchGroup{Name: groupName, Items: []*common.Media{}}
+				group = &SearchGroup{Name: groupName, Items: []*MediaHit{}}
 				lastGroup = groupName
 				sr.Groups = append(sr.Groups, group)
 			}
 
-			group.Items = append(group.Items, media)
+			group.Items = append(group.Items, mh)
 			sr.ResultCount += 1
 		}
 	}

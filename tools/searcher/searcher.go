@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
@@ -26,7 +28,8 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewTermQuery("path.raw", "1\\2001\\PDRM0300.JPG") // Search for a given path (can use _id instead...)
 	//	query := elastic.NewGeoDistanceQuery("location").Lat(47.60863888888889).Lon(-122.43516666666666).Distance("7km")
 
-	sort := elastic.NewGeoDistanceSort("location").Point(47.608638, -122.43516).Order(false).Unit("km")
+	//	sort := elastic.NewGeoDistanceSort("location").Point(47.608638, -122.43516).Unit("km")
+	sort := elastic.NewGeoDistanceSort("location").Point(55.804175, -43.584820).Unit("km")
 	//	hasSort = true
 
 	//	query := elastic.NewTermQuery("path", "2005") // 'path' is analyzed, so partial matches work
@@ -34,18 +37,17 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewQueryStringQuery("path:2005 AND filename:100*") // A direct query, as typed in - good for adhoc/from or from search box in UI
 	//	query := elastic.NewRangeQuery("datetime").Gte("2014/01/01").Lte("2014/12/31").Format("yyyy/MM/dd")
 	//	query := elastic.NewWildcardQuery("date", "20140*")
-	query := elastic.NewWildcardQuery("date", "*0904") // All matches on a given month/day, across all years
+	//	query := elastic.NewWildcardQuery("date", "*0904") // All matches on a given month/day, across all years
 	//	query := elastic.NewQueryStringQuery("monthname:august") // string query is analyzed, so can find 'Sep' and 'sep'
 	//	query := elastic.NewQueryStringQuery("filename:DSCN3380")
 	//	query := elastic.NewQueryStringQuery("DSCN3380").Field("path").Field("monthname").Field("dayname").Field("keyword").Field("placename")
 	//	query := elastic.NewQueryStringQuery("mural").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
-	//	query := elastic.NewWildcardQuery("date", "*0220") // All matches for a given day
 
 	//	query := addDateRangeQuery(search)
 
 	//	query := elastic.NewQueryStringQuery("cityname:Seattle")
-	//	query := elastic.NewMatchAllQuery()
+	query := elastic.NewMatchAllQuery()
 	//	query = nil
 
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
@@ -99,13 +101,13 @@ func main() {
 	client := common.CreateClient()
 
 	search := client.Search().
-		Index("dev-" + common.MediaIndexName).
-		//		Index(common.MediaIndexName).
+		//		Index("dev-" + common.MediaIndexName).
+		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true)
 
 	addQuery(search)
-	addAggregate(search)
+	//	addAggregate(search)
 
 	searchStartTime := time.Now()
 
@@ -126,6 +128,8 @@ func main() {
 				log.Error("Failed deserializing search result: %s", err.Error())
 			} else {
 				log.Info("  %d: %#v", index+1, media)
+
+				log.Info("Sort info: %s; score: %d", sortToString(hit.Sort), hit.Score)
 			}
 		}
 
@@ -134,6 +138,21 @@ func main() {
 			emitAggregations(&searchResult.Aggregations, "")
 		}
 	}
+}
+
+func sortToString(sortArray []interface{}) string {
+	values := []string{}
+	for _, item := range sortArray {
+		switch item.(type) {
+		case float64:
+			n := item.(float64)
+			values = append(values, strconv.FormatFloat(n, 'f', -1, 64))
+		}
+
+	}
+
+	return strings.Join(values, ", ")
+	//	return fmt.Sprintf("%#v", sortArray)
 }
 
 func emitAggregations(aggs *elastic.Aggregations, prefix string) {

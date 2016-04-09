@@ -36,7 +36,9 @@ func populateNearbyOptions(fc *applicationglobals.FpContext) *search.NearbyOptio
 
 	lat := float64FromQuery(fc.Ctx, "lat")
 	lon := float64FromQuery(fc.Ctx, "lon")
-	nearbyOptions := search.NewNearbyOptions(lat, lon, "10km")
+	// The intent of this api is to return the top few closest items - even if they're on the other side of the world
+	nearbyOptions := search.NewNearbyOptions(lat, lon, "13000km")
+	nearbyOptions.MaxCount = intFromQuery(fc.Ctx, "count", 5)
 
 	return nearbyOptions
 }

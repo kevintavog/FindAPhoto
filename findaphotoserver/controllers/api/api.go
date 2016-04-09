@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-playground/lars"
 
-	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
@@ -47,6 +46,9 @@ func handleErrors(c lars.Context) {
 	defer func() {
 		if r := recover(); r != nil {
 			if ie, ok := r.(*InternalError); ok {
+				buf := make([]byte, 1<<16)
+				stackSize := runtime.Stack(buf, false)
+				fc.AppContext.FieldLogger.Add("stack", string(buf[0:stackSize]))
 				fc.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
 			} else if ir, ok := r.(*InvalidRequest); ok {
 				fc.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
@@ -110,55 +112,57 @@ func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) int
 	return list
 }
 
-func filteredItems(items []*common.Media, propertiesFilter []string) interface{} {
+func filteredItems(items []*search.MediaHit, propertiesFilter []string) interface{} {
 
 	list := make([]map[string]interface{}, len(items))
 
-	for mediaIndex, media := range items {
+	for mediaIndex, mh := range items {
 		listItem := make(map[string]interface{})
 		list[mediaIndex] = listItem
 		for _, prop := range propertiesFilter {
-			listItem[prop] = property(prop, media)
+			listItem[prop] = property(prop, mh)
 		}
 	}
 
 	return list
 }
 
-func property(name string, media *common.Media) interface{} {
+func property(name string, mh *search.MediaHit) interface{} {
 	switch strings.ToLower(name) {
 	case "city":
-		return media.LocationCityName
+		return mh.Media.LocationCityName
 	case "createddate":
-		return media.DateTime
+		return mh.Media.DateTime
+	case "distancekm":
+		return mh.DistanceKm
 	case "id":
-		return media.Path
+		return mh.Media.Path
 	case "imagename":
-		return media.Filename
+		return mh.Media.Filename
 	case "keywords":
-		return media.Keywords
+		return mh.Media.Keywords
 	case "latitude":
-		return media.Location.Latitude
+		return mh.Media.Location.Latitude
 	case "locationdetailedname":
-		return media.LocationPlaceName
+		return mh.Media.LocationPlaceName
 	case "locationname":
-		return media.LocationHierarchicalName
+		return mh.Media.LocationHierarchicalName
 	case "longitude":
-		return media.Location.Longitude
+		return mh.Media.Location.Longitude
 	case "mediatype":
-		return media.MediaType()
+		return mh.Media.MediaType()
 	case "mediaurl":
-		return files.ToMediaUrl(media.Path)
+		return files.ToMediaUrl(mh.Media.Path)
 	case "mimetype":
-		return media.MimeType
+		return mh.Media.MimeType
 	case "path":
-		return media.Path
+		return mh.Media.Path
 	case "slideurl":
-		return files.ToSlideUrl(media.Path)
+		return files.ToSlideUrl(mh.Media.Path)
 	case "thumburl":
-		return files.ToThumbUrl(media.Path)
+		return files.ToThumbUrl(mh.Media.Path)
 	case "warnings":
-		return media.Warnings
+		return mh.Media.Warnings
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
