@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-playground/lars"
 
-	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
+	"github.com/kevintavog/findaphoto/common"
 )
 
 func ConfigureRouting(l *lars.LARS) {
@@ -30,17 +30,16 @@ func aliasedToFullPath(aliasedPath string) (string, error) {
 	}
 
 	alias := aliasedPath[0:aliasIndex]
-	for _, pathAndAlias := range configuration.Current.PathAndAliases {
-		if alias == pathAndAlias.Alias {
-			unescapedPath, err := url.QueryUnescape(aliasedPath[aliasIndex+1:])
-			if err != nil {
-				return "", errors.New("Badly escaped alias '" + aliasedPath + "'; " + err.Error())
-			}
-			return path.Join(pathAndAlias.Path, unescapedPath), nil
-		}
+	basePath, err := common.PathForAlias(alias)
+	if err != nil {
+		return "", errors.New("Can't find alias '" + alias + "'; " + err.Error())
 	}
 
-	return "", errors.New("Can't find alias '" + alias + "' from '" + aliasedPath + "'")
+	unescapedPath, err := url.QueryUnescape(aliasedPath[aliasIndex+1:])
+	if err != nil {
+		return "", errors.New("Badly escaped alias '" + aliasedPath + "'; " + err.Error())
+	}
+	return path.Join(basePath, unescapedPath), nil
 }
 
 type FileBuffer struct {

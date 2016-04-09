@@ -156,7 +156,6 @@ func invokeSearch(search *elastic.SearchService, groupBy int) (*SearchResult, er
 	}
 
 	return sr, nil
-
 }
 
 func groupName(media *common.Media, groupBy int) string {
@@ -175,5 +174,6 @@ func groupName(media *common.Media, groupBy int) string {
 	case GroupByDate:
 		return media.DateTime.Format("2006-01-02")
 	}
+
 	return ""
 }

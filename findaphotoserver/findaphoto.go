@@ -107,6 +107,11 @@ func checkElasticServerAndIndex() {
 			log.Fatal("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
 		}
 	}
+
+	err = common.InitializeAliases(client)
+	if err != nil {
+		log.Fatal("Failed initializing aliases: %s", err.Error())
+	}
 }
 
 func checkOpenMapServer() {

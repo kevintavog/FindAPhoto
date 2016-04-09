@@ -16,12 +16,7 @@ type Configuration struct {
 	ElasticSearchUrl string
 	OpenMapUrl       string
 	OpenMapKey       string
-	PathAndAliases   []PathAndAliasConfiguration
-}
-
-type PathAndAliasConfiguration struct {
-	Path  string
-	Alias string
+	Paths            []string
 }
 
 var Current Configuration
@@ -34,17 +29,15 @@ func ReadConfiguration() {
 	configFile := path.Join(configDirectory, "rangic.findaphotoService")
 	_, err := os.Stat(configFile)
 	if err != nil {
-		defaultPaths := make([]PathAndAliasConfiguration, 2)
-		defaultPaths[0].Path = "first path"
-		defaultPaths[0].Alias = "1"
-		defaultPaths[1].Path = "second path"
-		defaultPaths[1].Alias = "2"
+		defaultPaths := make([]string, 2)
+		defaultPaths[0] = "first path"
+		defaultPaths[1] = "second path"
 
 		defaults := &Configuration{
 			ElasticSearchUrl: "provideUrl",
 			OpenMapUrl:       "provideUrl",
 			OpenMapKey:       "key goes here",
-			PathAndAliases:   defaultPaths,
+			Paths:            defaultPaths,
 		}
 		json, jerr := json.Marshal(defaults)
 		if jerr != nil {

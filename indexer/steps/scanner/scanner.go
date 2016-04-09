@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/kevintavog/findaphoto/indexer/steps/checkindex"
 
@@ -29,11 +30,19 @@ var supportedFileExtensions = map[string]bool{
 func Scan(scanPath, alias string) {
 	checkindex.Start()
 
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+	go func() {
+		RemoveFiles()
+		waitGroup.Done()
+	}()
+
 	go func() {
 		scan(scanPath, alias, scanPath)
 		checkindex.Done()
 	}()
 
+	waitGroup.Wait()
 	checkindex.Wait()
 }
 

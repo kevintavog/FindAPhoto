@@ -30,9 +30,8 @@ func main() {
 	// go http.ListenAndServe(":8080", nil)
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -a -o -k [-i] [-c]"
+	app.Spec = "-p -s -o -k [-i] [-c]"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
-	alias := app.StringOpt("a alias", "", "The alias (prefix) to use for the path")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
@@ -42,10 +41,9 @@ func main() {
 
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 
-		log.Info("%s: FindAPhoto scanning %s, alias=%s) and indexing to %s/%s; using %d/%d CPU's",
+		log.Info("%s: FindAPhoto scanning %s, and indexing to %s/%s; using %d/%d CPU's",
 			time.Now().Format("2006-01-02"),
 			*scanPath,
-			*alias,
 			*server,
 			common.MediaIndexName,
 			runtime.NumCPU(),
@@ -58,9 +56,13 @@ func main() {
 		resolveplacename.CachedLocationsUrl = *cachedLocationsServer
 
 		checkServerAndIndex()
+		alias, err := common.AliasForPath(*scanPath)
+		if err != nil {
+			log.Fatalf("Unable to get alias for '%s': %s", *scanPath, err.Error())
+		}
 
 		scanStartTime := time.Now()
-		scanner.Scan(*scanPath, *alias)
+		scanner.Scan(*scanPath, alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)
 	}
@@ -87,8 +89,11 @@ func emitStats(seconds float64) {
 	log.Info("%d image thumbnails created, %d failed; %d video thumbnails created, %d failed; %d failed thumbnail checks",
 		generatethumbnail.GeneratedImage, generatethumbnail.FailedImage, generatethumbnail.GeneratedVideo, generatethumbnail.FailedVideo, checkthumbnail.FailedChecks)
 
-	log.Info("%d files indexed, %d failed and %d were added due to detected changes",
+	log.Info("%d files indexed, %d failed and %d added due to detected changes",
 		indexmedia.IndexedFiles, indexmedia.FailedIndexAttempts, indexmedia.ChangedFiles)
+
+	log.Info("%d media scanned, %d removed from the index",
+		scanner.MediaScanned, scanner.MediaRemoved)
 }
 
 func checkServerAndIndex() {
@@ -110,5 +115,10 @@ func checkServerAndIndex() {
 		if err != nil {
 			log.Fatal("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
 		}
+	}
+
+	err = common.InitializeAliases(client)
+	if err != nil {
+		log.Fatal("Failed initializing aliases: %s", err.Error())
 	}
 }
