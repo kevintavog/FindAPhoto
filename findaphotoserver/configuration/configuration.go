@@ -16,7 +16,6 @@ type Configuration struct {
 	ElasticSearchUrl string
 	OpenMapUrl       string
 	OpenMapKey       string
-	Paths            []string
 }
 
 var Current Configuration
@@ -37,7 +36,6 @@ func ReadConfiguration() {
 			ElasticSearchUrl: "provideUrl",
 			OpenMapUrl:       "provideUrl",
 			OpenMapKey:       "key goes here",
-			Paths:            defaultPaths,
 		}
 		json, jerr := json.Marshal(defaults)
 		if jerr != nil {
