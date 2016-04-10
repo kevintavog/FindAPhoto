@@ -45,12 +45,11 @@ func handleErrors(c lars.Context) {
 	fc := c.(*applicationglobals.FpContext)
 	defer func() {
 		if r := recover(); r != nil {
+			logStack := true
 			if ie, ok := r.(*InternalError); ok {
-				buf := make([]byte, 1<<16)
-				stackSize := runtime.Stack(buf, false)
-				fc.AppContext.FieldLogger.Add("stack", string(buf[0:stackSize]))
 				fc.Error(http.StatusInternalServerError, "InternalError", ie.Error(), ie.err)
 			} else if ir, ok := r.(*InvalidRequest); ok {
+				logStack = false
 				fc.Error(http.StatusBadRequest, "InvalidRequest", ir.Error(), ir.err)
 			} else if e, ok := r.(runtime.Error); ok {
 				fc.Error(http.StatusInternalServerError, "UnhandledError", "", e)
@@ -58,6 +57,12 @@ func handleErrors(c lars.Context) {
 				fc.Error(http.StatusInternalServerError, "UnhandledError", s, nil)
 			} else {
 				fc.Error(http.StatusInternalServerError, "UnhandledError", fmt.Sprintf("%v", r), nil)
+			}
+
+			if logStack {
+				buf := make([]byte, 1<<16)
+				stackSize := runtime.Stack(buf, false)
+				fc.AppContext.FieldLogger.Add("stack", string(buf[0:stackSize]))
 			}
 		}
 	}()
@@ -120,7 +125,10 @@ func filteredItems(items []*search.MediaHit, propertiesFilter []string) interfac
 		listItem := make(map[string]interface{})
 		list[mediaIndex] = listItem
 		for _, prop := range propertiesFilter {
-			listItem[prop] = property(prop, mh)
+			v := property(prop, mh)
+			if v != nil {
+				listItem[prop] = v
+			}
 		}
 	}
 
@@ -134,7 +142,10 @@ func property(name string, mh *search.MediaHit) interface{} {
 	case "createddate":
 		return mh.Media.DateTime
 	case "distancekm":
-		return mh.DistanceKm
+		if mh.DistanceKm != nil {
+			return mh.DistanceKm
+		}
+		return nil
 	case "id":
 		return mh.Media.Path
 	case "imagename":
@@ -142,12 +153,24 @@ func property(name string, mh *search.MediaHit) interface{} {
 	case "keywords":
 		return mh.Media.Keywords
 	case "latitude":
+		if mh.Media.Location == nil {
+			return nil
+		}
 		return mh.Media.Location.Latitude
 	case "locationdetailedname":
+		if mh.Media.Location == nil {
+			return nil
+		}
 		return mh.Media.LocationPlaceName
 	case "locationname":
+		if mh.Media.Location == nil {
+			return nil
+		}
 		return mh.Media.LocationHierarchicalName
 	case "longitude":
+		if mh.Media.Location == nil {
+			return nil
+		}
 		return mh.Media.Location.Longitude
 	case "mediatype":
 		return mh.Media.MediaType()

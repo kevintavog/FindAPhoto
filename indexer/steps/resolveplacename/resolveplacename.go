@@ -71,6 +71,9 @@ func addWarning(media *common.Media, warning string) {
 }
 
 func lookupInCache(media *common.Media) bool {
+	if media.Location == nil {
+		return false
+	}
 	if media.Location.Latitude == 0 && media.Location.Longitude == 0 {
 		return false
 	}
@@ -135,6 +138,9 @@ func lookupInCache(media *common.Media) bool {
 }
 
 func resolvePlacename(media *common.Media) {
+	if media.Location == nil {
+		return
+	}
 	if media.Location.Latitude == 0 && media.Location.Longitude == 0 {
 		return
 	}

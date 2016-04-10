@@ -309,8 +309,7 @@ func populateWithGpsAndRef(media *common.Media, candidate *common.CandidateFile,
 		lonFloat = lonFloat * -1.0
 	}
 
-	media.Location.Latitude = latFloat
-	media.Location.Longitude = lonFloat
+	media.Location = &common.GeoPoint{Latitude: latFloat, Longitude: lonFloat}
 	return true
 }
 

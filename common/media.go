@@ -59,7 +59,7 @@ type Media struct {
 	Keywords []string `json:"keywords,omitempty"`
 
 	// Location
-	Location GeoPoint `json:"location,omitempty"`
+	Location *GeoPoint `json:"location,omitempty"`
 
 	// Placename, from the reverse coding of the location
 	LocationCountryName          string `json:"countryname,omitempty"`

@@ -2,7 +2,7 @@ import { Component, OnInit } from 'angular2/core';
 import { Router,RouteParams, ROUTER_DIRECTIVES, Location } from 'angular2/router';
 
 import { SearchRequest } from './search-request';
-import { SearchResults,SearchGroup,SearchItem } from './search-results';
+import { SearchResults, SearchGroup, SearchItem } from './search-results';
 import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';
 
@@ -55,6 +55,10 @@ export class SlideComponent implements OnInit {
     this.loadSlide()
   }
 
+  hasLocation() {
+      return this.slideInfo.longitude != undefined && this.slideInfo.latitude != undefined
+  }
+
   lonDms() {
       return this.convertToDms(this.slideInfo.longitude, ["E", "W"])
   }
@@ -96,10 +100,20 @@ export class SlideComponent implements OnInit {
   }
 
   loadNearby() {
-      this._searchService.nearby(this.slideInfo.latitude, this.slideInfo.longitude, 6, SlideComponent.NearbyProperties).subscribe(
+      if (!this.hasLocation()) { return }
+      this._searchService.nearby(this.slideInfo.latitude, this.slideInfo.longitude, 7, SlideComponent.NearbyProperties).subscribe(
           results => {
               if (results.groups.length > 0 && results.groups[0].items.length > 0) {
-                  this.nearbyResults = results.groups[0].items.filter(i => i.id != this.slideInfo.id)
+                  let items = Array<SearchItem>()
+                  let list = results.groups[0].items
+                  for (let index = 0; index < list.length && items.length < 5; ++index) {
+                      let si = list[index]
+                      if (si.id != this.slideInfo.id) {
+                          items.push(si)
+                      }
+                  }
+
+                  this.nearbyResults = items
               } else {
                   this.nearbyError = "No nearby results"
               }

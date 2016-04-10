@@ -34,7 +34,7 @@
 
             <tr>
                 <td class="tdright">Date:</td>      <td class="tdleft"> {{slideInfo.createdDate | DateStringToLocaleDatePipe }} </td>
-                <td class="tdright">Geo: </td> <td class="tdleft">
+                <td class="tdright">Geo: </td> <td *ngIf="hasLocation() == true" class="tdleft">
                     <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
                         <h3>
                         <pre>{{latDms()}}, {{lonDms()}}</pre>
