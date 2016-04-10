@@ -26,4 +26,5 @@ export interface SearchItem {
   slideUrl: string;
   thumbUrl: string;
   warnings: string[];
+  distanceKm: number;
 }

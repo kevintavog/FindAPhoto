@@ -8,16 +8,17 @@ import { SearchService } from './search.service';
 import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 
 @Component({
-  selector: 'today',
+  selector: 'byday',
   templateUrl: 'app/search.component.html',
   styleUrls:  ['app/search.component.css'],
   directives: [ROUTER_DIRECTIVES],
   pipes: [DateStringToLocaleDatePipe]
 })
 
-export class TodayComponent implements OnInit {
+export class ByDayComponent implements OnInit {
     private static QueryProperties: string = "id,city,keywords,imageName,createdDate,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 30
+    private static monthNames: string[] = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
 
     pageMessage: string
     showSearch: boolean
@@ -26,16 +27,16 @@ export class TodayComponent implements OnInit {
     searchResults: SearchResults;
     currentPage: number;
     totalPages: number;
+    activeDate: Date;
+
 
   constructor(
-    private _router: Router,
-    private _searchService: SearchService,
-    private _routeParams: RouteParams,
-    private _location: Location) { }
+    private _searchService: SearchService) { }
 
   ngOnInit() {
       this.showSearch = false
-      this.searchRequest = { searchText: "", first: 1, pageCount: TodayComponent.ItemsPerPage, properties: TodayComponent.QueryProperties }
+      this.activeDate = new Date()
+      this.searchRequest = { searchText: "", first: 1, pageCount: ByDayComponent.ItemsPerPage, properties: ByDayComponent.QueryProperties }
       this.internalSearch()
   }
 
@@ -44,12 +45,12 @@ export class TodayComponent implements OnInit {
       this.serverError = undefined
       this.pageMessage = undefined
 
-      var date = new Date()
-      this._searchService.today(date.getMonth() + 1, date.getDate(), TodayComponent.QueryProperties).subscribe(
+      this._searchService.today(this.activeDate.getMonth() + 1, this.activeDate.getDate(), ByDayComponent.QueryProperties).subscribe(
           results => {
               this.searchResults = results
+
               // DOES NOT honor locale. Nor is the month name shown
-              this.pageMessage = "Your pictures from " + (date.getMonth() + 1) + "-" + date.getDate()
+              this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
 
               let resultIndex = 0
               for (var group of this.searchResults.groups) {

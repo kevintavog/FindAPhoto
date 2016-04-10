@@ -22,6 +22,13 @@ export class SearchService {
                   .catch(this.handleError);
   }
 
+  nearby(lat: number, lon: number, count: number, properties: string) {
+      var url = "/api/nearby?lat=" + lat + "&lon=" + lon + "&count=" + count + "&properties=" + properties
+      return this._http.get(url)
+                    .map(response => response.json())
+                    .catch(this.handleError);
+  }
+
   private handleError(response: Response) {
       if (response.type == ResponseType.Error) {
           return Observable.throw("Server not accessible");

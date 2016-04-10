@@ -44,6 +44,21 @@
             </tr>
         </table>
 
+        <span *ngIf="nearbyResults != null" >
+            <figure style="display:inline-block;" *ngFor="#item of nearbyResults">
+                <img src="{{item.thumbUrl}}">
+                <figcaption *ngIf="item.distancekm == 0"> Same location</figcaption>
+                <figcaption *ngIf="item.distancekm > 0 && item.distancekm < 1.0"> Distance: {{(item.distancekm * 1000).toFixed(0)}} meters</figcaption>
+                <figcaption *ngIf="item.distancekm >= 1.0"> Distance: {{item.distancekm.toFixed(2)}} KM</figcaption>
+            </figure>
+        </span>
+
+        <div *ngIf="nearbyError != null" >
+            <br>
+            <h2 class="server-error">{{nearbyError}}</h2>
+        </div>
+
+
     </center>
 
     <div *ngIf="slideInfo.warnings != undefined">

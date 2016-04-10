@@ -25,6 +25,7 @@ interface DegreesMinutesSeconds {
 
 export class SlideComponent implements OnInit {
   private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings"
+  private static NearbyProperties: string = "id,thumbUrl,latitude,longitude,distancekm"
 
   searchRequest: SearchRequest;
   slideInfo: SearchItem;
@@ -32,6 +33,9 @@ export class SlideComponent implements OnInit {
   totalSearchMatches: number;
   searchPage: number;
   error: string;
+  nearbyResults: SearchItem[];
+  nearbyError: string;
+
 
   constructor(
     private _router: Router,
@@ -81,12 +85,28 @@ export class SlideComponent implements OnInit {
           if (results.groups.length > 0 && results.groups[0].items.length > 0) {
               this.slideInfo = results.groups[0].items[0]
               this.totalSearchMatches = results.totalMatches
+
+              this.loadNearby()
           } else {
               this.error = "The slide cannot be found"
           }
       },
       error => this.error = "The server returned an error: " + error
     );
+  }
+
+  loadNearby() {
+      this._searchService.nearby(this.slideInfo.latitude, this.slideInfo.longitude, 6, SlideComponent.NearbyProperties).subscribe(
+          results => {
+              if (results.groups.length > 0 && results.groups[0].items.length > 0) {
+                  this.nearbyResults = results.groups[0].items.filter(i => i.id != this.slideInfo.id)
+              } else {
+                  this.nearbyError = "No nearby results"
+              }
+          },
+          error => this.nearbyError = "The server returned an error: " + error
+      )
+
   }
 
   convertToDms(degrees: number, refValues: string[]) : string {
