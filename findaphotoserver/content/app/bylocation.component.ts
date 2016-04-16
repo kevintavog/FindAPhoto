@@ -46,8 +46,6 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
           results => {
               this.searchResults = results
 
-console.log("by location search has a total result count of: " + this.searchResults.totalMatches + " - " + this.searchResults.resultCount)
-
               let resultIndex = 0
               for (var group of this.searchResults.groups) {
                   group.resultIndex = resultIndex

@@ -48,8 +48,6 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
           results => {
               this.searchResults = results
 
-console.log("by day search has a total result count of: " + this.searchResults.totalMatches + " - " + this.searchResults.resultCount)
-
               // DOES NOT honor locale...
               this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
 

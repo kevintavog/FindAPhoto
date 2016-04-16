@@ -1,6 +1,7 @@
 import { Component, OnInit } from 'angular2/core';
 import { Router,RouteParams, ROUTER_DIRECTIVES, Location } from 'angular2/router';
 
+import { BaseComponent } from './base.component';
 import { SearchRequest } from './search-request';
 import { SearchResults, SearchGroup, SearchItem } from './search-results';
 import { SearchService } from './search.service';
@@ -24,7 +25,7 @@ interface DegreesMinutesSeconds {
   inputs: ['slideId']
 })
 
-export class SlideComponent implements OnInit {
+export class SlideComponent extends BaseComponent implements OnInit {
   private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings"
   private static NearbyProperties: string = "id,thumbUrl,latitude,longitude,distancekm"
 
@@ -43,7 +44,7 @@ export class SlideComponent implements OnInit {
     private _routeParams: RouteParams,
     private _searchService: SearchService,
     private _location: Location,
-    private _searchRequestBuilder: SearchRequestBuilder) { }
+    private _searchRequestBuilder: SearchRequestBuilder) { super() }
 
   ngOnInit() {
     this.slideInfo = undefined

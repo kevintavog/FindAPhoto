@@ -46,10 +46,18 @@
             </colgroup>
             <tr>
                 <td> {{item.imageName}} </td>
-                <td> {{item.city}}  </td>
+                <td>
+                    <a [routerLink]="['ByLocation', { id:item.id, lat:item.latitude, lon:item.longitude }]">
+                        {{item.city}}
+                    </a>
+                </td>
             </tr>
             <tr>
-                <td> {{item.createdDate | DateStringToLocaleDatePipe:'dateOnly' }} </td>
+                <td>
+                    <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
+                        {{item.createdDate | DateStringToLocaleDatePipe:'dateOnly' }}
+                    </a>
+                </td>
                 <td> {{item.keywords}} </td>
             </tr>
         </table>

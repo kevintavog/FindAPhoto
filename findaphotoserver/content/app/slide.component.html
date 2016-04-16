@@ -33,7 +33,11 @@
             </tr>
 
             <tr>
-                <td class="tdright">Date:</td>      <td class="tdleft"> {{slideInfo.createdDate | DateStringToLocaleDatePipe }} </td>
+                <td class="tdright">Date:</td>      <td class="tdleft">
+                    <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
+                        {{slideInfo.createdDate | DateStringToLocaleDatePipe }}
+                    </a>
+                </td>
                 <td class="tdright">Geo: </td> <td *ngIf="hasLocation() == true" class="tdleft">
                     <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
                         <h3>
@@ -46,7 +50,12 @@
 
         <span *ngIf="nearbyResults != null" >
             <figure style="display:inline-block;" *ngFor="#item of nearbyResults">
-                <img src="{{item.thumbUrl}}">
+                <div id="thumbnail">
+                    <a [routerLink]="['ByLocation', { lat:item.latitude, lon:item.longitude }]">
+                        <img src="{{item.thumbUrl}}">
+                    </a>
+                </div>
+
                 <figcaption *ngIf="item.distancekm == 0"> Same location</figcaption>
                 <figcaption *ngIf="item.distancekm > 0 && item.distancekm < 1.0"> Distance: {{(item.distancekm * 1000).toFixed(0)}} meters</figcaption>
                 <figcaption *ngIf="item.distancekm >= 1.0"> Distance: {{item.distancekm.toFixed(2)}} KM</figcaption>
