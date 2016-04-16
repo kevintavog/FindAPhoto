@@ -10,18 +10,15 @@ import { SearchRequestBuilder } from './search.request.builder';
 import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 
 @Component({
-  selector: 'byday',
+  selector: 'bylocation',
   templateUrl: 'app/search.component.html',
   styleUrls:  ['app/search.component.css'],
   directives: [ROUTER_DIRECTIVES],
   pipes: [DateStringToLocaleDatePipe]
 })
 
-export class ByDayComponent extends BaseSearchComponent implements OnInit {
-    private static monthNames: string[] = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
-
+export class ByLocationComponent extends BaseSearchComponent implements OnInit {
     pageMessage: string
-    activeDate: Date;
 
 
     constructor(
@@ -34,8 +31,9 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
 
     ngOnInit() {
         this.showSearch = false
-        this.initializeSearchRequest('d')
-        this.activeDate = new Date(2016, this.searchRequest.month - 1, this.searchRequest.day, 0, 0, 0, 0)
+        this.initializeSearchRequest('l')
+
+        // If location not specified, use the browser location (if user allows)
         this.internalSearch()
     }
 
@@ -48,10 +46,7 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
           results => {
               this.searchResults = results
 
-console.log("by day search has a total result count of: " + this.searchResults.totalMatches + " - " + this.searchResults.resultCount)
-
-              // DOES NOT honor locale...
-              this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+console.log("by location search has a total result count of: " + this.searchResults.totalMatches + " - " + this.searchResults.resultCount)
 
               let resultIndex = 0
               for (var group of this.searchResults.groups) {

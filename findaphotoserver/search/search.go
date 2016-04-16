@@ -38,11 +38,14 @@ type NearbyOptions struct {
 	Latitude, Longitude float64
 	Distance            string
 	MaxCount            int
+	Index               int
+	Count               int
 }
 
 type ByDayOptions struct {
 	Month      int
 	DayOfMonth int
+	Index      int
 	Count      int
 }
 
@@ -94,6 +97,8 @@ func NewNearbyOptions(lat, lon float64, distance string) *NearbyOptions {
 		Latitude:  lat,
 		Longitude: lon,
 		Distance:  distance,
+		Index:     0,
+		Count:     20,
 	}
 }
 
@@ -107,6 +112,7 @@ func (no *NearbyOptions) Search() (*SearchResult, error) {
 
 	search.Query(elastic.NewGeoDistanceQuery("location").Lat(no.Latitude).Lon(no.Longitude).Distance(no.Distance))
 	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
+	search.From(no.Index).Size(no.Count)
 
 	return invokeSearch(search, GroupByAll, func(searchHit *elastic.SearchHit, mediaHit *MediaHit) {
 
@@ -126,7 +132,8 @@ func NewByDayOptions(month, dayOfMonth int) *ByDayOptions {
 	return &ByDayOptions{
 		Month:      month,
 		DayOfMonth: dayOfMonth,
-		Count:      25,
+		Index:      0,
+		Count:      20,
 	}
 }
 
@@ -139,7 +146,7 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 		Size(bdo.Count)
 
 	search.Query(elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth)))
-	search.Sort("datetime", false)
+	search.From(bdo.Index).Size(bdo.Count).Sort("datetime", false)
 
 	return invokeSearch(search, GroupByDate, nil)
 }

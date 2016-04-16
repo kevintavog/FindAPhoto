@@ -35,7 +35,7 @@
     <p>
     <div id="singleimage" *ngFor="#item of group.items; #imageIndex = index">
         <div id="thumbnail">
-            <a [routerLink]="['Slide', {id: item.id, q:searchRequest.searchText, i:imageIndex + group.resultIndex + searchRequest.first}]">
+            <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
                 <img src="{{item.thumbUrl}}">
             </a>
         </div>

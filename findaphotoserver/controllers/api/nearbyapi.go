@@ -40,5 +40,12 @@ func populateNearbyOptions(fc *applicationglobals.FpContext) *search.NearbyOptio
 	nearbyOptions := search.NewNearbyOptions(lat, lon, "13000km")
 	nearbyOptions.MaxCount = intFromQuery(fc.Ctx, "count", 5)
 
+	nearbyOptions.Count = intFromQuery(fc.Ctx, "count", nearbyOptions.Count)
+	if nearbyOptions.Count < 1 || nearbyOptions.Count > 100 {
+		panic(&InvalidRequest{message: "count must be between 1 and 100, inclusive"})
+	}
+
+	nearbyOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
+
 	return nearbyOptions
 }

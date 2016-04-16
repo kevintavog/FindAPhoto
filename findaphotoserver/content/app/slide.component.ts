@@ -4,7 +4,8 @@ import { Router,RouteParams, ROUTER_DIRECTIVES, Location } from 'angular2/router
 import { SearchRequest } from './search-request';
 import { SearchResults, SearchGroup, SearchItem } from './search-results';
 import { SearchService } from './search.service';
-import { SearchComponent } from './search.component';
+import { BaseSearchComponent } from './base.search.component';
+import { SearchRequestBuilder } from './search.request.builder';
 
 import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 
@@ -41,17 +42,15 @@ export class SlideComponent implements OnInit {
     private _router: Router,
     private _routeParams: RouteParams,
     private _searchService: SearchService,
-    private _location: Location) { }
+    private _location: Location,
+    private _searchRequestBuilder: SearchRequestBuilder) { }
 
   ngOnInit() {
     this.slideInfo = undefined
     this.error = undefined
 
     let slideId = this._routeParams.get('id');
-
-    this.searchRequest = { searchText: "", first: 1, pageCount: 1, properties: SlideComponent.QueryProperties };
-    this.searchRequest.searchText = this._routeParams.get('q');
-    this.searchRequest.first = +this._routeParams.get('i');
+    this.searchRequest = this._searchRequestBuilder.createRequest(this._routeParams, 1, SlideComponent.QueryProperties, 's')
     this.loadSlide()
   }
 
@@ -83,7 +82,7 @@ export class SlideComponent implements OnInit {
 
   loadSlide() {
     this.slideIndex = this.searchRequest.first
-    this.searchPage = (1 + (this.searchRequest.first / SearchComponent.ItemsPerPage)) | 0
+    this.searchPage = (1 + (this.searchRequest.first / BaseSearchComponent.ItemsPerPage)) | 0
     this._searchService.search(this.searchRequest).subscribe(
       results => {
           if (results.groups.length > 0 && results.groups[0].items.length > 0) {
@@ -101,7 +100,7 @@ export class SlideComponent implements OnInit {
 
   loadNearby() {
       if (!this.hasLocation()) { return }
-      this._searchService.nearby(this.slideInfo.latitude, this.slideInfo.longitude, 7, SlideComponent.NearbyProperties).subscribe(
+      this._searchService.searchByLocation(this.slideInfo.latitude, this.slideInfo.longitude, SlideComponent.NearbyProperties, 1, 7).subscribe(
           results => {
               if (results.groups.length > 0 && results.groups[0].items.length > 0) {
                   let items = Array<SearchItem>()

@@ -5,8 +5,10 @@ import { HTTP_PROVIDERS } from 'angular2/http'
 
 import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';
+import { SearchRequestBuilder } from './search.request.builder';
 import { SlideComponent } from './slide.component';
 import { ByDayComponent } from './byday.component';
+import { ByLocationComponent } from './bylocation.component';
 
 @Component({
   selector: 'find-a-photo',
@@ -21,6 +23,7 @@ import { ByDayComponent } from './byday.component';
     ROUTER_PROVIDERS,
     HTTP_PROVIDERS,
     SearchService,
+    SearchRequestBuilder,
     provide(LocationStrategy, {useClass: HashLocationStrategy})
   ]
 })
@@ -41,6 +44,11 @@ import { ByDayComponent } from './byday.component';
     path: '/byday',
     name: 'ByDay',
     component: ByDayComponent
+  },
+  {
+    path: '/byloc',
+    name: 'ByLocation',
+    component: ByLocationComponent
   }
 
 ])
