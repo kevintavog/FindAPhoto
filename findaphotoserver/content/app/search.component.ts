@@ -22,12 +22,12 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
     constructor(
         private _router: Router,
-        private _searchService: SearchService,
+        searchService: SearchService,
         routeParams: RouteParams,
-        private _location: Location,
+        location: Location,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super(routeParams, searchRequestBuilder)
+        super("/search", routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {
@@ -49,47 +49,8 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
       this.internalSearch(true)
   }
 
-  previousPage() {
-      if (this.currentPage > 1) {
-          let zeroBasedPage = this.currentPage - 1
-          this.searchRequest.first = 1 + ((zeroBasedPage - 1) * BaseSearchComponent.ItemsPerPage)
-          this.internalSearch(true)
-      }
+  processSearchResults() {
+      this.resultsSearchText = this.searchRequest.searchText
   }
 
-  nextPage() {
-      if (this.currentPage < this.totalPages) {
-          let zeroBasedPage = this.currentPage - 1
-          this.searchRequest.first = 1 + ((zeroBasedPage + 1) * BaseSearchComponent.ItemsPerPage)
-          this.internalSearch(true)
-      }
-  }
-
-  updateUrl() {
-      this._location.go("/search", this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + "&p=" + this.currentPage)
-  }
-
-  internalSearch(updateUrl: boolean) {
-      this.searchResults = undefined
-      this.serverError = undefined
-      this._searchService.search(this.searchRequest).subscribe(
-          results => {
-              this.searchResults = results
-              this.resultsSearchText = this.searchRequest.searchText
-
-              let resultIndex = 0
-              for (var group of this.searchResults.groups) {
-                  group.resultIndex = resultIndex
-                  resultIndex += group.items.length
-              }
-
-              let pageCount = this.searchResults.totalMatches / BaseSearchComponent.ItemsPerPage
-              this.totalPages = ((pageCount) | 0) + (pageCount > Math.floor(pageCount) ? 1 : 0)
-              this.currentPage = 1 + (this.searchRequest.first / BaseSearchComponent.ItemsPerPage) | 0
-
-              if (updateUrl) { this.updateUrl() }
-          },
-          error => this.serverError = error
-     );
-  }
 }

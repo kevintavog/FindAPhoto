@@ -20,44 +20,27 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 export class ByDayComponent extends BaseSearchComponent implements OnInit {
     private static monthNames: string[] = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
 
-    pageMessage: string
     activeDate: Date;
 
 
     constructor(
         routeParams: RouteParams,
-        private _searchService: SearchService,
+        location: Location,
+        searchService: SearchService,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super(routeParams, searchRequestBuilder)
+        super("/byday", routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {
         this.showSearch = false
         this.initializeSearchRequest('d')
         this.activeDate = new Date(2016, this.searchRequest.month - 1, this.searchRequest.day, 0, 0, 0, 0)
-        this.internalSearch()
+        this.internalSearch(true)
     }
 
-    internalSearch() {
-      this.searchResults = undefined
-      this.serverError = undefined
-      this.pageMessage = undefined
-
-      this._searchService.search(this.searchRequest).subscribe(
-          results => {
-              this.searchResults = results
-
-              // DOES NOT honor locale...
-              this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
-
-              let resultIndex = 0
-              for (var group of this.searchResults.groups) {
-                  group.resultIndex = resultIndex
-                  resultIndex += group.items.length
-              }
-          },
-          error => this.serverError = "The server returned an error: " + error
-     );
-  }
+    processSearchResults() {
+          // DOES NOT honor locale...
+          this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+    }
 }

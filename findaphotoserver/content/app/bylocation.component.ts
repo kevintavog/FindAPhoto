@@ -18,15 +18,14 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 })
 
 export class ByLocationComponent extends BaseSearchComponent implements OnInit {
-    pageMessage: string
-
 
     constructor(
         routeParams: RouteParams,
-        private _searchService: SearchService,
+        location: Location,
+        searchService: SearchService,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super(routeParams, searchRequestBuilder)
+        super("/byloc", routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {
@@ -34,25 +33,9 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
         this.initializeSearchRequest('l')
 
         // If location not specified, use the browser location (if user allows)
-        this.internalSearch()
+        this.internalSearch(true)
     }
 
-    internalSearch() {
-      this.searchResults = undefined
-      this.serverError = undefined
-      this.pageMessage = undefined
-
-      this._searchService.search(this.searchRequest).subscribe(
-          results => {
-              this.searchResults = results
-
-              let resultIndex = 0
-              for (var group of this.searchResults.groups) {
-                  group.resultIndex = resultIndex
-                  resultIndex += group.items.length
-              }
-          },
-          error => this.serverError = "The server returned an error: " + error
-     );
-  }
+    processSearchResults() {
+    }
 }
