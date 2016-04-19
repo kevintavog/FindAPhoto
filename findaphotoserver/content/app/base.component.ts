@@ -1,6 +1,15 @@
 import { SearchResults,SearchGroup,SearchItem } from './search-results';
 
 export abstract class BaseComponent {
+
+    itemYear(item: SearchItem) {
+        let date = this.getItemDate(item)
+        if (date != null) {
+            return date.getFullYear()
+        }
+        return -1
+    }
+
     itemMonth(item: SearchItem) {
         let date = this.getItemDate(item)
         if (date != null) {

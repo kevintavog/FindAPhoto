@@ -47,6 +47,7 @@ type ByDayOptions struct {
 	DayOfMonth int
 	Index      int
 	Count      int
+	Random     bool
 }
 
 const (
@@ -134,6 +135,7 @@ func NewByDayOptions(month, dayOfMonth int) *ByDayOptions {
 		DayOfMonth: dayOfMonth,
 		Index:      0,
 		Count:      20,
+		Random:     false,
 	}
 }
 
@@ -143,12 +145,24 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true).
+		Size(bdo.Count).
+		From(bdo.Index).
 		Size(bdo.Count)
 
-	search.Query(elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth)))
-	search.From(bdo.Index).Size(bdo.Count).Sort("datetime", false)
+	grouping := GroupByDate
+	dateQuery := elastic.NewWildcardQuery("date", fmt.Sprintf("*%02d%02d", bdo.Month, bdo.DayOfMonth))
+	if bdo.Random {
+		grouping = GroupByAll
+		randomQuery := elastic.NewFunctionScoreQuery().
+			Query(dateQuery).
+			AddScoreFunc(elastic.NewRandomFunction())
+		search.Query(randomQuery)
+	} else {
+		search.Query(dateQuery)
+		search.Sort("datetime", false)
+	}
 
-	return invokeSearch(search, GroupByDate, nil)
+	return invokeSearch(search, grouping, nil)
 }
 
 //-------------------------------------------------------------------------------------------------

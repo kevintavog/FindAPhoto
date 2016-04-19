@@ -49,6 +49,8 @@
         </table>
 
         <span *ngIf="nearbyResults != null" >
+            <hr>
+            <div class="slideshow-extra_title">Nearby items</div>
             <figure style="display:inline-block;" *ngFor="#item of nearbyResults">
                 <div id="thumbnail">
                     <a [routerLink]="['ByLocation', { lat:item.latitude, lon:item.longitude }]">
@@ -67,6 +69,24 @@
             <h2 class="server-error">{{nearbyError}}</h2>
         </div>
 
+        <span *ngIf="sameDateResults != null" >
+            <hr>
+            <div class="slideshow-extra_title">Items with the same month & day</div>
+            <figure style="display:inline-block;" *ngFor="#item of sameDateResults">
+                <div id="thumbnail">
+                    <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
+                        <img src="{{item.thumbUrl}}">
+                    </a>
+                </div>
+
+                <figcaption> {{item.city}} ({{itemYear(item)}}) </figcaption>
+            </figure>
+        </span>
+
+        <div *ngIf="sameDateError != null" >
+            <br>
+            <h2 class="server-error">{{sameDateError}}</h2>
+        </div>
 
     </center>
 

@@ -95,6 +95,18 @@ func intFromQuery(ctx *lars.Ctx, name string, defaultValue int) int {
 	return defaultValue
 }
 
+func boolFromQuery(ctx *lars.Ctx, name string, defaultValue bool) bool {
+	s := ctx.Request().Form.Get(name)
+	if s != "" {
+		v, err := strconv.ParseBool(s)
+		if err != nil {
+			panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not an int: %s", name, s)})
+		}
+		return v
+	}
+	return defaultValue
+}
+
 func filterResults(searchResult *search.SearchResult, propertiesFilter []string) map[string]interface{} {
 
 	filtered := make(map[string]interface{})

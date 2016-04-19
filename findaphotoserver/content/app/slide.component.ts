@@ -28,6 +28,7 @@ interface DegreesMinutesSeconds {
 export class SlideComponent extends BaseComponent implements OnInit {
   private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings"
   private static NearbyProperties: string = "id,thumbUrl,latitude,longitude,distancekm"
+  private static SameDateProperties: string = "id,thumbUrl,createdDate,city"
 
   searchRequest: SearchRequest;
   slideInfo: SearchItem;
@@ -37,6 +38,8 @@ export class SlideComponent extends BaseComponent implements OnInit {
   error: string;
   nearbyResults: SearchItem[];
   nearbyError: string;
+  sameDateResults: SearchItem[];
+  sameDateError: string;
 
 
   constructor(
@@ -91,6 +94,7 @@ export class SlideComponent extends BaseComponent implements OnInit {
               this.totalSearchMatches = results.totalMatches
 
               this.loadNearby()
+              this.loadSameDate()
           } else {
               this.error = "The slide cannot be found"
           }
@@ -120,8 +124,35 @@ export class SlideComponent extends BaseComponent implements OnInit {
           },
           error => this.nearbyError = "The server returned an error: " + error
       )
+  }
+
+  loadSameDate() {
+      let month = this.itemMonth(this.slideInfo)
+      let day = this.itemDay(this.slideInfo)
+      if (month < 0 || day < 0) { return }
+
+      this._searchService.searchByDay(month, day, SlideComponent.SameDateProperties, 1, 7, true).subscribe(
+          results => {
+              if (results.groups.length > 0 && results.groups[0].items.length > 0) {
+                  let items = Array<SearchItem>()
+                  let list = results.groups[0].items
+                  for (let index = 0; index < list.length && items.length < 5; ++index) {
+                      let si = list[index]
+                      if (si.id != this.slideInfo.id) {
+                          items.push(si)
+                      }
+                  }
+
+                  this.sameDateResults = items
+              } else {
+                  this.sameDateError = "No results with the same date"
+              }
+          },
+          error => this.sameDateError = "The server returned an error: " + error
+      )
 
   }
+
 
   convertToDms(degrees: number, refValues: string[]) : string {
       var dms = this.degreesToDms(degrees)

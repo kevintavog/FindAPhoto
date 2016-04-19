@@ -13,7 +13,7 @@ export class SearchService {
             case 's':
                 return this.searchByText(request.searchText, request.properties, request.first, request.pageCount)
             case 'd':
-                return this.searchByDay(request.month, request.day, request.properties, request.first, request.pageCount)
+                return this.searchByDay(request.month, request.day, request.properties, request.first, request.pageCount, false)
             case 'l':
                 return this.searchByLocation(request.latitude, request.longitude, request.properties, request.first, request.pageCount)
         }
@@ -29,8 +29,12 @@ export class SearchService {
                   .catch(this.handleError);
   }
 
-  searchByDay(month: number, day: number, properties: string, first, pageCount: number) {
+  searchByDay(month: number, day: number, properties: string, first, pageCount: number, random: boolean) {
       var url = "/api/by-day?month=" + month + "&day=" + day + "&first=" + first + "&count=" + pageCount + "&properties=" + properties
+      if (random) {
+          url += "&random=" + random
+      }
+
       return this._http.get(url)
                   .map(response => response.json())
                   .catch(this.handleError);

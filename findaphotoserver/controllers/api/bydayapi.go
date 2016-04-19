@@ -50,6 +50,7 @@ func populateByDayOptions(fc *applicationglobals.FpContext) *search.ByDayOptions
 		panic(&InvalidRequest{message: "count must be between 1 and 100, inclusive"})
 	}
 
+	byDayOptions.Random = boolFromQuery(fc.Ctx, "random", byDayOptions.Random)
 	byDayOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
 
 	return byDayOptions

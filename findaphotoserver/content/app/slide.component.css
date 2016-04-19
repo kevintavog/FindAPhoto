@@ -34,3 +34,9 @@ a:visited{
     text-align: right;
     padding: 0px 3px 0px 5px;
 }
+.slideshow-extra_title {
+    font-size: 2em;
+    margin-top: 0;
+    padding-top: 0;
+    color: #FFF;
+}
