@@ -65,7 +65,6 @@ func dequeue() {
 		atomic.AddInt64(&IndexedFiles, 1)
 		if !response.Created {
 			atomic.AddInt64(&ChangedFiles, 1)
-			log.Warn("Updated %s", media.Path)
 		}
 
 		if IndexedFiles%1000 == 0 {

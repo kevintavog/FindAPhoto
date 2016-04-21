@@ -30,12 +30,13 @@ func main() {
 	// go http.ListenAndServe(":8080", nil)
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -o -k [-i] [-c]"
+	app.Spec = "-p -s -o -k [-i] [-c] [--reindex]"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
 	cachedLocationsServer := app.StringOpt("c", "", "The URL for the cached location server (optional)")
+	forceIndex := app.BoolOpt("reindex", false, "Force everything to be re-indexed; current index not deleted. (optional)")
 	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
 	app.Action = func() {
 
@@ -49,6 +50,11 @@ func main() {
 			runtime.NumCPU(),
 			runtime.GOMAXPROCS(0))
 		log.Info("Using %s to resolve locations to placename", *openStreetMapServer)
+
+		checkindex.ForceIndex = *forceIndex
+		if checkindex.ForceIndex {
+			log.Warn("Re-indexing all documents")
+		}
 
 		common.ElasticSearchServer = *server
 		resolveplacename.OpenStreetMapUrl = *openStreetMapServer

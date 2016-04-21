@@ -22,6 +22,8 @@ var CheckFailed int64
 var SignatureGenerationFailed int64
 var ChecksMade int64
 
+var ForceIndex bool
+
 const numConsumers = 8
 const numBytesForSignature = 20 * 1024
 
@@ -94,7 +96,7 @@ func dequeue() {
 			continue
 		}
 
-		if searchResult.TotalHits() != 1 {
+		if ForceIndex || searchResult.TotalHits() != 1 {
 			getexif.Enqueue(candidateFile)
 		} else {
 			hit := searchResult.Hits.Hits[0]
