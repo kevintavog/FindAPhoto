@@ -24,12 +24,13 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
 
 
     constructor(
+        router: Router,
         routeParams: RouteParams,
         location: Location,
         searchService: SearchService,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super("/byday", routeParams, location, searchService, searchRequestBuilder)
+        super("/byday", router, routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {
@@ -42,6 +43,6 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
 
     processSearchResults() {
           // DOES NOT honor locale...
-          this.pageMessage = "Your pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+          this.pageMessage = "Pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
     }
 }

@@ -21,13 +21,13 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
     resultsSearchText: string;
 
     constructor(
-        private _router: Router,
+        router: Router,
         searchService: SearchService,
         routeParams: RouteParams,
         location: Location,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super("/search", routeParams, location, searchService, searchRequestBuilder)
+        super("/search", router, routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {

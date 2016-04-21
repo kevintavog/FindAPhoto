@@ -15,6 +15,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     showGroup: boolean
     showDistance: boolean
 
+    locationError: string
     serverError: string
     searchRequest: SearchRequest;
     searchResults: SearchResults;
@@ -25,6 +26,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
     constructor(
         private _pageRoute: string,
+        protected _router: Router,
         protected _routeParams: RouteParams,
         private _location: Location,
         private _searchService: SearchService,
@@ -67,6 +69,24 @@ export abstract class BaseSearchComponent extends BaseComponent {
             let zeroBasedPage = this.currentPage - 1
             this.searchRequest.first = 1 + ((zeroBasedPage + 1) * BaseSearchComponent.ItemsPerPage)
             this.internalSearch(true)
+        }
+    }
+
+    searchToday() {
+        this._router.navigate( ['ByDay'] );
+    }
+
+    searchNearby() {
+        this.locationError = undefined
+
+        if (window.navigator.geolocation) {
+            window.navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this._router.navigate( ['ByLocation', { lat:position.coords.latitude, lon:position.coords.longitude }] );
+                },
+                (error) => {
+                    this.locationError = "Unable to get location: " + error.message + " (" + error.code + ")"
+                })
         }
     }
 

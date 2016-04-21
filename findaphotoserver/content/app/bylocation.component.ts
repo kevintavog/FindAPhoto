@@ -20,12 +20,13 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 export class ByLocationComponent extends BaseSearchComponent implements OnInit {
 
     constructor(
+        router: Router,
         routeParams: RouteParams,
         location: Location,
         searchService: SearchService,
         searchRequestBuilder: SearchRequestBuilder)
     {
-        super("/byloc", routeParams, location, searchService, searchRequestBuilder)
+        super("/byloc", router, routeParams, location, searchService, searchRequestBuilder)
     }
 
     ngOnInit() {
@@ -44,9 +45,17 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
     processSearchResults() {
         let firstResult = this.firstResult()
         if (firstResult != undefined && firstResult.locationName != null) {
-            this.pageMessage = "Your pictures near " + firstResult.locationName
-        } else {
-            this.pageMessage = "Your pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+            if (firstResult.latitude == this.searchRequest.latitude &&
+                firstResult.longitude == this.searchRequest.longitude) {
+                    this.pageMessage = "Your pictures near " + firstResult.locationName
+                    return
+                }
         }
+
+        this.pageMessage = "Pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+    }
+
+    searchNearby() {
+
     }
 }
