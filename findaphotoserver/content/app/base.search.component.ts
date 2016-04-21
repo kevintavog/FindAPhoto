@@ -28,8 +28,8 @@ export abstract class BaseSearchComponent extends BaseComponent {
         private _pageRoute: string,
         protected _router: Router,
         protected _routeParams: RouteParams,
-        private _location: Location,
-        private _searchService: SearchService,
+        protected _location: Location,
+        protected _searchService: SearchService,
         protected _searchRequestBuilder: SearchRequestBuilder) {
             super()
             this.showGroup = true

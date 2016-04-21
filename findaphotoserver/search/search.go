@@ -108,8 +108,7 @@ func (no *NearbyOptions) Search() (*SearchResult, error) {
 	search := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
-		Pretty(true).
-		Size(no.MaxCount)
+		Pretty(true)
 
 	search.Query(elastic.NewGeoDistanceQuery("location").Lat(no.Latitude).Lon(no.Longitude).Distance(no.Distance))
 	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
@@ -145,7 +144,6 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Pretty(true).
-		Size(bdo.Count).
 		From(bdo.Index).
 		Size(bdo.Count)
 

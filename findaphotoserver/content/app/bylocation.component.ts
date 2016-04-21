@@ -52,10 +52,28 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
                 }
         }
 
-        this.pageMessage = "Pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+        // Ask the server for something nearby the given location
+        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName", 1, 1).subscribe(
+            results => {
+                let messageSet = false
+                if (results.totalMatches > 0) {
+                    let item = results.groups[0].items[0]
+                    if (item.distancekm <= 500) {
+                        this.pageMessage = "Your pictures near " + item.locationName
+                        messageSet = true
+                    }
+                }
+
+                if (!messageSet) {
+                    this.setFallbacktMessage()
+                }
+            },
+            error => { this.setFallbacktMessage() }
+        );
+
     }
 
-    searchNearby() {
-
+    setFallbacktMessage() {
+        this.pageMessage = "Pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
     }
 }

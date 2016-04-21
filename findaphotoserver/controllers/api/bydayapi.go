@@ -11,11 +11,11 @@ import (
 
 func ByDay(c lars.Context) {
 	fc := c.(*applicationglobals.FpContext)
-	nearbyOptions := populateByDayOptions(fc)
+	bydayOptions := populateByDayOptions(fc)
 	propertiesFilter := getPropertiesFilter(fc.Ctx.Request().Form.Get("properties"))
 
 	fc.AppContext.FieldLogger.Time("byday", func() {
-		searchResult, err := nearbyOptions.Search()
+		searchResult, err := bydayOptions.Search()
 		if err != nil {
 			panic(&InternalError{message: "SearchFailed", err: err})
 		}
