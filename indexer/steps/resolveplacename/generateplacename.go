@@ -8,7 +8,7 @@ import (
 	"github.com/Jeffail/gabs"
 )
 
-func generatePlacename(media *common.Media, address *gabs.Container) {
+func generatePlacename(media *common.Media, address *gabs.Container, displayName *string) {
 	countryCode, ok := address.Path("country_code").Data().(string)
 	if ok {
 		media.LocationCountryCode = countryCode
@@ -23,6 +23,10 @@ func generatePlacename(media *common.Media, address *gabs.Container) {
 
 	media.LocationHierarchicalName = joinSkipEmpty(",", media.LocationSiteName, media.LocationCityName, media.LocationStateName, media.LocationCountryName)
 	media.LocationPlaceName = placename(address)
+
+	if displayName != nil {
+		media.LocationDisplayName = *displayName
+	}
 }
 
 func joinSkipEmpty(separator string, items ...string) string {

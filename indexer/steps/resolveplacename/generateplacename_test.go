@@ -54,9 +54,9 @@ func logResult(t *testing.T, media *common.Media) {
 func TestGeneratePlacename(t *testing.T) {
 	media := &common.Media{}
 	address, _ := getAddressJson(t, britishLibraryJson)
-	generatePlacename(media, address)
+	generatePlacename(media, address, nil)
 
-	assert.Equal(t, britishLibraryPlacename, media.LocationPlaceName)
+	assert.Equal(t, britishLibraryPlacename, media.LocationHierarchicalName)
 }
 
 func TestGenerateAllPlacenames(t *testing.T) {
@@ -69,39 +69,9 @@ func TestGenerateAllPlacenames(t *testing.T) {
 		media := &common.Media{}
 		address, err := getAddressJson(t, k)
 		assert.Nil(t, err, "Address error: %v", err)
-		generatePlacename(media, address)
+		generatePlacename(media, address, nil)
 
-		assert.Equal(t, v, media.LocationPlaceName)
-	}
-}
-
-func TestCheckForUnexpectedFields(t *testing.T) {
-	common.InitDirectories("FindAPhoto")
-
-	const numRecordsToRead = 100
-	recordsRead := numRecordsToRead
-	offset := 0
-
-	for recordsRead == numRecordsToRead {
-		records, err := getRecords(offset, numRecordsToRead)
-		if err != nil {
-			t.Fatalf("Unable to get records from database: %s", err.Error())
-		}
-
-		for latLong, placename := range records {
-			media := &common.Media{}
-			address, err := getAddressJson(t, placename)
-			if err != nil {
-				t.Logf("Can't find address: %s for %s", err.Error(), latLong)
-			} else {
-				generatePlacename(media, address)
-				checkFields(t, address, media)
-				t.Logf("placename: %s (From: %s)", media.LocationPlaceName, placename)
-			}
-		}
-
-		recordsRead = len(records)
-		offset += numRecordsToRead
+		assert.Equal(t, v, media.LocationHierarchicalName)
 	}
 }
 

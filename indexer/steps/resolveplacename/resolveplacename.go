@@ -131,9 +131,14 @@ func lookupInCache(media *common.Media) bool {
 		return false
 	}
 
+	displayName, _ := jsonPlacename.Path("display_name").Data().(string)
+	if len(displayName) < 1 {
+		log.Warn("No cached display_name for %f, %f (%s)", media.Location.Latitude, media.Location.Longitude, media.Path)
+	}
+
 	atomic.AddInt64(&PlacenameLookups, 1)
 	media.CachedLocationDistanceMeters = int(calcDistance(media.Location.Latitude, media.Location.Longitude, lat, lon))
-	generatePlacename(media, jsonPlacename.Path("address"))
+	generatePlacename(media, jsonPlacename.Path("address"), &displayName)
 	return true
 }
 
@@ -196,7 +201,12 @@ func placenameFromText(media *common.Media, blob []byte) {
 	}
 
 	address := json.Path("address")
-	generatePlacename(media, address)
+	displayName, _ := json.Path("display_name").Data().(string)
+	if len(displayName) < 1 {
+		log.Warn("No display_name for %f, %f (%s)", media.Location.Latitude, media.Location.Longitude, media.Path)
+	}
+
+	generatePlacename(media, address, &displayName)
 }
 
 //// FROM https://gist.github.com/cdipaolo/d3f8db3848278b49db68

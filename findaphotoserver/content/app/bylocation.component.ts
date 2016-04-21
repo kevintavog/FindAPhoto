@@ -35,7 +35,7 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
         this.showDistance = true
         this.showGroup = false
 
-        this.extraProperties = "locationName,distancekm"
+        this.extraProperties = "locationName,locationDisplayName,distancekm"
         this.initializeSearchRequest('l')
 
         // TODO: If location not specified, use the browser location (if user allows)
@@ -47,33 +47,41 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
         if (firstResult != undefined && firstResult.locationName != null) {
             if (firstResult.latitude == this.searchRequest.latitude &&
                 firstResult.longitude == this.searchRequest.longitude) {
-                    this.pageMessage = "Your pictures near " + firstResult.locationName
+                    this.setLocationName(firstResult.locationName, firstResult.locationDisplayName)
                     return
                 }
         }
 
         // Ask the server for something nearby the given location
-        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName", 1, 1).subscribe(
+        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1).subscribe(
             results => {
                 let messageSet = false
                 if (results.totalMatches > 0) {
                     let item = results.groups[0].items[0]
                     if (item.distancekm <= 500) {
-                        this.pageMessage = "Your pictures near " + item.locationName
+                        this.setLocationName(item.locationName, item.locationDetailedName)
                         messageSet = true
                     }
                 }
 
                 if (!messageSet) {
-                    this.setFallbacktMessage()
+                    this.setLocationNameFallbacktMessage()
                 }
             },
-            error => { this.setFallbacktMessage() }
+            error => { this.setLocationNameFallbacktMessage() }
         );
 
     }
 
-    setFallbacktMessage() {
-        this.pageMessage = "Pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+    setLocationName(name, displayName: string) {
+        this.pageMessage = "Your pictures near: " + name
+        if (displayName != undefined) {
+            this.pageSubMessage = displayName
+        }
+    }
+
+    setLocationNameFallbacktMessage() {
+        this.pageMessage = "Pictures near: " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+        this.pageSubMessage = undefined
     }
 }

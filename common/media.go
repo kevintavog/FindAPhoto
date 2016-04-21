@@ -69,6 +69,7 @@ type Media struct {
 	LocationSiteName             string `json:"sitename,omitempty"`
 	LocationPlaceName            string `json:"placename,omitempty"`
 	LocationHierarchicalName     string `json:"hierarchicalname,omitempty"`
+	LocationDisplayName          string `json:"displayname,omitempty"`
 	CachedLocationDistanceMeters int    `json:"cachedlocationdistancemeters,omitempty"` // # of meters away from stored location the placename came from (due to using caching server)
 
 	// Date related fields

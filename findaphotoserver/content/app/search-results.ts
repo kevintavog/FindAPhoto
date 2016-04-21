@@ -18,6 +18,7 @@ export interface SearchItem {
   keywords: string[];
   latitude: number;
   locationName: string;
+  locationDisplayName: string;
   longitude: number;
   mediaType: string;
   mediaUrl: string

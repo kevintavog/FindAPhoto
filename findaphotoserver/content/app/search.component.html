@@ -6,9 +6,10 @@
   </form>
 </div>
 
-<div >
+<div>
     <button class="btn" (click)="searchNearby()"> Nearby </button>
     <button class="btn" (click)="searchToday()"> Today </button>
+    <br>
 </div>
 
 <div *ngIf="locationError != undefined">
@@ -18,6 +19,11 @@
 <div *ngIf="pageMessage != undefined" >
     <div class="section-header">{{pageMessage}}</div>
 </div>
+
+<div *ngIf="pageSubMessage != undefined" >
+    <div class="sub-section">{{pageSubMessage}}</div>
+</div>
+
 
 <div *ngIf="showLinks == true" >
     <br>

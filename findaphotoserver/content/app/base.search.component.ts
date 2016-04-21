@@ -21,7 +21,10 @@ export abstract class BaseSearchComponent extends BaseComponent {
     searchResults: SearchResults;
     currentPage: number;
     totalPages: number;
+
     pageMessage: string
+    pageSubMessage: string
+
     extraProperties: string
 
     constructor(
