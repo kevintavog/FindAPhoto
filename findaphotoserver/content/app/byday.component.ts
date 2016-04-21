@@ -33,10 +33,11 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.showLinks = true
         this.showSearch = false
         this.initializeSearchRequest('d')
         this.activeDate = new Date(2016, this.searchRequest.month - 1, this.searchRequest.day, 0, 0, 0, 0)
-        this.internalSearch(true)
+        this.internalSearch(false)
     }
 
     processSearchResults() {

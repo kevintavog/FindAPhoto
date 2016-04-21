@@ -10,24 +10,36 @@ export abstract class BaseSearchComponent extends BaseComponent {
     protected static QueryProperties: string = "id,city,keywords,imageName,createdDate,latitude,longitude,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 30
 
+    showLinks: boolean
     showSearch: boolean
+    showGroup: boolean
+    showDistance: boolean
+
     serverError: string
     searchRequest: SearchRequest;
     searchResults: SearchResults;
     currentPage: number;
     totalPages: number;
     pageMessage: string
+    extraProperties: string
 
     constructor(
         private _pageRoute: string,
         protected _routeParams: RouteParams,
         private _location: Location,
         private _searchService: SearchService,
-        protected _searchRequestBuilder: SearchRequestBuilder) { super() }
+        protected _searchRequestBuilder: SearchRequestBuilder) {
+            super()
+            this.showGroup = true
+        }
 
 
     initializeSearchRequest(searchType: string) {
-        this.searchRequest = this._searchRequestBuilder.createRequest(this._routeParams, BaseSearchComponent.ItemsPerPage, BaseSearchComponent.QueryProperties, searchType)
+        let queryProps = BaseSearchComponent.QueryProperties
+        if (this.extraProperties != undefined) {
+            queryProps += "," + this.extraProperties
+        }
+        this.searchRequest = this._searchRequestBuilder.createRequest(this._routeParams, BaseSearchComponent.ItemsPerPage, queryProps, searchType)
     }
 
 
@@ -87,4 +99,11 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
 
     abstract processSearchResults()
+
+    firstResult() {
+        if (this.searchResults != undefined && this.searchResults.totalMatches > 0) {
+            return this.searchResults.groups[0].items[0]
+        }
+        return undefined
+    }
 }

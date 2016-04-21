@@ -10,9 +10,9 @@ export class SearchRequestBuilder {
             case 's':
                 return "t=s&q=" + searchRequest.searchText
             case 'd':
-                return "t=d&m=1"
+                return "t=d&m=" + searchRequest.month + "&d=" + searchRequest.day
             case 'l':
-                return "t=n&lat=1&lon=2"
+                return "t=l&lat=" + searchRequest.latitude + "&lon=" + searchRequest.longitude
         }
         return ""
     }
@@ -35,18 +35,6 @@ export class SearchRequestBuilder {
         }
         return properties
     }
-
-    // createSearchRequest(routeParams: RouteParams, itemsPerPage: number, queryProperties: string) {
-    //     return this.createRequest(routeParams, itemsPerPage, queryProperties, 's')
-    // }
-    //
-    // createByDayRequest(routeParams: RouteParams, itemsPerPage: number, queryProperties: string) {
-    //     return this.createRequest(routeParams, itemsPerPage, queryProperties, 'd')
-    // }
-
-    // createSlideRequest(routeParams: RouteParams, queryProperties: string) {
-    //     return this.createRequest(routeParams, 1, queryProperties, 's')
-    // }
 
     createRequest(routeParams: RouteParams, itemsPerPage: number, queryProperties: string, defaultType: string) {
 

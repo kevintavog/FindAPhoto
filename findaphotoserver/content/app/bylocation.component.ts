@@ -29,13 +29,24 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
     }
 
     ngOnInit() {
+        this.showLinks = true
         this.showSearch = false
+        this.showDistance = true
+        this.showGroup = false
+
+        this.extraProperties = "locationName,distancekm"
         this.initializeSearchRequest('l')
 
-        // If location not specified, use the browser location (if user allows)
-        this.internalSearch(true)
+        // TODO: If location not specified, use the browser location (if user allows)
+        this.internalSearch(false)
     }
 
     processSearchResults() {
+        let firstResult = this.firstResult()
+        if (firstResult != undefined && firstResult.locationName != null) {
+            this.pageMessage = "Your pictures near " + firstResult.locationName
+        } else {
+            this.pageMessage = "Your pictures near " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+        }
     }
 }

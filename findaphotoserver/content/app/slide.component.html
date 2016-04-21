@@ -41,7 +41,7 @@
                 <td class="tdright">Geo: </td> <td *ngIf="hasLocation() == true" class="tdleft">
                     <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
                         <h3>
-                        <pre>{{latDms()}}, {{lonDms()}}</pre>
+                        <pre>{{latDms(slideInfo)}}, {{lonDms(slideInfo)}}</pre>
                         </h3>
                     </a>
                 </td>

@@ -7,7 +7,12 @@
 </div>
 
 <div *ngIf="pageMessage != undefined" >
-    <h2 class="page-message">{{pageMessage}}</h2>
+    <div class="section-header">{{pageMessage}}</div>
+</div>
+
+<div *ngIf="showLinks == true" >
+    <br>
+    <a [routerLink]="['Search']"> Find A Photo </a>
 </div>
 
 <div *ngIf="serverError != undefined" >
@@ -31,7 +36,7 @@
     <div style="clear:both;"></div>
     <br>
     <hr style="width:100%;"/>
-    <h2>{{group.name}}</h2>
+    <div *ngIf="showGroup" class="section-header">{{group.name}}</div>
     <p>
     <div id="singleimage" *ngFor="#item of group.items; #imageIndex = index">
         <div id="thumbnail">
@@ -59,6 +64,13 @@
                     </a>
                 </td>
                 <td> {{item.keywords}} </td>
+            </tr>
+            <tr *ngIf="showDistance">
+                <td colspan="2">
+                    <figcaption *ngIf="item.distancekm == 0"> Same location</figcaption>
+                    <figcaption *ngIf="item.distancekm > 0 && item.distancekm < 1.0"> Distance: {{(item.distancekm * 1000).toFixed(0)}} meters</figcaption>
+                    <figcaption *ngIf="item.distancekm >= 1.0"> Distance: {{item.distancekm.toFixed(2)}} KM</figcaption>
+                </td>
             </tr>
         </table>
         <div *ngIf="item.warnings != udefined">

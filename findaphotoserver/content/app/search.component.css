@@ -39,12 +39,16 @@ a:visited{
     display:inline;
     color: #CCC;
 }
-
 #paging{
     float: right;
     color: #CCC;
 }
-
+.section-header {
+    font-size: 2em;
+    margin-top: 0;
+    padding-top: 0;
+    color: #FFF;
+}
 
 .numberCircle {
     display:inline-block;

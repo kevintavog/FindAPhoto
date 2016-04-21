@@ -1,5 +1,12 @@
 import { SearchResults,SearchGroup,SearchItem } from './search-results';
 
+interface DegreesMinutesSeconds {
+    degrees: number
+    minutes: number
+    seconds: number
+}
+
+
 export abstract class BaseComponent {
 
     itemYear(item: SearchItem) {
@@ -35,5 +42,51 @@ export abstract class BaseComponent {
             return date
         }
         return undefined
+    }
+
+    lonDms(item: SearchItem) {
+        return this.longitudeDms(item.longitude)
+    }
+
+    longitudeDms(longitude: number) {
+        return this.convertToDms(longitude, ["E", "W"])
+    }
+
+    latDms(item: SearchItem) {
+        return this.latitudeDms(item.latitude)
+    }
+
+    latitudeDms(latitude: number) {
+        return this.convertToDms(latitude, ["N", "S"])
+    }
+
+
+    convertToDms(degrees: number, refValues: string[]) : string {
+        var dms = this.degreesToDms(degrees)
+        var ref = refValues[0]
+        if (dms.degrees < 0) {
+            ref = refValues[1]
+            dms.degrees *= -1
+        }
+        return dms.degrees + "° " + dms.minutes + "' " + dms.seconds.toFixed(2) + "\" " + refValues[1]
+    }
+
+    degreesToDms(degrees: number):DegreesMinutesSeconds {
+
+        var d = degrees
+        if (d < 0) {
+            d = Math.ceil(d)
+        } else {
+            d = Math.floor(d)
+        }
+
+        var minutesSeconds = Math.abs(degrees - d) * 60.0
+        var m = Math.floor(minutesSeconds)
+        var s = (minutesSeconds - m) * 60.0
+
+        return {
+            degrees: d,
+            minutes: m,
+            seconds: s};
     }
 }
