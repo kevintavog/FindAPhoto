@@ -52,6 +52,7 @@ a:visited{
 
 .numberCircle {
     display:inline-block;
+    float:left;
 
     border-radius:50%;
     border:2px solid;

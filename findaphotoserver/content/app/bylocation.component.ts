@@ -74,7 +74,7 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
     }
 
     setLocationName(name, displayName: string) {
-        this.pageMessage = "Your pictures near: " + name
+        this.pageMessage = "Pictures near: " + name
         if (displayName != undefined) {
             this.pageSubMessage = displayName
         }

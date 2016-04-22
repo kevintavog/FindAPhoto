@@ -58,6 +58,7 @@
         <div id="thumbnail">
             <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
                 <img src="{{item.thumbUrl}}">
+                <span *ngIf="item.warnings != udefined" class="numberCircle">{{item.warnings.length}}</span>
             </a>
         </div>
         <table class="imageListInfoTable">
@@ -89,9 +90,6 @@
                 </td>
             </tr>
         </table>
-        <div *ngIf="item.warnings != udefined">
-            <span class="numberCircle">{{item.warnings.length}}</span>
-        </div>
     </div>
   </div>
 
