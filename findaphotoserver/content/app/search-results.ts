@@ -2,6 +2,13 @@ export interface SearchResults {
   totalMatches: number;
   resultCount: number;
   groups: SearchGroup[];
+  previousAvailableByDay: ByDayResult;
+  nextAvailableByDay: ByDayResult;
+}
+
+export interface ByDayResult {
+    month: number;
+    day: number;
 }
 
 export interface SearchGroup {

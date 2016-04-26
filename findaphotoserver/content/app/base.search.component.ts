@@ -24,6 +24,8 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
     pageMessage: string
     pageSubMessage: string
+    typeLeftButtonText: string
+    typeRightButtonText: string
 
     extraProperties: string
 
@@ -122,6 +124,8 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
 
     abstract processSearchResults()
+    typeLeftButton() {}
+    typeRightButton() {}
 
     firstResult() {
         if (this.searchResults != undefined && this.searchResults.totalMatches > 0) {

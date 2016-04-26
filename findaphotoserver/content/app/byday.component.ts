@@ -3,7 +3,7 @@ import { Router, ROUTER_DIRECTIVES, RouteParams, Location } from 'angular2/route
 
 import { BaseSearchComponent } from './base.search.component';
 import { SearchRequest } from './search-request';
-import { SearchResults,SearchGroup,SearchItem } from './search-results';
+import { SearchResults,SearchGroup,SearchItem,ByDayResult } from './search-results';
 import { SearchService } from './search.service';
 import { SearchRequestBuilder } from './search.request.builder';
 
@@ -42,7 +42,24 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
     }
 
     processSearchResults() {
-          // DOES NOT honor locale...
-          this.pageMessage = "Pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+        // DOES NOT honor locale...
+        this.pageMessage = "Pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+
+        this.typeLeftButtonText = this.byDayString(this.searchResults.previousAvailableByDay)
+        this.typeRightButtonText = this.byDayString(this.searchResults.nextAvailableByDay)
+    }
+
+    byDayString(byday: ByDayResult) {
+        if (byday == undefined)
+            return null
+        return ByDayComponent.monthNames[byday.month - 1] + " " + byday.day
+    }
+
+    typeLeftButton() {
+        this._router.navigate( ['ByDay', {m:this.searchResults.previousAvailableByDay.month, d:this.searchResults.previousAvailableByDay.day}] );
+    }
+
+    typeRightButton() {
+        this._router.navigate( ['ByDay', {m:this.searchResults.nextAvailableByDay.month, d:this.searchResults.nextAvailableByDay.day}] );
     }
 }

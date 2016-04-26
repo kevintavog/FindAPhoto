@@ -25,6 +25,12 @@
 </div>
 
 
+<div *ngIf="typeLeftButtonText != undefined || typeRightButtonText != undefined" >
+    <button *ngIf="typeLeftButtonText != undefined" class="btn" (click)="typeLeftButton()"> {{typeLeftButtonText}} </button>
+    <button *ngIf="typeRightButtonText != undefined" class="btn" (click)="typeRightButton()"> {{typeRightButtonText}} </button>
+</div>
+
+
 <div *ngIf="showLinks == true" >
     <br>
     <a [routerLink]="['Search']"> Find A Photo </a>

@@ -114,7 +114,21 @@ func filterResults(searchResult *search.SearchResult, propertiesFilter []string)
 	filtered["resultCount"] = searchResult.ResultCount
 	filtered["groups"] = filteredGroups(searchResult.Groups, propertiesFilter)
 
+	if searchResult.NextAvailableByDay != nil {
+		filtered["nextAvailableByDay"] = filterByDay(searchResult.NextAvailableByDay)
+	}
+	if searchResult.PreviousAvailableByDay != nil {
+		filtered["previousAvailableByDay"] = filterByDay(searchResult.PreviousAvailableByDay)
+	}
+
 	return filtered
+}
+
+func filterByDay(byday *search.ByDayResult) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["month"] = byday.Month
+	result["day"] = byday.Day
+	return result
 }
 
 func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) interface{} {

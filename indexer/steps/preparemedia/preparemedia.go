@@ -219,6 +219,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	media.DateTime = dateTime
 	media.MonthName = dateTime.Month().String() + " " + dateTime.Month().String()[:3]
 	media.DayName = dateTime.Weekday().String() + " " + dateTime.Weekday().String()[:3]
+	media.DayOfYear = common.DayOfYearFromDate(dateTime)
 }
 
 func populateLocation(media *common.Media, candidate *common.CandidateFile) {

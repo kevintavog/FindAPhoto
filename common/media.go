@@ -77,6 +77,7 @@ type Media struct {
 	Date      string    `json:"date"`      // yyyyMMdd - for aggregating by date
 	DayName   string    `json:"dayname"`   // (Wed, Wednesday)
 	MonthName string    `json:"monthname"` // (Apr, April)
+	DayOfYear int       `json:"dayofyear"` // Index of the day in the year, to help with byday searches (1-366; Jan/1 = 1, Feb/29 =60, Mar/1 = 61)
 
 	Warnings []string `json:"warnings,omitempty"`
 }
