@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -36,7 +37,11 @@ var queue chan *ThumbnailInfo
 var waitGroup sync.WaitGroup
 
 func Start() {
-	numConsumers := common.RatioNumCpus(0.5)
+	ratio := 1.0
+	if !VipsExists {
+		ratio = 0.5
+	}
+	numConsumers := common.RatioNumCpus(float32(ratio))
 	queue = make(chan *ThumbnailInfo, 10000)
 	waitGroup.Add(numConsumers)
 
@@ -174,6 +179,6 @@ func createNfntThumbnail(imageFilename, thumbFilename string) error {
 }
 
 func createVipsThumbnails(imageFilename, thumbFilename string) error {
-	_, err := exec.Command(common.VipsThumbnailPath, "-d", "-s", "2000x170", "-f", thumbFilename+"[optimize_coding,strip]", imageFilename).Output()
+	_, err := exec.Command(common.VipsThumbnailPath, "-d", "-s", "10000x"+strconv.Itoa(thumbnailMaxHeightDimension), "-f", thumbFilename+"[optimize_coding,strip]", imageFilename).Output()
 	return err
 }

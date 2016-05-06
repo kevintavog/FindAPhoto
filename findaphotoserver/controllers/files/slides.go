@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,7 +125,7 @@ func generateVipsSlide(imageFilename string) (bytes.Buffer, error) {
 		return buffer, err
 	}
 
-	_, err = exec.Command(common.VipsThumbnailPath, "-d", "-s", "2000x800", "-f", tmpFilename+"[optimize_coding,strip]", imageFilename).Output()
+	_, err = exec.Command(common.VipsThumbnailPath, "-d", "-s", "20000x"+strconv.Itoa(slideMaxHeightDimension), "-f", tmpFilename+"[optimize_coding,strip]", imageFilename).Output()
 	if err != nil {
 		return buffer, err
 	}
