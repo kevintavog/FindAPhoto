@@ -33,10 +33,10 @@ func run(devolopmentMode bool) {
 	listenPort := 2000
 	easyExit := false
 
-	if !configuration.IsExecWorking(common.ExifToolPath, "-ver") {
+	if !common.IsExecWorking(common.ExifToolPath, "-ver") {
 		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)
 	}
-	if !configuration.IsExecWorking(common.FfmpegPath, "-version") {
+	if !common.IsExecWorking(common.FfmpegPath, "-version") {
 		log.Fatal("ffmpeg isn't usable (path is '%s')", common.FfmpegPath)
 	}
 
