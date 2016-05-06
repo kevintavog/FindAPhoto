@@ -16,6 +16,7 @@ type Configuration struct {
 	ElasticSearchUrl string
 	OpenMapUrl       string
 	OpenMapKey       string
+	VipsExists       bool
 }
 
 var Current Configuration
@@ -60,4 +61,6 @@ func ReadConfiguration() {
 			log.Fatal("Failed converting configuration from (%s): %s", configFile, err.Error())
 		}
 	}
+
+	Current.VipsExists = common.IsExecWorking(common.VipsThumbnailPath, "--vips-version")
 }

@@ -22,6 +22,7 @@ var FailedImage int64
 var GeneratedVideo int64
 var FailedVideo int64
 var ThumbnailsCreated int64
+var VipsExists bool
 
 type ThumbnailInfo struct {
 	FullPath    string
@@ -101,7 +102,15 @@ func dequeue() {
 }
 
 func generateImage(fullPath, thumbPath string) {
-	if err := createThumbnail(fullPath, thumbPath); err != nil {
+
+	var err error
+	if VipsExists {
+		err = createVipsThumbnails(fullPath, thumbPath)
+	} else {
+		err = createNfntThumbnail(fullPath, thumbPath)
+	}
+
+	if err != nil {
 		log.Error("Failed thumbnail generation on %s: %s", fullPath, err.Error())
 		atomic.AddInt64(&FailedImage, 1)
 	} else {
@@ -133,7 +142,7 @@ func generateVideo(fullPath, thumbPath string) {
 		}
 	}
 
-	if err := createThumbnail(tmpFilename, thumbPath); err != nil {
+	if err := createNfntThumbnail(tmpFilename, thumbPath); err != nil {
 		log.Error("Failed thumbnail generation on %s: %s", tmpFilename, err.Error())
 		atomic.AddInt64(&FailedVideo, 1)
 	} else {
@@ -141,7 +150,7 @@ func generateVideo(fullPath, thumbPath string) {
 	}
 }
 
-func createThumbnail(imageFilename, thumbFilename string) error {
+func createNfntThumbnail(imageFilename, thumbFilename string) error {
 	file, err := os.Open(imageFilename)
 	if err != nil {
 		return err
@@ -162,4 +171,9 @@ func createThumbnail(imageFilename, thumbFilename string) error {
 
 	jpeg.Encode(savedThumbnailFile, thumb, &jpeg.Options{Quality: 85})
 	return nil
+}
+
+func createVipsThumbnails(imageFilename, thumbFilename string) error {
+	_, err := exec.Command(common.VipsThumbnailPath, "-d", "-s", "2000x170", "-f", thumbFilename+"[optimize_coding,strip]", imageFilename).Output()
+	return err
 }

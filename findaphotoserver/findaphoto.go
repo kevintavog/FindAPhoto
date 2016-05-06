@@ -33,6 +33,13 @@ func run(devolopmentMode bool) {
 	listenPort := 2000
 	easyExit := false
 
+	if !configuration.IsExecWorking(common.ExifToolPath, "-ver") {
+		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)
+	}
+	if !configuration.IsExecWorking(common.FfmpegPath, "-version") {
+		log.Fatal("ffmpeg isn't usable (path is '%s')", common.FfmpegPath)
+	}
+
 	if devolopmentMode {
 		fmt.Println("Using development mode")
 		common.MediaIndexName = "dev-" + common.MediaIndexName
@@ -68,6 +75,10 @@ func run(devolopmentMode bool) {
 		if err != nil {
 			log.Fatal("Failed starting the service: %s", err.Error())
 		}
+	}
+
+	if !configuration.Current.VipsExists {
+		log.Warn("Unable to use the 'vipsthumbnails' command, defaulting to slower slide generation (path is '%s')", common.VipsThumbnailPath)
 	}
 
 	if easyExit {

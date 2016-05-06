@@ -19,15 +19,19 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
 	"gopkg.in/olivere/elastic.v3"
-
-	_ "runtime/pprof"
 )
 
 func main() {
 	common.InitDirectories("FindAPhoto")
 	common.ConfigureLogging(common.LogDirectory, "findaphotoindexer")
 
-	// go http.ListenAndServe(":8080", nil)
+	if !common.IsExecWorking(common.ExifToolPath, "-ver") {
+		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)
+	}
+	if !common.IsExecWorking(common.FfmpegPath, "-version") {
+		log.Fatal("ffmpeg isn't usable (path is '%s')", common.FfmpegPath)
+	}
+	generatethumbnail.VipsExists = common.IsExecWorking(common.VipsThumbnailPath, "--vips-version")
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
 	app.Spec = "-p -s -o -k [-i] [-c] [--reindex]"
@@ -65,6 +69,10 @@ func main() {
 		alias, err := common.AliasForPath(*scanPath)
 		if err != nil {
 			log.Fatalf("Unable to get alias for '%s': %s", *scanPath, err.Error())
+		}
+
+		if !generatethumbnail.VipsExists {
+			log.Warn("Unable to use the 'vipsthumbnails' command, defaulting to slower slide generation (path is '%s')", common.VipsThumbnailPath)
 		}
 
 		scanStartTime := time.Now()

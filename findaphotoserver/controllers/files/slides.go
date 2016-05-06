@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"image"
 	"image/jpeg"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"path"
 	"strings"
 	"time"
 
@@ -16,6 +19,8 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
+	"github.com/twinj/uuid"
 )
 
 const baseSlideUrl = "/files/slides/"
@@ -74,7 +79,13 @@ func Slides(c lars.Context) {
 			return
 		}
 
-		buffer, err := generateSlide(slideFilename)
+		var buffer bytes.Buffer
+		if configuration.Current.VipsExists {
+			buffer, err = generateVipsSlide(slideFilename)
+		} else {
+			buffer, err = generateNfntSlide(slideFilename)
+		}
+
 		if err != nil {
 			fc.Error(http.StatusInternalServerError, "failedSlideGeneration", "", err)
 			return
@@ -84,7 +95,7 @@ func Slides(c lars.Context) {
 	})
 }
 
-func generateSlide(imageFilename string) (bytes.Buffer, error) {
+func generateNfntSlide(imageFilename string) (bytes.Buffer, error) {
 	var buffer bytes.Buffer
 
 	file, err := os.Open(imageFilename)
@@ -102,4 +113,27 @@ func generateSlide(imageFilename string) (bytes.Buffer, error) {
 	jpeg.Encode(&buffer, slideImage, &jpeg.Options{Quality: 85})
 
 	return buffer, nil
+}
+
+func generateVipsSlide(imageFilename string) (bytes.Buffer, error) {
+	var buffer bytes.Buffer
+
+	tmpFilename := path.Join(os.TempDir(), "findAPhoto", "slides", uuid.NewV4().String()+".JPG")
+	err := common.CreateDirectory(path.Dir(tmpFilename))
+	if err != nil {
+		return buffer, err
+	}
+
+	_, err = exec.Command(common.VipsThumbnailPath, "-d", "-s", "2000x800", "-f", tmpFilename+"[optimize_coding,strip]", imageFilename).Output()
+	if err != nil {
+		return buffer, err
+	}
+	defer os.Remove(tmpFilename)
+
+	ar, err := ioutil.ReadFile(tmpFilename)
+	if err != nil {
+		return buffer, err
+	}
+
+	return *bytes.NewBuffer(ar), nil
 }

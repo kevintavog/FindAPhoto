@@ -15,6 +15,7 @@ var ThumbnailDirectory string
 var LocationCacheDirectory string
 var ExifToolPath string
 var FfmpegPath string
+var VipsThumbnailPath string
 
 func InitDirectories(appName string) {
 	if HomeDirectory == "" {
@@ -26,6 +27,7 @@ func InitDirectories(appName string) {
 			LocationCacheDirectory = path.Join(HomeDirectory, "Library", "Application Support", "FindAPhoto")
 			FfmpegPath = "/usr/local/bin/ffmpeg"
 			ExifToolPath = "/usr/local/bin/exiftool"
+			VipsThumbnailPath = "/usr/local/bin/vipsthumbnail"
 		} else if runtime.GOOS == "linux" {
 			HomeDirectory = os.Getenv("HOME")
 			ThumbnailDirectory = path.Join(HomeDirectory, ".findaphoto", "thumbnails")
@@ -34,6 +36,7 @@ func InitDirectories(appName string) {
 			LocationCacheDirectory = path.Join(HomeDirectory, ".findaphoto")
 			FfmpegPath = "/usr/bin/ffmpeg"
 			ExifToolPath = "/usr/bin/exiftool"
+			VipsThumbnailPath = "/usr/bin/vipsthumbnail"
 		} else {
 			log.Fatal("Come up with directories for: %v", runtime.GOOS)
 		}
