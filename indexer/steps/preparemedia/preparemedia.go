@@ -158,19 +158,20 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 	var dateTime time.Time
 	var err error
 
-	if candidate.Exif.Quicktime.ContentCreateDate != "" {
-		dateTime, err = time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.Quicktime.ContentCreateDate)
-		if err != nil {
-			candidate.AddWarning(fmt.Sprintf(
-				"Failed parsing ContentCreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.ContentCreateDate, err.Error(), candidate.FullPath))
-		}
-	}
-	if dateTime.IsZero() && len(candidate.Exif.Quicktime.CreateDate) > 0 {
+	if dateTime.IsZero() && candidate.Exif.Quicktime.CreateDate != "" {
 		// UTC according to spec - no timezone like there is for 'ContentCreateDate'
 		dateTime, err = time.Parse("2006:01:02 15:04:05", candidate.Exif.Quicktime.CreateDate)
 		if err != nil {
 			candidate.AddWarning(fmt.Sprintf(
 				"Failed parsing CreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.CreateDate, err.Error(), candidate.FullPath))
+		}
+	}
+
+	if dateTime.IsZero() && candidate.Exif.Quicktime.ContentCreateDate != "" {
+		dateTime, err = time.Parse("2006:01:02 15:04:05-07:00", candidate.Exif.Quicktime.ContentCreateDate)
+		if err != nil {
+			candidate.AddWarning(fmt.Sprintf(
+				"Failed parsing ContentCreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.ContentCreateDate, err.Error(), candidate.FullPath))
 		}
 	}
 
