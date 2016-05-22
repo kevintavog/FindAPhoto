@@ -7,6 +7,7 @@ import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';
 import { SearchRequestBuilder } from './search.request.builder';
 import { SlideComponent } from './slide.component';
+import { SlideshowComponent } from './slideshow.component';
 import { ByDayComponent } from './byday.component';
 import { ByLocationComponent } from './bylocation.component';
 
@@ -39,6 +40,11 @@ import { ByLocationComponent } from './bylocation.component';
     path: '/slide/:id',
     name: 'Slide',
     component: SlideComponent
+  },
+  {
+    path: '/slideshow',
+    name: 'Slideshow',
+    component: SlideshowComponent
   },
   {
     path: '/byday',
