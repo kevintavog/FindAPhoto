@@ -7,17 +7,19 @@ import (
 )
 
 type SearchOptions struct {
-	Query string
-	Index int
-	Count int
+	Query           string
+	Index           int
+	Count           int
+	CategoryOptions *CategoryOptions
 }
 
 //-------------------------------------------------------------------------------------------------
 func NewSearchOptions(query string) *SearchOptions {
 	return &SearchOptions{
-		Query: query,
-		Index: 0,
-		Count: 20,
+		Query:           query,
+		Index:           0,
+		Count:           20,
+		CategoryOptions: NewCategoryOptions(),
 	}
 }
 
@@ -40,5 +42,5 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	}
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
-	return invokeSearch(search, GroupByPath, nil)
+	return invokeSearch(search, GroupByPath, so.CategoryOptions, nil)
 }

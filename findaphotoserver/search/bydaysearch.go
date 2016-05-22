@@ -1,8 +1,6 @@
 package search
 
 import (
-	"fmt"
-
 	"github.com/ian-kent/go-log/log"
 	"gopkg.in/olivere/elastic.v3"
 
@@ -10,21 +8,23 @@ import (
 )
 
 type ByDayOptions struct {
-	Month      int
-	DayOfMonth int
-	Index      int
-	Count      int
-	Random     bool
+	Month           int
+	DayOfMonth      int
+	Index           int
+	Count           int
+	Random          bool
+	CategoryOptions *CategoryOptions
 }
 
 //-------------------------------------------------------------------------------------------------
 func NewByDayOptions(month, dayOfMonth int) *ByDayOptions {
 	return &ByDayOptions{
-		Month:      month,
-		DayOfMonth: dayOfMonth,
-		Index:      0,
-		Count:      20,
-		Random:     false,
+		Month:           month,
+		DayOfMonth:      dayOfMonth,
+		Index:           0,
+		Count:           20,
+		Random:          false,
+		CategoryOptions: NewCategoryOptions(),
 	}
 }
 
@@ -51,13 +51,10 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 		search.Sort("datetime", false)
 	}
 
-	result, err := invokeSearch(search, grouping, nil)
+	result, err := invokeSearch(search, grouping, bdo.CategoryOptions, nil)
 	if err == nil {
 		result.PreviousAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Lt(dayOfYear), false)
 		result.NextAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Gt(dayOfYear), true)
-
-		fmt.Printf("dayofyear: %v; previous: %v -- next: %v", dayOfYear, result.PreviousAvailableByDay, result.NextAvailableByDay)
-		fmt.Println()
 	}
 
 	return result, err
@@ -83,5 +80,4 @@ func getAvailableDay(client *elastic.Client, query *elastic.RangeQuery, ascendin
 	}
 
 	return nil
-
 }

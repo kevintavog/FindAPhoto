@@ -53,5 +53,7 @@ func populateByDayOptions(fc *applicationglobals.FpContext) *search.ByDayOptions
 	byDayOptions.Random = boolFromQuery(fc.Ctx, "random", byDayOptions.Random)
 	byDayOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
 
+	populateCategoryOptions(fc, byDayOptions.CategoryOptions)
+
 	return byDayOptions
 }

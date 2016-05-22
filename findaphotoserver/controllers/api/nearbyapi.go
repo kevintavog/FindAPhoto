@@ -46,6 +46,7 @@ func populateNearbyOptions(fc *applicationglobals.FpContext) *search.NearbyOptio
 	}
 
 	nearbyOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
+	populateCategoryOptions(fc, nearbyOptions.CategoryOptions)
 
 	return nearbyOptions
 }

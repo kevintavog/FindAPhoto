@@ -108,7 +108,6 @@ func boolFromQuery(ctx *lars.Ctx, name string, defaultValue bool) bool {
 }
 
 func filterResults(searchResult *search.SearchResult, propertiesFilter []string) map[string]interface{} {
-
 	filtered := make(map[string]interface{})
 	filtered["totalMatches"] = searchResult.TotalMatches
 	filtered["resultCount"] = searchResult.ResultCount
@@ -119,6 +118,10 @@ func filterResults(searchResult *search.SearchResult, propertiesFilter []string)
 	}
 	if searchResult.PreviousAvailableByDay != nil {
 		filtered["previousAvailableByDay"] = filterByDay(searchResult.PreviousAvailableByDay)
+	}
+
+	if searchResult.Categories != nil {
+		filtered["categories"] = convertCategories(searchResult.Categories)
 	}
 
 	return filtered
@@ -132,7 +135,6 @@ func filterByDay(byday *search.ByDayResult) map[string]interface{} {
 }
 
 func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) interface{} {
-
 	list := make([]map[string]interface{}, len(groups))
 	for index, group := range groups {
 		listItem := make(map[string]interface{})
@@ -144,7 +146,6 @@ func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) int
 }
 
 func filteredItems(items []*search.MediaHit, propertiesFilter []string) interface{} {
-
 	list := make([]map[string]interface{}, len(items))
 
 	for mediaIndex, mh := range items {
@@ -215,4 +216,62 @@ func property(name string, mh *search.MediaHit) interface{} {
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
+}
+
+func populateCategoryOptions(fc *applicationglobals.FpContext, categoryOptions *search.CategoryOptions) {
+
+	// TODO: Is this a LARS bug? The examples don't show a call to ParseForm being required to get query parameters
+	// Even with this, the query param example isn't working for me
+	err := fc.Ctx.ParseForm()
+	if err != nil {
+		panic(&InvalidRequest{message: "parseFormError", err: err})
+	}
+
+	categories := fc.Ctx.Request().Form.Get("categories") // Grumble grumble - should be 'query := c.Param("categories")'
+	if len(categories) > 0 {
+		for _, c := range strings.Split(categories, ",") {
+			switch strings.ToLower(c) {
+			case "keywords":
+				categoryOptions.KeywordCount = 10
+			case "placename":
+				categoryOptions.PlacenameCount = 10
+			case "date":
+				categoryOptions.DateCount = 10
+			case "year":
+				categoryOptions.YearCount = 10
+			default:
+				panic(&InvalidRequest{message: fmt.Sprintf("Unknown category: '%s'", c)})
+			}
+		}
+	}
+}
+
+func convertCategories(categories []*search.CategoryResult) interface{} {
+	list := make([]map[string]interface{}, len(categories))
+
+	for index, category := range categories {
+		listItem := make(map[string]interface{})
+		list[index] = listItem
+		listItem["name"] = category.Name
+		listItem["values"] = convertCategoryValues(category.Values)
+	}
+
+	return list
+}
+
+func convertCategoryValues(values []*search.CategoryValue) interface{} {
+	list := make([]map[string]interface{}, len(values))
+
+	for index, value := range values {
+		listItem := make(map[string]interface{})
+		list[index] = listItem
+		listItem["value"] = value.Value
+		listItem["count"] = value.Count
+
+		if len(value.Categories) > 0 {
+			listItem["categories"] = convertCategories(value.Categories)
+		}
+	}
+
+	return list
 }
