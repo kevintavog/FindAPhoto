@@ -268,8 +268,8 @@ func convertCategoryValues(values []*search.CategoryValue) interface{} {
 		listItem["value"] = value.Value
 		listItem["count"] = value.Count
 
-		if len(value.Categories) > 0 {
-			listItem["categories"] = convertCategories(value.Categories)
+		if len(value.SubCategories) > 0 {
+			listItem["subCategories"] = convertCategoryValues(value.SubCategories)
 		}
 	}
 

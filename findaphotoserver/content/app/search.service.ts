@@ -23,14 +23,14 @@ export class SearchService {
     }
 
   searchByText(searchText, properties: string, first, pageCount: number) {
-      var url = "/api/search?q=" + searchText + "&first=" + first + "&count=" + pageCount + "&properties=" + properties
+      var url = "/api/search?q=" + searchText + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,date"
       return this._http.get(url)
                   .map(response => response.json())
                   .catch(this.handleError);
   }
 
   searchByDay(month: number, day: number, properties: string, first, pageCount: number, random: boolean) {
-      var url = "/api/by-day?month=" + month + "&day=" + day + "&first=" + first + "&count=" + pageCount + "&properties=" + properties
+      var url = "/api/by-day?month=" + month + "&day=" + day + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,year"
       if (random) {
           url += "&random=" + random
       }
@@ -41,7 +41,7 @@ export class SearchService {
   }
 
   searchByLocation(lat, lon: number, properties: string, first, pageCount: number) {
-      var url = "/api/nearby?lat=" + lat + "&lon=" + lon + "&first=" + first + "&count=" + pageCount + "&properties=" + properties
+      var url = "/api/nearby?lat=" + lat + "&lon=" + lon + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,date"
       return this._http.get(url)
                     .map(response => response.json())
                     .catch(this.handleError);

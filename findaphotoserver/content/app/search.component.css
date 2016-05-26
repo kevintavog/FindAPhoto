@@ -74,3 +74,44 @@ a:visited{
 .numberCircle:after {
     padding-right:8px;
 }
+
+#containerLeft {
+	clear:left;
+	float:left;
+	width:100%;
+	overflow:hidden;
+}
+#containerMiddle {
+	clear:left;
+	float:left;
+	width:100%;
+	position:relative;
+	right:33.333%;
+}
+#containerRight {
+	float:left;
+	width:100%;
+	position:relative;
+	right:33.33%;
+}
+#columnLeft {
+	float:left;
+	width:29.33%;
+	position:relative;
+	left:68.67%;
+	overflow:hidden;
+}
+#columnMiddle {
+	float:left;
+	width:29.33%;
+	position:relative;
+	left:72.67%;
+	overflow:hidden;
+}
+#columnRight {
+	float:left;
+	width:29.33%;
+	position:relative;
+	left:76.67%;
+	overflow:hidden;
+}

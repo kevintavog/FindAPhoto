@@ -122,6 +122,24 @@ export abstract class BaseSearchComponent extends BaseComponent {
        );
     }
 
+    categoryDate() {
+        return this.categoryByName("date")
+    }
+
+    categoryKeywords() {
+        return this.categoryByName("keywords")
+    }
+
+    categoryPlacenames() {
+        return this.categoryByName("countryName")
+    }
+
+    categoryByName(name: string) {
+        for (var category of this.searchResults.categories) {
+            if (category.name == name) { return category }
+        }
+        return null
+    }
 
     abstract processSearchResults()
     typeLeftButton() {}

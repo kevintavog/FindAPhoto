@@ -52,9 +52,9 @@ type CategoryResult struct {
 }
 
 type CategoryValue struct {
-	Value      string
-	Count      int
-	Categories []*CategoryResult
+	Value         string
+	Count         int
+	SubCategories []*CategoryValue
 }
 
 const (
@@ -216,7 +216,7 @@ func processAggregations(aggregations *elastic.Aggregations) []*CategoryResult {
 				// response always includes aggregates. The comparison of length is to filter out the expected 'key' & 'doc_count'
 				// fields, allowing the code to get the actual values of interest.
 				if bucket.Aggregations != nil && len(bucket.Aggregations) > 2 {
-					categoryValue.Categories = processAggregations(&bucket.Aggregations)
+					categoryValue.SubCategories = processChildAggregations(&bucket.Aggregations)
 				}
 			}
 
@@ -229,4 +229,52 @@ func processAggregations(aggregations *elastic.Aggregations) []*CategoryResult {
 	}
 
 	return result
+}
+
+func processChildAggregations(aggregations *elastic.Aggregations) []*CategoryValue {
+	if aggregations == nil || len(*aggregations) < 1 {
+		return nil
+	}
+
+	result := make([]*CategoryValue, 0)
+
+	for key, _ := range *aggregations {
+		terms, ok := aggregations.Terms(key)
+		if ok {
+			for _, bucket := range terms.Buckets {
+				if bucket.DocCount == 0 {
+					continue
+				}
+
+				v := ""
+				switch bucket.Key.(type) {
+				case string:
+					v = bucket.Key.(string)
+				case float64:
+					fmt.Printf("Handling a float64 conversion for aggregation\n")
+					// Assume it's a time, specifically, milliseconds since the epoch
+					msec := int64(bucket.Key.(float64))
+					v = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
+				}
+
+				categoryValue := &CategoryValue{}
+				result = append(result, categoryValue)
+				categoryValue.Value = v
+				categoryValue.Count = int(bucket.DocCount)
+
+				// ElasticSearch doesn't return aggregations in buckets EXCEPT for sub-aggregates. But the conversion to a Go
+				// response always includes aggregates. The comparison of length is to filter out the expected 'key' & 'doc_count'
+				// fields, allowing the code to get the actual values of interest.
+				if bucket.Aggregations != nil && len(bucket.Aggregations) > 2 {
+					categoryValue.SubCategories = processChildAggregations(&bucket.Aggregations)
+				}
+			}
+		}
+	}
+
+	if len(result) > 0 {
+		return result
+	}
+
+	return nil
 }

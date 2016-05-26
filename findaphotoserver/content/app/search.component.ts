@@ -6,6 +6,7 @@ import { SearchRequest } from './search-request';
 import { SearchResults,SearchGroup,SearchItem } from './search-results';
 import { SearchService } from './search.service';
 import { SearchRequestBuilder } from './search.request.builder';
+import { CategoryTreeView } from './category-tree-view.component';
 
 import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
 
@@ -13,7 +14,7 @@ import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
   selector: 'search',
   templateUrl: 'app/search.component.html',
   styleUrls:  ['app/search.component.css'],
-  directives: [ROUTER_DIRECTIVES],
+  directives: [ROUTER_DIRECTIVES, CategoryTreeView],
   pipes: [DateStringToLocaleDatePipe]
 })
 

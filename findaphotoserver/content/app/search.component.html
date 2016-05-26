@@ -41,6 +41,28 @@
     <h2 class="server-error">{{serverError}}</h2>
 </div>
 
+<div *ngIf="searchResults != null && searchResults.categories != null && searchResults.categories.length > 0" >
+    <div id="containerLeft">
+        <div id="containerMiddle">
+            <div id="containerRight">
+<!--
+                <div *ngIf="categoryDate() != null" id="columnLeft" >
+                    <category-tree-view [category]=categoryDate()></category-tree-view>
+                </div>
+
+                <div *ngIf="categoryKeywords() != null" id="columnMiddle" >
+                    <category-tree-view [category]=categoryKeywords()></category-tree-view>
+                </div>
+
+                <div *ngIf="categoryPlacenames() != null" id="columnRight" >
+                    <category-tree-view [category]=categoryPlacenames()></category-tree-view>
+                </div>
+-->
+            </div>
+        </div>
+    </div>
+</div>
+
 <div *ngIf="searchResults != null">
   <br>
   <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'</h2>
