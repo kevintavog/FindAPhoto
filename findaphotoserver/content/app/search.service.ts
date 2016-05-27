@@ -1,8 +1,9 @@
-import { SearchRequest } from './search-request';
-import { Injectable } from 'angular2/core';
-import { Http, RequestOptionsArgs, Response, Headers, ResponseType } from 'angular2/http'
+import { Injectable } from '@angular/core';
+import { Http, RequestOptionsArgs, Response, Headers, ResponseType } from '@angular/http'
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
+
+import { SearchRequest } from './search-request';
 
 @Injectable()
 export class SearchService {
@@ -22,14 +23,14 @@ export class SearchService {
         return Observable.throw("Unknown search type: " + request.searchType)
     }
 
-  searchByText(searchText, properties: string, first, pageCount: number) {
+  searchByText(searchText: string, properties: string, first: number, pageCount: number) {
       var url = "/api/search?q=" + searchText + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,date"
       return this._http.get(url)
                   .map(response => response.json())
                   .catch(this.handleError);
   }
 
-  searchByDay(month: number, day: number, properties: string, first, pageCount: number, random: boolean) {
+  searchByDay(month: number, day: number, properties: string, first: number, pageCount: number, random: boolean) {
       var url = "/api/by-day?month=" + month + "&day=" + day + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,year"
       if (random) {
           url += "&random=" + random
@@ -40,7 +41,7 @@ export class SearchService {
                   .catch(this.handleError);
   }
 
-  searchByLocation(lat, lon: number, properties: string, first, pageCount: number) {
+  searchByLocation(lat: number, lon: number, properties: string, first: number, pageCount: number) {
       var url = "/api/nearby?lat=" + lat + "&lon=" + lon + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,date"
       return this._http.get(url)
                     .map(response => response.json())

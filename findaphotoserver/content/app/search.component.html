@@ -76,13 +76,13 @@
       <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
   </div>
 
-  <div *ngFor="#group of searchResults.groups">
+  <div *ngFor="let group of searchResults.groups">
     <div style="clear:both;"></div>
     <br>
     <hr style="width:100%;"/>
     <div *ngIf="showGroup" class="section-header">{{group.name}}</div>
     <p>
-    <div id="singleimage" *ngFor="#item of group.items; #imageIndex = index">
+    <div id="singleimage" *ngFor="let item of group.items; let imageIndex = index">
         <div id="thumbnail">
             <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
                 <img src="{{item.thumbUrl}}">

@@ -1,5 +1,6 @@
-import { Component, OnInit } from 'angular2/core';
-import { Router,RouteParams, ROUTER_DIRECTIVES, Location } from 'angular2/router';
+import { Component, OnInit } from '@angular/core';
+import { Router,RouteParams, ROUTER_DIRECTIVES } from '@angular/router-deprecated';
+import { Location } from '@angular/common';
 
 import { BaseComponent } from './base.component';
 import { SearchRequest } from './search-request';

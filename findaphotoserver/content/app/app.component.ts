@@ -1,7 +1,7 @@
-import { Component, provide } from 'angular2/core';
-import { RouteConfig, ROUTER_DIRECTIVES, ROUTER_PROVIDERS } from 'angular2/router';
-import { LocationStrategy, HashLocationStrategy } from 'angular2/router';
-import { HTTP_PROVIDERS } from 'angular2/http'
+import { Component, provide } from '@angular/core';
+import { RouteConfig, ROUTER_DIRECTIVES, ROUTER_PROVIDERS } from '@angular/router-deprecated';
+import { LocationStrategy, HashLocationStrategy } from '@angular/common';
+import { HTTP_PROVIDERS } from '@angular/http'
 
 import { SearchService } from './search.service';
 import { SearchComponent } from './search.component';

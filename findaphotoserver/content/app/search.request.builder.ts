@@ -1,6 +1,7 @@
+import { RouteParams } from '@angular/router-deprecated';
+import { Injectable } from '@angular/core';
+
 import { SearchRequest } from './search-request';
-import { RouteParams } from 'angular2/router';
-import { Injectable } from 'angular2/core';
 
 @Injectable()
 export class SearchRequestBuilder {

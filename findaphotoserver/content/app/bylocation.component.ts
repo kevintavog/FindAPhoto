@@ -1,5 +1,6 @@
-import { Component, OnInit } from 'angular2/core';
-import { Router, ROUTER_DIRECTIVES, RouteParams, Location } from 'angular2/router';
+import { Component, OnInit } from '@angular/core';
+import { Router, ROUTER_DIRECTIVES, RouteParams } from '@angular/router-deprecated';
+import { Location } from '@angular/common';
 
 import { BaseSearchComponent } from './base.search.component';
 import { SearchRequest } from './search-request';
@@ -73,7 +74,7 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
 
     }
 
-    setLocationName(name, displayName: string) {
+    setLocationName(name: string, displayName: string) {
         this.pageMessage = "Pictures near: " + name
         if (displayName != undefined) {
             this.pageSubMessage = displayName

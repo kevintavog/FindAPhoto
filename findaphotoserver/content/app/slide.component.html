@@ -51,7 +51,7 @@
         <span *ngIf="nearbyResults != null" >
             <hr>
             <div class="slideshow-extra_title">Nearby items</div>
-            <figure style="display:inline-block;" *ngFor="#item of nearbyResults">
+            <figure style="display:inline-block;" *ngFor="let item of nearbyResults">
                 <div id="thumbnail">
                     <a [routerLink]="['ByLocation', { lat:item.latitude, lon:item.longitude }]">
                         <img src="{{item.thumbUrl}}">
@@ -72,7 +72,7 @@
         <span *ngIf="sameDateResults != null" >
             <hr>
             <div class="slideshow-extra_title">Items with the same month & day</div>
-            <figure style="display:inline-block;" *ngFor="#item of sameDateResults">
+            <figure style="display:inline-block;" *ngFor="let item of sameDateResults">
                 <div id="thumbnail">
                     <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
                         <img src="{{item.thumbUrl}}">
@@ -92,7 +92,7 @@
 
     <div *ngIf="slideInfo.warnings != undefined">
         <ol>
-            <li *ngFor="#warning of slideInfo.warnings">{{warning}}</li>
+            <li *ngFor="let warning of slideInfo.warnings">{{warning}}</li>
         </ol>
     </div>
 

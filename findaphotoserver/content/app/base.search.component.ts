@@ -1,4 +1,5 @@
-import { Router, ROUTER_DIRECTIVES, RouteParams, Location } from 'angular2/router';
+import { Router, ROUTER_DIRECTIVES, RouteParams } from '@angular/router-deprecated';
+import { Location } from '@angular/common';
 
 import { BaseComponent } from './base.component';
 import { SearchService } from './search.service';
@@ -50,7 +51,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
 
-    slideSearchLinkParameters(item: SearchItem, imageIndex, groupIndex: number) {
+    slideSearchLinkParameters(item: SearchItem, imageIndex: number, groupIndex: number) {
         let properties = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest)
         properties['id'] = item.id
         properties['i'] = imageIndex + groupIndex + this.searchRequest.first
@@ -86,10 +87,10 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
         if (window.navigator.geolocation) {
             window.navigator.geolocation.getCurrentPosition(
-                (position) => {
+                (position: Position) => {
                     this._router.navigate( ['ByLocation', { lat:position.coords.latitude, lon:position.coords.longitude }] );
                 },
-                (error) => {
+                (error: PositionError) => {
                     this.locationError = "Unable to get location: " + error.message + " (" + error.code + ")"
                 })
         }
@@ -141,7 +142,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
         return null
     }
 
-    abstract processSearchResults()
+    abstract processSearchResults() : void
     typeLeftButton() {}
     typeRightButton() {}
 
