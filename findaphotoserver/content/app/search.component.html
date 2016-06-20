@@ -41,27 +41,42 @@
     <h2 class="server-error">{{serverError}}</h2>
 </div>
 
+<!--  Categories aren't ready
+    - open/collapse works in desktop Safari, but not Firefox or mobile Safari
+
 <div *ngIf="searchResults != null && searchResults.categories != null && searchResults.categories.length > 0" >
-    <div id="containerLeft">
-        <div id="containerMiddle">
-            <div id="containerRight">
-<!--
-                <div *ngIf="categoryDate() != null" id="columnLeft" >
-                    <category-tree-view [category]=categoryDate()></category-tree-view>
-                </div>
+    <br>
 
-                <div *ngIf="categoryKeywords() != null" id="columnMiddle" >
-                    <category-tree-view [category]=categoryKeywords()></category-tree-view>
-                </div>
+    <div id="main-filter-panel-closed" class="filter-panel" *ngIf="showFilters != true" (click)="toggleFilterPanel()"  >
+        Filters &#x025BD;
+    </div>
 
-                <div *ngIf="categoryPlacenames() != null" id="columnRight" >
-                    <category-tree-view [category]=categoryPlacenames()></category-tree-view>
+    <div id="main-filter-panel-opened" class="filter-panel" *ngIf="showFilters == true" (click)="toggleFilterPanel()" >
+        Filters &#x025B3;
+
+        <div id="containerLeft" class="filter-panel" >
+            <div id="containerMiddle" class="filter-panel" >
+                <div id="containerRight" class="filter-panel" >
+
+                    <div *ngIf="categoryDate() != null" id="columnLeft" class="filter-panel" >
+                        <category-tree-view [caption]=DatesCaption [category]=categoryDate()></category-tree-view>
+                    </div>
+
+                    <div *ngIf="categoryKeywords() != null" id="columnMiddle" class="filter-panel" >
+                        <category-tree-view [caption]=KeywordsCaption [category]=categoryKeywords()></category-tree-view>
+                    </div>
+
+                    <div *ngIf="categoryPlacenames() != null" id="columnRight" class="filter-panel" >
+                        <category-tree-view [caption]=LocationsCaption [category]=categoryPlacenames()></category-tree-view>
+                    </div>
+
                 </div>
--->
             </div>
         </div>
     </div>
 </div>
+-->
+
 
 <div *ngIf="searchResults != null">
   <br>

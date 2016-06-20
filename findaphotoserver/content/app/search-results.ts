@@ -39,12 +39,18 @@ export interface SearchItem {
 }
 
 export interface SearchCategory {
-    name: string;
-    values: SearchCategoryValues[];
+    field: string;
+    details: SearchCategoryDetail[];
 }
 
-export interface SearchCategoryValues {
+export interface SearchCategoryDetail {
     count: number;
     value: string;
-    subCategories: SearchCategoryValues[];
+    field: string;
+    details: SearchCategoryDetail[];
+
+    // Fields added by the client side
+    displayValue: string;
+    selected: boolean;
+    isOpen: boolean;
 }

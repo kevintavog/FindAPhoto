@@ -78,6 +78,9 @@ export class SearchRequestBuilder {
             longitude = +routeParams.get('lon')
         }
 
-        return { searchType: searchType, searchText: searchText, first: firstItem, pageCount: itemsPerPage, properties: queryProperties, month: month, day: day, latitude: latitude, longitude: longitude }
+        let drilldown = routeParams.get("drilldown")
+
+        return { searchType: searchType, searchText: searchText, first: firstItem, pageCount: itemsPerPage,
+            properties: queryProperties, month: month, day: day, latitude: latitude, longitude: longitude, drilldown: drilldown }
     }
 }

@@ -7,7 +7,6 @@
         'app': 'app',
 
         '@angular': 'https://npmcdn.com/@angular', // sufficient if we didn't pin the version
-        'angular2-in-memory-web-api': 'https://npmcdn.com/angular2-in-memory-web-api', // get latest
         'rxjs': 'https://npmcdn.com/rxjs@5.0.0-beta.6',
         'ts': 'https://npmcdn.com/plugin-typescript@4.0.10/lib/plugin.js',
         'typescript': 'https://npmcdn.com/typescript@1.8.10/lib/typescript.js',

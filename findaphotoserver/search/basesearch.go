@@ -19,6 +19,10 @@ type CategoryOptions struct {
 	YearCount      int
 }
 
+type DrilldownOptions struct {
+	Drilldown map[string][]string
+}
+
 type SearchResult struct {
 	TotalMatches int64
 	Groups       []*SearchGroup
@@ -47,14 +51,15 @@ type MediaHit struct {
 }
 
 type CategoryResult struct {
-	Name   string
-	Values []*CategoryValue
+	Field   string
+	Details []*CategoryDetailResult
 }
 
-type CategoryValue struct {
-	Value         string
-	Count         int
-	SubCategories []*CategoryValue
+type CategoryDetailResult struct {
+	Field    *string
+	Value    string
+	Count    int
+	Children []*CategoryDetailResult
 }
 
 const (
@@ -74,14 +79,22 @@ func NewCategoryOptions() *CategoryOptions {
 }
 
 //-------------------------------------------------------------------------------------------------
+func NewDrilldownOptions() *DrilldownOptions {
+	return &DrilldownOptions{
+		Drilldown: make(map[string][]string),
+	}
+}
+
+//-------------------------------------------------------------------------------------------------
 
 // Each search may return specific fields
 type mappingAction func(searchHit *elastic.SearchHit, mediaHit *MediaHit)
 
 //-------------------------------------------------------------------------------------------------
-func invokeSearch(search *elastic.SearchService, groupBy int, categoryOptions *CategoryOptions, extraMapping mappingAction) (*SearchResult, error) {
+func invokeSearch(search *elastic.SearchService, query *elastic.Query, groupBy int, categoryOptions *CategoryOptions, drilldownOptions *DrilldownOptions, extraMapping mappingAction) (*SearchResult, error) {
 
 	addAggregations(search, categoryOptions)
+	addDrilldown(search, query, drilldownOptions)
 
 	result, err := search.Do()
 	if err != nil {
@@ -89,6 +102,7 @@ func invokeSearch(search *elastic.SearchService, groupBy int, categoryOptions *C
 	}
 
 	sr := &SearchResult{TotalMatches: result.TotalHits()}
+
 	if sr.TotalMatches > 0 {
 		var lastGroup = ""
 		sr.Groups = []*SearchGroup{}
@@ -188,8 +202,8 @@ func processAggregations(aggregations *elastic.Aggregations) []*CategoryResult {
 	for key, _ := range *aggregations {
 		terms, ok := aggregations.Terms(key)
 		if ok {
-			category := &CategoryResult{}
-			values := make([]*CategoryValue, 0)
+			topCategory := &CategoryResult{}
+			detailsList := make([]*CategoryDetailResult, 0)
 
 			for _, bucket := range terms.Buckets {
 				if bucket.DocCount == 0 {
@@ -207,23 +221,23 @@ func processAggregations(aggregations *elastic.Aggregations) []*CategoryResult {
 					v = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
 				}
 
-				categoryValue := &CategoryValue{}
-				values = append(values, categoryValue)
-				categoryValue.Value = v
-				categoryValue.Count = int(bucket.DocCount)
+				detail := &CategoryDetailResult{}
+				detail.Value = v
+				detail.Count = int(bucket.DocCount)
+				detailsList = append(detailsList, detail)
 
 				// ElasticSearch doesn't return aggregations in buckets EXCEPT for sub-aggregates. But the conversion to a Go
 				// response always includes aggregates. The comparison of length is to filter out the expected 'key' & 'doc_count'
 				// fields, allowing the code to get the actual values of interest.
 				if bucket.Aggregations != nil && len(bucket.Aggregations) > 2 {
-					categoryValue.SubCategories = processChildAggregations(&bucket.Aggregations)
+					detail.Field, detail.Children = processDetailAggregations(&bucket.Aggregations)
 				}
 			}
 
-			if len(values) > 0 {
-				category.Name = key
-				category.Values = values
-				result = append(result, category)
+			topCategory.Field = key
+			if len(detailsList) > 0 {
+				topCategory.Details = detailsList
+				result = append(result, topCategory)
 			}
 		}
 	}
@@ -231,16 +245,18 @@ func processAggregations(aggregations *elastic.Aggregations) []*CategoryResult {
 	return result
 }
 
-func processChildAggregations(aggregations *elastic.Aggregations) []*CategoryValue {
+func processDetailAggregations(aggregations *elastic.Aggregations) (*string, []*CategoryDetailResult) {
 	if aggregations == nil || len(*aggregations) < 1 {
-		return nil
+		return nil, nil
 	}
 
-	result := make([]*CategoryValue, 0)
+	result := make([]*CategoryDetailResult, 0)
 
-	for key, _ := range *aggregations {
-		terms, ok := aggregations.Terms(key)
+	var key string
+	for k, _ := range *aggregations {
+		terms, ok := aggregations.Terms(k)
 		if ok {
+			key = k
 			for _, bucket := range terms.Buckets {
 				if bucket.DocCount == 0 {
 					continue
@@ -255,26 +271,82 @@ func processChildAggregations(aggregations *elastic.Aggregations) []*CategoryVal
 					// Assume it's a time, specifically, milliseconds since the epoch
 					msec := int64(bucket.Key.(float64))
 					v = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
+				default:
+					v = "error"
+					fmt.Printf("Unhandled type '%v'\n", bucket.Key)
 				}
 
-				categoryValue := &CategoryValue{}
-				result = append(result, categoryValue)
-				categoryValue.Value = v
-				categoryValue.Count = int(bucket.DocCount)
+				detail := &CategoryDetailResult{}
+				result = append(result, detail)
+				detail.Value = v
+				detail.Count = int(bucket.DocCount)
 
 				// ElasticSearch doesn't return aggregations in buckets EXCEPT for sub-aggregates. But the conversion to a Go
 				// response always includes aggregates. The comparison of length is to filter out the expected 'key' & 'doc_count'
 				// fields, allowing the code to get the actual values of interest.
 				if bucket.Aggregations != nil && len(bucket.Aggregations) > 2 {
-					categoryValue.SubCategories = processChildAggregations(&bucket.Aggregations)
+					detail.Field, detail.Children = processDetailAggregations(&bucket.Aggregations)
 				}
 			}
 		}
 	}
 
 	if len(result) > 0 {
-		return result
+		return &key, result
 	}
 
-	return nil
+	return nil, nil
+}
+
+func addDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, drilldownOptions *DrilldownOptions) {
+	if searchQuery == nil {
+		return
+	}
+
+	if len(drilldownOptions.Drilldown) < 1 {
+		return
+	}
+
+	// locations (site, city, state, country) are OR - also, OR between each type/level
+	// dates are OR
+	// keywords are OR
+	// ANDed together ((locations) AND (dates) AND (keywords))
+
+	// countryName:Canada;stateName:Washington,Ile-de-France;keywords:trip,flower
+	// (countryName=Canada OR stateName=Washington OR stateName=Ile-de-France) AND (keywords=trip OR keywords=flower)
+
+	drilldownQuery := elastic.NewBoolQuery()
+	drilldownQuery.Must(*searchQuery)
+	var locationQuery *elastic.BoolQuery
+
+	for key, value := range drilldownOptions.Drilldown {
+		isLocationField := false
+		var fieldQuery *elastic.BoolQuery
+
+		switch strings.ToLower(key) {
+		// Re-use location query to have OR semantics for all location related fields
+		case "countryname", "statename", "cityname", "sitename":
+			if locationQuery == nil {
+				locationQuery = elastic.NewBoolQuery()
+			}
+			fieldQuery = locationQuery
+			isLocationField = true
+		default:
+			fieldQuery = elastic.NewBoolQuery()
+		}
+
+		for _, v := range value {
+			fieldQuery.Should(elastic.NewTermQuery(strings.ToLower(key), strings.ToLower(v)))
+		}
+
+		if !isLocationField {
+			drilldownQuery.Must(fieldQuery)
+		}
+	}
+
+	if locationQuery != nil {
+		drilldownQuery.Must(locationQuery)
+	}
+
+	search.Query(drilldownQuery)
 }

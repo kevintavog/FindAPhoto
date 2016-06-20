@@ -74,7 +74,20 @@ a:visited{
 .numberCircle:after {
     padding-right:8px;
 }
+.filter-panel {
+    background: #333;
+}
 
+#main-filter-panel-closed {
+    padding: 1em;
+}
+#main-filter-panel-opened {
+border: 1px solid blue;
+    padding: 1em;
+}
+#main-filter-panel-opened:after {
+    padding: 0;
+}
 #containerLeft {
 	clear:left;
 	float:left;

@@ -92,7 +92,7 @@ export class SlideComponent extends BaseComponent implements OnInit {
 
   loadNearby() {
       if (!this.hasLocation()) { return }
-      this._searchService.searchByLocation(this.slideInfo.latitude, this.slideInfo.longitude, SlideComponent.NearbyProperties, 1, 7).subscribe(
+      this._searchService.searchByLocation(this.slideInfo.latitude, this.slideInfo.longitude, SlideComponent.NearbyProperties, 1, 7, null).subscribe(
           results => {
               if (results.groups.length > 0 && results.groups[0].items.length > 0) {
                   let items = Array<SearchItem>()
@@ -118,7 +118,7 @@ export class SlideComponent extends BaseComponent implements OnInit {
       let day = this.itemDay(this.slideInfo)
       if (month < 0 || day < 0) { return }
 
-      this._searchService.searchByDay(month, day, SlideComponent.SameDateProperties, 1, 7, true).subscribe(
+      this._searchService.searchByDay(month, day, SlideComponent.SameDateProperties, 1, 7, true, null).subscribe(
           results => {
               if (results.groups.length > 0 && results.groups[0].items.length > 0) {
                   let items = Array<SearchItem>()

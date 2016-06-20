@@ -15,4 +15,6 @@ export interface SearchRequest {
     // A nearby search
     latitude: number;
     longitude: number;
+
+    drilldown: string;
 }

@@ -252,26 +252,56 @@ func convertCategories(categories []*search.CategoryResult) interface{} {
 	for index, category := range categories {
 		listItem := make(map[string]interface{})
 		list[index] = listItem
-		listItem["name"] = category.Name
-		listItem["values"] = convertCategoryValues(category.Values)
+		listItem["field"] = category.Field
+		listItem["details"] = convertCategoryDetails(category.Details)
 	}
 
 	return list
 }
 
-func convertCategoryValues(values []*search.CategoryValue) interface{} {
-	list := make([]map[string]interface{}, len(values))
+func convertCategoryDetails(details []*search.CategoryDetailResult) interface{} {
+	list := make([]map[string]interface{}, len(details))
 
-	for index, value := range values {
+	for index, detail := range details {
 		listItem := make(map[string]interface{})
 		list[index] = listItem
-		listItem["value"] = value.Value
-		listItem["count"] = value.Count
+		listItem["value"] = detail.Value
+		listItem["count"] = detail.Count
+		if detail.Field != nil {
+			listItem["field"] = detail.Field
+		}
 
-		if len(value.SubCategories) > 0 {
-			listItem["subCategories"] = convertCategoryValues(value.SubCategories)
+		if len(detail.Children) > 0 {
+			listItem["details"] = convertCategoryDetails(detail.Children)
 		}
 	}
 
 	return list
+}
+
+func populateDrilldownOptions(fc *applicationglobals.FpContext, drilldownOptions *search.DrilldownOptions) {
+
+	// TODO: Is this a LARS bug? The examples don't show a call to ParseForm being required to get query parameters
+	// Even with this, the query param example isn't working for me
+	err := fc.Ctx.ParseForm()
+	if err != nil {
+		panic(&InvalidRequest{message: "parseFormError", err: err})
+	}
+
+	// Drilldown is provided as 'field1:val1-1,val1-2_field2:val2-1' - each field/value set is seperated by '_',
+	// the field & values are separated by ':' and the values are separated by ','
+	// Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
+	drilldown := fc.Ctx.Request().Form.Get("drilldown") // Grumble grumble - should be 'query := c.Param("drilldown")'
+	if len(drilldown) > 0 {
+		for _, c := range strings.Split(drilldown, "_") {
+			fieldAndValues := strings.SplitN(c, ":", 2)
+			if len(fieldAndValues) != 2 {
+				panic(&InvalidRequest{message: fmt.Sprintf("Poorly formed drilldown (missing ':'): '%s'", c)})
+			}
+
+			field := fieldAndValues[0]
+			values := strings.Split(fieldAndValues[1], ",")
+			drilldownOptions.Drilldown[field] = append(drilldownOptions.Drilldown[field], values...)
+		}
+	}
 }

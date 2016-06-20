@@ -54,7 +54,7 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
         }
 
         // Ask the server for something nearby the given location
-        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1).subscribe(
+        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1, null).subscribe(
             results => {
                 let messageSet = false
                 if (results.totalMatches > 0) {

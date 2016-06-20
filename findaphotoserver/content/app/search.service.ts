@@ -12,26 +12,31 @@ export class SearchService {
     search(request: SearchRequest) {
         switch (request.searchType) {
             case 's':
-                return this.searchByText(request.searchText, request.properties, request.first, request.pageCount)
+                return this.searchByText(request.searchText, request.properties, request.first, request.pageCount, request.drilldown)
             case 'd':
-                return this.searchByDay(request.month, request.day, request.properties, request.first, request.pageCount, false)
+                return this.searchByDay(request.month, request.day, request.properties, request.first, request.pageCount, false, request.drilldown)
             case 'l':
-                return this.searchByLocation(request.latitude, request.longitude, request.properties, request.first, request.pageCount)
+                return this.searchByLocation(request.latitude, request.longitude, request.properties, request.first, request.pageCount, request.drilldown)
         }
 
-        console.log("Unknown search type: " + request.searchType)
         return Observable.throw("Unknown search type: " + request.searchType)
     }
 
-  searchByText(searchText: string, properties: string, first: number, pageCount: number) {
+  searchByText(searchText: string, properties: string, first: number, pageCount: number, drilldown: string) {
       var url = "/api/search?q=" + searchText + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,date"
+      if (drilldown != undefined && drilldown.length > 0) {
+          url += "&drilldown=" + drilldown
+      }
       return this._http.get(url)
                   .map(response => response.json())
                   .catch(this.handleError);
   }
 
-  searchByDay(month: number, day: number, properties: string, first: number, pageCount: number, random: boolean) {
+  searchByDay(month: number, day: number, properties: string, first: number, pageCount: number, random: boolean, drilldown: string) {
       var url = "/api/by-day?month=" + month + "&day=" + day + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,year"
+      if (drilldown != undefined && drilldown.length > 0) {
+          url += "&drilldown=" + drilldown
+      }
       if (random) {
           url += "&random=" + random
       }
@@ -41,8 +46,11 @@ export class SearchService {
                   .catch(this.handleError);
   }
 
-  searchByLocation(lat: number, lon: number, properties: string, first: number, pageCount: number) {
+  searchByLocation(lat: number, lon: number, properties: string, first: number, pageCount: number, drilldown: string) {
       var url = "/api/nearby?lat=" + lat + "&lon=" + lon + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,date"
+      if (drilldown != undefined && drilldown.length > 0) {
+          url += "&drilldown=" + drilldown
+      }
       return this._http.get(url)
                     .map(response => response.json())
                     .catch(this.handleError);

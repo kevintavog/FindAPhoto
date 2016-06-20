@@ -15,17 +15,19 @@ type NearbyOptions struct {
 	Index               int
 	Count               int
 	CategoryOptions     *CategoryOptions
+	DrilldownOptions    *DrilldownOptions
 }
 
 //-------------------------------------------------------------------------------------------------
 func NewNearbyOptions(lat, lon float64, distance string) *NearbyOptions {
 	return &NearbyOptions{
-		Latitude:        lat,
-		Longitude:       lon,
-		Distance:        distance,
-		Index:           0,
-		Count:           20,
-		CategoryOptions: NewCategoryOptions(),
+		Latitude:         lat,
+		Longitude:        lon,
+		Distance:         distance,
+		Index:            0,
+		Count:            20,
+		CategoryOptions:  NewCategoryOptions(),
+		DrilldownOptions: NewDrilldownOptions(),
 	}
 }
 
@@ -40,7 +42,7 @@ func (no *NearbyOptions) Search() (*SearchResult, error) {
 	search.SortBy(elastic.NewGeoDistanceSort("location").Point(no.Latitude, no.Longitude).Order(true).Unit("km"))
 	search.From(no.Index).Size(no.Count)
 
-	return invokeSearch(search, GroupByAll, no.CategoryOptions, func(searchHit *elastic.SearchHit, mediaHit *MediaHit) {
+	return invokeSearch(search, nil, GroupByAll, no.CategoryOptions, no.DrilldownOptions, func(searchHit *elastic.SearchHit, mediaHit *MediaHit) {
 
 		// For the geo sort, the returned sort value is the distance from the given point, in kilometers
 		if len(searchHit.Sort) > 0 {

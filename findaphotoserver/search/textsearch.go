@@ -7,19 +7,21 @@ import (
 )
 
 type SearchOptions struct {
-	Query           string
-	Index           int
-	Count           int
-	CategoryOptions *CategoryOptions
+	Query            string
+	Index            int
+	Count            int
+	CategoryOptions  *CategoryOptions
+	DrilldownOptions *DrilldownOptions
 }
 
 //-------------------------------------------------------------------------------------------------
 func NewSearchOptions(query string) *SearchOptions {
 	return &SearchOptions{
-		Query:           query,
-		Index:           0,
-		Count:           20,
-		CategoryOptions: NewCategoryOptions(),
+		Query:            query,
+		Index:            0,
+		Count:            20,
+		CategoryOptions:  NewCategoryOptions(),
+		DrilldownOptions: NewDrilldownOptions(),
 	}
 }
 
@@ -30,17 +32,20 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 		Type(common.MediaTypeName).
 		Pretty(true)
 
+	var query elastic.Query
 	if so.Query == "" {
-		search.Query(elastic.NewMatchAllQuery())
+		query = elastic.NewMatchAllQuery()
 	} else {
-		search.Query(elastic.NewQueryStringQuery(so.Query).
+		query = elastic.NewQueryStringQuery(so.Query).
 			Field("path"). // Folder name
 			Field("monthname").
 			Field("dayname").
 			Field("keywords").
-			Field("placename")) // Full reverse location lookup
+			Field("placename") // Full reverse location lookup
 	}
 
+	search.Query(query)
+
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
-	return invokeSearch(search, GroupByPath, so.CategoryOptions, nil)
+	return invokeSearch(search, &query, GroupByPath, so.CategoryOptions, so.DrilldownOptions, nil)
 }

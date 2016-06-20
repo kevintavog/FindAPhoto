@@ -1,3 +1,4 @@
+import { Input, Output } from "@angular/core"
 import { Router, ROUTER_DIRECTIVES, RouteParams } from '@angular/router-deprecated';
 import { Location } from '@angular/common';
 
@@ -5,16 +6,24 @@ import { BaseComponent } from './base.component';
 import { SearchService } from './search.service';
 import { SearchRequestBuilder } from './search.request.builder';
 import { SearchRequest } from './search-request';
-import { SearchResults,SearchGroup,SearchItem } from './search-results';
+import { SearchResults, SearchGroup, SearchItem, SearchCategory, SearchCategoryDetail } from './search-results';
+
 
 export abstract class BaseSearchComponent extends BaseComponent {
+
+
     protected static QueryProperties: string = "id,city,keywords,imageName,createdDate,latitude,longitude,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 30
+
+    public DatesCaption: string = "Dates:"
+    public KeywordsCaption: string = "Keywords:"
+    public LocationsCaption: string = "Locations:"
 
     showLinks: boolean
     showSearch: boolean
     showGroup: boolean
     showDistance: boolean
+    @Output() @Input() showFilters: boolean = false
 
     locationError: string
     serverError: string
@@ -29,6 +38,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     typeRightButtonText: string
 
     extraProperties: string
+
 
     constructor(
         private _pageRoute: string,
@@ -59,7 +69,12 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
     updateUrl() {
-        this._location.go(this._pageRoute, this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + "&p=" + this.currentPage)
+        let drilldown = this.generateDrilldown()
+        if (drilldown.length > 0) {
+            drilldown = "&drilldown=" + drilldown
+        }
+
+        this._location.go(this._pageRoute, this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + drilldown + "&p=" + this.currentPage)
     }
 
     previousPage() {
@@ -97,6 +112,15 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
     internalSearch(updateUrl: boolean) {
+        var selectedCategories = new Map<string,string[]>()
+        if (this.searchResults != null) {
+            for (var cat of this.searchResults.categories) {
+               this.saveSelectedCategories(cat.field, cat.details, selectedCategories)
+            }
+
+            this.searchRequest.drilldown = this.generateDrilldown()
+        }
+
         this.searchResults = undefined
         this.serverError = undefined
         this.pageMessage = undefined
@@ -115,31 +139,134 @@ export abstract class BaseSearchComponent extends BaseComponent {
                 this.totalPages = ((pageCount) | 0) + (pageCount > Math.floor(pageCount) ? 1 : 0)
                 this.currentPage = 1 + (this.searchRequest.first / BaseSearchComponent.ItemsPerPage) | 0
 
-                if (updateUrl) { this.updateUrl() }
-
                 this.processSearchResults()
+
+                var dates = this.categoryDate()
+                if (dates != null) {
+                    for (var detail of dates.details) {
+                        if (detail.value.length == 8 && Number.isInteger(Number(detail.value))) {
+                            let year = Number(detail.value.substring(0, 4))
+                            let month = Number(detail.value.substring(4, 6))
+                            let day = Number(detail.value.substring(6, 8))
+
+                            detail.displayValue = new Date(year, month - 1, day).toLocaleDateString()
+                        }
+                    }
+                }
+
+                selectedCategories.forEach((value, key) => {
+                    this.selectSavedCategories(key.split("/"), value)
+                })
+
+                if (updateUrl) { this.updateUrl() }
             },
             error => this.serverError = error
        );
     }
 
-    categoryDate() {
-        return this.categoryByName("date")
+    selectSavedCategories(categoryPath:string[], valueArray:string[]) {
+        if (this.searchResults == undefined || this.searchResults.categories == undefined) {
+            return
+        }
+
+        for (let category of this.searchResults.categories) {
+            if (category.field == categoryPath[0] && category.details != undefined) {
+                this.selectSavedCategoryChildren(category.details, categoryPath.slice(1), valueArray)
+            }
+        }
     }
 
-    categoryKeywords() {
-        return this.categoryByName("keywords")
+    selectSavedCategoryChildren(details:SearchCategoryDetail[], childPath:string[], valueArray:string[]) {
+        if (childPath.length == 0) {
+            for (let d of details) {
+                if (valueArray.indexOf(d.value) >= 0) {
+                    d.selected = true
+                }
+            }
+        } else {
+            for (let d of details) {
+                if (childPath[0] == d.field) {
+                    this.selectSavedCategoryChildren(d.details, childPath.slice(1), valueArray)
+                }
+            }
+        }
     }
 
-    categoryPlacenames() {
-        return this.categoryByName("countryName")
+    saveSelectedCategories(field: string, details: SearchCategoryDetail[], selectedCategories: Map<string,string[]>) {
+        for (var scd of details) {
+            if (scd.selected) {
+                if (selectedCategories.has(field)) {
+                    selectedCategories.get(field).push(scd.value)
+                } else {
+                    selectedCategories.set(field, [scd.value])
+                }
+            }
+
+            if (scd.details != undefined) {
+                this.saveSelectedCategories(field + "/" + scd.field, scd.details, selectedCategories)
+            }
+        }
     }
 
-    categoryByName(name: string) {
+    // Generate the drilldown from selected categories. The format is 'category name':val1,val2' - each category is
+    // separated by '_'. For heirarchecal categories, the 'category name' is the selected value
+    //      Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
+    generateDrilldown() : string {
+        var selectedCategories = new Map<string,string[]>()
+        if (this.searchResults != null) {
+            for (var cat of this.searchResults.categories) {
+               this.saveSelectedCategories(cat.field, cat.details, selectedCategories)
+            }
+        }
+        return this.generateDrilldownWithCategories(selectedCategories)
+    }
+
+    generateDrilldownWithCategories(selectedCategories: Map<string,string[]>) : string {
+        var drilldown = ""
+        selectedCategories.forEach((value, key) => {
+            let categories = key.split("/")
+            if (drilldown.length > 0) {
+                drilldown += "_"
+            }
+
+            drilldown += categories[categories.length - 1] + ':' + value.join(",")
+        })
+        return drilldown
+    }
+
+    logCategoryDetails(details: SearchCategoryDetail[], prefix: string) {
+        if (details == undefined || details == null) { return }
+        for (var d of details) {
+            console.log(prefix + d.value + "; " + d.count + "; " + d.field)
+            this.logCategoryDetails(d.details, prefix + "  ")
+        }
+    }
+
+    categoryDate() : SearchCategory {
+        return this.categoryByField("date")
+    }
+
+    categoryKeywords() : SearchCategory {
+        return this.categoryByField("keywords")
+    }
+
+    categoryPlacenames() : SearchCategory {
+        return this.categoryByField("countryName")
+    }
+
+    categoryByField(field: string) : SearchCategory {
         for (var category of this.searchResults.categories) {
-            if (category.name == name) { return category }
+            if (category.field == field) { return category }
         }
         return null
+    }
+
+    toggleFilterPanel() {
+        if (this.showFilters != true) {
+            this.showFilters = true
+        } else {
+            this.showFilters = false
+        }
     }
 
     abstract processSearchResults() : void

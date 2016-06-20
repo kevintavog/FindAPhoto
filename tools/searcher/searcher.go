@@ -41,13 +41,13 @@ func addQuery(search *elastic.SearchService) {
 	//	query := elastic.NewQueryStringQuery("monthname:august") // string query is analyzed, so can find 'Sep' and 'sep'
 	//	query := elastic.NewQueryStringQuery("filename:DSCN3380")
 	//	query := elastic.NewQueryStringQuery("DSCN3380").Field("path").Field("monthname").Field("dayname").Field("keyword").Field("placename")
-	//	query := elastic.NewQueryStringQuery("mural").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
+	query := elastic.NewQueryStringQuery("mural").Field("path").Field("monthname").Field("dayname").Field("keywords").Field("placename")
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
 
 	//	query := addDateRangeQuery(search)
 
 	//	query := elastic.NewQueryStringQuery("cityname:Seattle")
-	query := elastic.NewMatchAllQuery()
+	//	query := elastic.NewMatchAllQuery()
 	//	query = nil
 
 	//	query := elastic.NewQueryStringQuery("keywords:mount rainier")
@@ -74,13 +74,21 @@ func addQuery(search *elastic.SearchService) {
 }
 
 func addAggregate(search *elastic.SearchService) {
-	search.Aggregation("countryName", elastic.NewTermsAggregation().Field("countryname.value").Size(30).
-		SubAggregation("stateName", elastic.NewTermsAggregation().Field("statename.value").Size(10).
-		SubAggregation("cityName", elastic.NewTermsAggregation().Field("cityname.value").Size(10).
-		SubAggregation("siteName", elastic.NewTermsAggregation().Field("sitename.value").Size(10)))))
+
+	//	search.Aggregation("countryName", elastic.NewTermsAggregation().Field("countryname.value").Size(10).
+	//		SubAggregation("stateName", elastic.NewTermsAggregation().Field("statename.value").Size(10).
+	//			SubAggregation("cityName", elastic.NewTermsAggregation().Field("cityname.value").Size(10).
+	//				SubAggregation("siteName", elastic.NewTermsAggregation().Field("sitename.value").Size(10)))))
 
 	//	search.Aggregation("siteName", elastic.NewTermsAggregation().Field("sitename.value").Size(30))
 	//	search.Aggregation("cityName", elastic.NewTermsAggregation().Field("cityname.value").Size(30))
+
+	//	search.Aggregation("datetime", elastic.NewDateHistogramAggregation().
+	//		Field("datetime").
+	//		Interval("year").
+	//		Format("YYYY").
+	//		TimeZone("UTC").
+	//		Offset("-8h"))
 
 	//	search.Aggregation("datetime", elastic.NewDateHistogramAggregation().
 	//		Field("datetime").
@@ -88,6 +96,10 @@ func addAggregate(search *elastic.SearchService) {
 	//		Format("YYYY-MM").
 	//		TimeZone("UTC").
 	//		Offset("-8h"))
+
+	//	search.Aggregation("date", elastic.NewTermsAggregation().Field("date").Size(10))
+	search.Aggregation("keywords", elastic.NewTermsAggregation().Field("keywords").Size(10))
+	//	search.Aggregation("stats", elastic.NewStatsAggregation().Field("cachedlocationdistancemeters"))
 
 	//	maxResults := 10
 	//	field := "date"
@@ -107,7 +119,7 @@ func main() {
 		Pretty(true)
 
 	addQuery(search)
-	//	addAggregate(search)
+	addAggregate(search)
 
 	searchStartTime := time.Now()
 
@@ -183,5 +195,4 @@ func emitAggregations(aggs *elastic.Aggregations, prefix string) {
 			}
 		}
 	}
-
 }

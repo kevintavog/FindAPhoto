@@ -48,6 +48,7 @@ func populateSearchOptions(fc *applicationglobals.FpContext) *search.SearchOptio
 
 	searchOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
 	populateCategoryOptions(fc, searchOptions.CategoryOptions)
+	populateDrilldownOptions(fc, searchOptions.DrilldownOptions)
 	return searchOptions
 }
 

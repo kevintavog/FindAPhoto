@@ -165,7 +165,7 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 			            }
 					  }
 					},
-					
+
 					"cityname" : {
 					  "type" : "string",
 			          "fields": {

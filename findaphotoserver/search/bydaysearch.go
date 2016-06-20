@@ -8,23 +8,25 @@ import (
 )
 
 type ByDayOptions struct {
-	Month           int
-	DayOfMonth      int
-	Index           int
-	Count           int
-	Random          bool
-	CategoryOptions *CategoryOptions
+	Month            int
+	DayOfMonth       int
+	Index            int
+	Count            int
+	Random           bool
+	CategoryOptions  *CategoryOptions
+	DrilldownOptions *DrilldownOptions
 }
 
 //-------------------------------------------------------------------------------------------------
 func NewByDayOptions(month, dayOfMonth int) *ByDayOptions {
 	return &ByDayOptions{
-		Month:           month,
-		DayOfMonth:      dayOfMonth,
-		Index:           0,
-		Count:           20,
-		Random:          false,
-		CategoryOptions: NewCategoryOptions(),
+		Month:            month,
+		DayOfMonth:       dayOfMonth,
+		Index:            0,
+		Count:            20,
+		Random:           false,
+		CategoryOptions:  NewCategoryOptions(),
+		DrilldownOptions: NewDrilldownOptions(),
 	}
 }
 
@@ -51,7 +53,7 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 		search.Sort("datetime", false)
 	}
 
-	result, err := invokeSearch(search, grouping, bdo.CategoryOptions, nil)
+	result, err := invokeSearch(search, nil, grouping, bdo.CategoryOptions, bdo.DrilldownOptions, nil)
 	if err == nil {
 		result.PreviousAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Lt(dayOfYear), false)
 		result.NextAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Gt(dayOfYear), true)
