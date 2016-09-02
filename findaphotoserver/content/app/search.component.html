@@ -1,45 +1,53 @@
-<div class="container" *ngIf="showSearch == true">
-  <form>
-      <a [routerLink]="['Search']"> Find A Photo:</a>
-      <input type="text" class="searchinput" autofocus [(ngModel)]="searchRequest.searchText" ngControl="searchText" >
-      <button type="submit" class="btn btn-default" (click)="userSearch()">Search</button>
-  </form>
-</div>
+<ul class="c-nav c-nav--inline">
+    <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Home </li>
+    <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
+    <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
+    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i> Info</li>
+</ul>
 
-<div>
-    <button class="btn" (click)="searchNearby()"> Nearby </button>
-    <button class="btn" (click)="searchToday()"> Today </button>
+<p style="margin-bottom:.5em;" >
+<form *ngIf="showSearch == true">
+    <div class="o-container o-container--large" >
+        <div class="c-input-group">
+            <input class="c-field" type="text" autofocus [(ngModel)]="searchRequest.searchText" >
+            <button class="c-button c-button c-button--primary" type="submit" (click)="userSearch()" >Search</button>
+        </div>
+    </div>
+</form>
+
+
+<div class="c-alerts" *ngIf="serverError != undefined">
     <br>
+    <div class="c-alerts__alert c-alerts__alert--error">
+        {{serverError}}
+    </div>
 </div>
 
-<div *ngIf="locationError != undefined">
-    <h2 class="server-error">{{locationError}}</h2>
-</div>
-
-<div *ngIf="pageMessage != undefined" >
-    <div class="section-header">{{pageMessage}}</div>
-</div>
-
-<div *ngIf="pageSubMessage != undefined" >
-    <div class="sub-section">{{pageSubMessage}}</div>
-</div>
-
-
-<div *ngIf="typeLeftButtonText != undefined || typeRightButtonText != undefined" >
-    <button *ngIf="typeLeftButtonText != undefined" class="btn" (click)="typeLeftButton()"> {{typeLeftButtonText}} </button>
-    <button *ngIf="typeRightButtonText != undefined" class="btn" (click)="typeRightButton()"> {{typeRightButtonText}} </button>
-</div>
-
-
-<div *ngIf="showLinks == true" >
+<div class="c-alerts"  *ngIf="locationError != undefined">
     <br>
-    <a [routerLink]="['Search']"> Find A Photo </a>
+    <div class="c-alerts__alert c-alerts__alert--secondary">
+        {{locationError}}
+    </div>
 </div>
 
-<div *ngIf="serverError != undefined" >
-    <br>
-    <h2 class="server-error">{{serverError}}</h2>
+<div *ngIf="pageMessage != undefined">
+    <div class="page-message">{{pageMessage}}</div>
 </div>
+
+<div *ngIf="pageSubMessage != undefined">
+    <div class="sub-page-message">{{pageSubMessage}}</div>
+</div>
+
+
+<div *ngIf="typeLeftButtonText != undefined || typeRightButtonText != undefined">
+    <button class="left-button c-button c-button--success" *ngIf="typeLeftButtonText != undefined" (click)="typeLeftButton()">
+        <i class="{{typeLeftButtonClass}}" *ngIf="typeLeftButtonText != undefined"></i> {{typeLeftButtonText}}
+    </button>
+    <button class="right-button c-button c-button--success" *ngIf="typeRightButtonText != undefined" (click)="typeRightButton()">
+        {{typeRightButtonText}} <i class="{{typeRightButtonClass}}" *ngIf="typeRightButtonText != undefined"></i>
+    </button>
+</div>
+
 
 <!--  Categories aren't ready
     - open/collapse works in desktop Safari, but not Firefox or mobile Safari
@@ -79,69 +87,110 @@
 
 
 <div *ngIf="searchResults != null">
-  <br>
-  <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0" >No matches were found for '{{searchRequest.searchText}}'</h2>
-  <h2 class="search-results" *ngIf="showSearch == true && searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches" >Showing all {{searchResults.totalMatches}} items</h2>
-  <h2 class="search-results" *ngIf="showSearch == true && searchResults.resultCount != searchResults.totalMatches" >Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items</h2>
+    <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0">No matches were found for '{{searchRequest.searchText}}'</h2>
+
+    <div class="o-container o-container--small" *ngIf="totalPages > 1">
+        <div class="c-pagination">
+
+            <div *ngIf="showSearch == true && searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches">
+                Showing all {{searchResults.totalMatches}} items
+            </div>
+
+            <div *ngIf="showSearch == true && searchResults.resultCount != searchResults.totalMatches">
+                Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items
+            </div>
+
+          <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1 && totalPages > 4">
+            <button class="c-pagination__control" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
+          </div>
+          <div class="c-pagination__controls">
+            <button class="c-pagination__page" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
+            <button class="c-pagination__page c-pagination__page--current">{{currentPage}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
+          </div>
+          <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages && totalPages > 4">
+            <button class="c-pagination__control" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
+          </div>
+        </div>
+    </div>
 
 
-  <div id="paging" *ngIf="totalPages > 1" >
-      <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>
-      Page {{currentPage}} of {{totalPages}}
-      <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
-  </div>
+    <div *ngFor="let group of searchResults.groups">
+        <div style="clear:both;"></div>
+        <br>
+        <div class="result-set-container">
+            <div *ngIf="showGroup" class="result-set-header">{{group.name}}
+            </div>
+            <div class="result-set-grid">
+                <div class="result-set-item" *ngFor="let item of group.items; let imageIndex = index">
 
-  <div *ngFor="let group of searchResults.groups">
+                    <div class="result-set-thumbnail">
+                        <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
+                            <img src="{{item.thumbUrl}}" >
+                        </a>
+                    </div>
+
+                    <div class="result-set-info">
+                        <div class="o-grid">
+                          <div class="result-set-info-text-left o-grid__cell c-text" >{{item.imageName}}</div>
+                          <div class="result-set-info-text-right o-grid__cell c-text">
+                              <a [routerLink]="['ByLocation', { id:item.id, lat:item.latitude, lon:item.longitude }]">
+                                  {{item.city}}
+                              </a>
+                          </div>
+                        </div>
+                        <div class="o-grid">
+                          <div class="result-set-info-text-left o-grid__cell c-text">
+                              <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
+                                  {{getItemLocaleDate(item)}}
+                              </a>
+                          </div>
+                          <div class="result-set-info-text-right o-grid__cell c-text">{{item.keywords}}</div>
+                        </div>
+                        <div class="o-grid" *ngIf="showDistance">
+                            <div *ngIf="item.distancekm == 0"> Same location</div>
+                            <div *ngIf="item.distancekm > 0 && item.distancekm < 1.0"> Distance: {{(item.distancekm * 1000).toFixed(0)}} meters</div>
+                            <div *ngIf="item.distancekm >= 1.0"> Distance: {{item.distancekm.toFixed(2)}} KM</div>
+                        </div>
+                        <div class="o-grid" *ngIf="item.warnings != udefined">
+                            <span class="c-badge c-badge--secondary">{{item.warnings.length}}</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div style="clear:both;"></div>
     <br>
-    <hr style="width:100%;"/>
-    <div *ngIf="showGroup" class="section-header">{{group.name}}</div>
-    <p>
-    <div id="singleimage" *ngFor="let item of group.items; let imageIndex = index">
-        <div id="thumbnail">
-            <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
-                <img src="{{item.thumbUrl}}">
-                <span *ngIf="item.warnings != udefined" class="numberCircle">{{item.warnings.length}}</span>
-            </a>
-        </div>
-        <table class="imageListInfoTable">
-            <colgroup>
-                <col id="leftCol"/>
-                <col id="rightCol"/>
-            </colgroup>
-            <tr>
-                <td> {{item.imageName}} </td>
-                <td>
-                    <a [routerLink]="['ByLocation', { id:item.id, lat:item.latitude, lon:item.longitude }]">
-                        {{item.city}}
-                    </a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
-                        {{item.createdDate | DateStringToLocaleDatePipe:'dateOnly' }}
-                    </a>
-                </td>
-                <td> {{item.keywords}} </td>
-            </tr>
-            <tr *ngIf="showDistance">
-                <td colspan="2">
-                    <figcaption *ngIf="item.distancekm == 0"> Same location</figcaption>
-                    <figcaption *ngIf="item.distancekm > 0 && item.distancekm < 1.0"> Distance: {{(item.distancekm * 1000).toFixed(0)}} meters</figcaption>
-                    <figcaption *ngIf="item.distancekm >= 1.0"> Distance: {{item.distancekm.toFixed(2)}} KM</figcaption>
-                </td>
-            </tr>
-        </table>
-    </div>
-  </div>
+    <div class="o-container o-container--small" *ngIf="totalPages > 1">
+        <div class="c-pagination">
 
-  <br>
-  <div style="clear:both;"></div>
-  <div id="paging" *ngIf="totalPages > 1" >
-      <button (click)="previousPage()" *ngIf="currentPage > 1" class="page-button" >« Prev</button>
-      Page {{currentPage}} of {{totalPages}}
-      <button (click)="nextPage()" *ngIf="currentPage < totalPages" class="page-button" >Next »</button>
-  </div>
+          <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1">
+            <button class="c-pagination__control" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
+          </div>
+          <div class="c-pagination__controls">
+            <button class="c-pagination__page" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
+            <button class="c-pagination__page c-pagination__page--current">{{currentPage}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
+            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
+          </div>
+          <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages">
+            <button class="c-pagination__control" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
+          </div>
+        </div>
+    </div>
 </div>
 <br>

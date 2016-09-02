@@ -31,7 +31,6 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.showLinks = true
         this.showSearch = false
         this.showDistance = true
         this.showGroup = false
@@ -39,7 +38,6 @@ export class ByLocationComponent extends BaseSearchComponent implements OnInit {
         this.extraProperties = "locationName,locationDisplayName,distancekm"
         this.initializeSearchRequest('l')
 
-        // TODO: If location not specified, use the browser location (if user allows)
         this.internalSearch(false)
     }
 

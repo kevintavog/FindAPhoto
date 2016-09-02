@@ -5,6 +5,8 @@ import 'rxjs/Rx';
 
 import { SearchRequest } from './search-request';
 
+
+
 @Injectable()
 export class SearchService {
     constructor(private _http: Http) {}

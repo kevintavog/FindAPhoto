@@ -19,7 +19,6 @@ export abstract class BaseSearchComponent extends BaseComponent {
     public KeywordsCaption: string = "Keywords:"
     public LocationsCaption: string = "Locations:"
 
-    showLinks: boolean
     showSearch: boolean
     showGroup: boolean
     showDistance: boolean
@@ -36,6 +35,8 @@ export abstract class BaseSearchComponent extends BaseComponent {
     pageSubMessage: string
     typeLeftButtonText: string
     typeRightButtonText: string
+    typeLeftButtonClass: string
+    typeRightButtonClass: string
 
     extraProperties: string
 
@@ -77,6 +78,27 @@ export abstract class BaseSearchComponent extends BaseComponent {
         this._location.go(this._pageRoute, this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + drilldown + "&p=" + this.currentPage)
     }
 
+    gotoPage(pageOneBased: number) {
+        if (this.currentPage != pageOneBased) {
+            this.searchRequest.first = 1 + (pageOneBased - 1) * BaseSearchComponent.ItemsPerPage
+            this.internalSearch(true)
+        }
+    }
+
+    firstPage() {
+        if (this.currentPage > 1) {
+            this.searchRequest.first = 1
+            this.internalSearch(true)
+        }
+    }
+
+    lastPage() {
+        if (this.currentPage < this.totalPages) {
+            this.searchRequest.first = (this.totalPages - 1) * BaseSearchComponent.ItemsPerPage
+            this.internalSearch(true)
+        }
+    }
+
     previousPage() {
         if (this.currentPage > 1) {
             let zeroBasedPage = this.currentPage - 1
@@ -93,8 +115,12 @@ export abstract class BaseSearchComponent extends BaseComponent {
         }
     }
 
+    home() {
+        this._router.navigate( ['Search'] )
+    }
+
     searchToday() {
-        this._router.navigate( ['ByDay'] );
+        this._router.navigate( ['ByDay'] )
     }
 
     searchNearby() {

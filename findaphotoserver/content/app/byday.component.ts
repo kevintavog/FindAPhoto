@@ -35,7 +35,6 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.showLinks = true
         this.showSearch = false
         this.initializeSearchRequest('d')
         this.activeDate = new Date(2016, this.searchRequest.month - 1, this.searchRequest.day, 0, 0, 0, 0)
@@ -46,7 +45,9 @@ export class ByDayComponent extends BaseSearchComponent implements OnInit {
         // DOES NOT honor locale...
         this.pageMessage = "Pictures from " + ByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
 
+        this.typeLeftButtonClass = "fa fa-arrow-left"
         this.typeLeftButtonText = this.byDayString(this.searchResults.previousAvailableByDay)
+        this.typeRightButtonClass = "fa fa-arrow-right"
         this.typeRightButtonText = this.byDayString(this.searchResults.nextAvailableByDay)
     }
 

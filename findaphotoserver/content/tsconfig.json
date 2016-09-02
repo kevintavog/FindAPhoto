@@ -9,6 +9,12 @@
     "removeComments": false,
     "noImplicitAny": false
   },
+  "ide": {
+    "compileOnSave": false
+},
+  "atom": {
+    "rewriteTsconfig": false
+},
   "exclude": [
     "node_modules"
   ]

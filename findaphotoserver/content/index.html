@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script>document.write('<base href="' + document.location + '" />');</script>
+
+<head>
+    <script>
+        document.write('<base href="' + document.location + '" />');
+    </script>
     <title>Find A Photo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="styles.css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/blazecss/latest/blaze.min.css">
+
 
     <!-- Polyfill(s) for older browsers -->
     <script src="https://npmcdn.com/core-js/client/shim.min.js"></script>
@@ -16,11 +23,14 @@
 
     <script src="systemjs.config.js"></script>
     <script>
-      System.import('app').catch(function(err){ console.error(err); });
+        System.import('app').catch(function(err) {
+            console.error(err);
+        });
     </script>
-  </head>
+</head>
 
-  <body style="background-color:#101010;color:#ffffff">
+<body class="c-text" style="background-color:#202020;color:#ffffff">
     <find-a-photo>Loading...</find-a-photo>
-  </body>
+</body>
+
 </html>
