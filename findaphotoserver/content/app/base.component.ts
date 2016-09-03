@@ -51,6 +51,14 @@ export abstract class BaseComponent {
         return undefined
     }
 
+    getItemLocaleDateAndTime(item: SearchItem) {
+        if (item.createdDate != null) {
+            let d = new Date(item.createdDate)
+            return d.toLocaleDateString() + "  " + d.toLocaleTimeString()
+        }
+        return undefined
+    }
+
     lonDms(item: SearchItem) {
         return this.longitudeDms(item.longitude)
     }

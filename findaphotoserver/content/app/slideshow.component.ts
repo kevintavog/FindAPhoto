@@ -40,8 +40,8 @@ export class SlideshowComponent extends BaseComponent implements OnInit {
         this.error = undefined
 
         this.searchRequest = this._searchRequestBuilder.createRequest(this._routeParams, 1, SlideshowComponent.QueryProperties, 's')
-        this.searchRequest.searchType = 's'
-        this.searchRequest.searchText = "keywords:mural"
+        // this.searchRequest.searchType = 's'
+        // this.searchRequest.searchText = "keywords:mural"
         this.loadSlide()
     }
 
@@ -102,4 +102,15 @@ export class SlideshowComponent extends BaseComponent implements OnInit {
         return properties
     }
 
+    home() {
+        this._router.navigate( ['Search', this._searchRequestBuilder.toLinkParametersObject(this.searchRequest)] )
+    }
+
+    searchToday() {
+        this._router.navigate( ['ByDay'] )
+    }
+
+    searchNearby() {
+        this._router.navigate( ['ByLocation'] )
+    }
 }

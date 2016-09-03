@@ -57,17 +57,31 @@ export class SlideComponent extends BaseComponent implements OnInit {
       return this.slideInfo.longitude != undefined && this.slideInfo.latitude != undefined
   }
 
+  firstSlide() {
+      if (this.slideIndex > 1) {
+        let index = 1
+        this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] )
+    }
+  }
+
   previousSlide() {
       if (this.slideIndex > 1) {
         let index = this.searchRequest.first - 1
-        this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] );
+        this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] )
     }
+  }
+
+  lastSlide() {
+      if (this.slideIndex < this.totalSearchMatches) {
+          let index = this.totalSearchMatches
+          this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] )
+      }
   }
 
   nextSlide() {
       if (this.slideIndex < this.totalSearchMatches) {
           let index = this.searchRequest.first + 1
-          this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] );
+          this._router.navigate( ['Slide', {id: this.slideInfo.id, q:this.searchRequest.searchText, i:index}] )
       }
   }
 
@@ -137,7 +151,18 @@ export class SlideComponent extends BaseComponent implements OnInit {
           },
           error => this.sameDateError = "The server returned an error: " + error
       )
+  }
 
+  home() {
+      this._router.navigate( ['Search', this._searchRequestBuilder.toLinkParametersObject(this.searchRequest)] )
+  }
+
+  searchToday() {
+      this._router.navigate( ['ByDay'] )
+  }
+
+  searchNearby() {
+      this._router.navigate( ['ByLocation'] )
   }
 
 }

@@ -1,5 +1,11 @@
+<ul class="c-nav c-nav--inline">
+    <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Home </li>
+    <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
+    <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
+    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i> Info</li>
+</ul>
+
 <div *ngIf="slideInfo == null && error == null">
-    <a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a>
     Loading the slideshow...
 </div>
 
@@ -23,6 +29,6 @@
 </div>
 
 <div *ngIf="error != null">
-    <a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a><br>
+    <a [routerLink]="['Search', {q:searchRequest.searchText} ]"> Back to search </a><br>
     {{error}}
 </div>

@@ -1,19 +1,44 @@
+<ul class="c-nav c-nav--inline">
+    <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Back to search </li>
+    <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
+    <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
+    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i> Info</li>
+</ul>
+
+
 <div *ngIf="slideInfo == null && error == null">
-    <a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a>
     Loading the slide...
 </div>
 
-<div *ngIf="slideInfo != null">
-    <button (click)="previousSlide()" *ngIf="slideIndex > 1"  >« Prev</button>
-    {{slideIndex}} of {{totalSearchMatches}}
-    <button (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches" >Next »</button>
-    <p><p>
-    <a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a>
+<div class="c-alerts" *ngIf="error != undefined">
+    <br>
+    <div class="c-alerts__alert c-alerts__alert--error">
+        {{error}}
+    </div>
+</div>
 
-    <center>
+<div *ngIf="slideInfo != null">
+    <div class="o-container o-container--xsmall">
+        <div class="c-pagination">
+          <div class="c-pagination__controls c-pagination__controls--backward">
+            <button class="c-pagination__control" (click)="firstSlide()" *ngIf="slideIndex > 1"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control" (click)="previousSlide()" *ngIf="slideIndex > 1"><i class="fa fa-chevron-left"></i></button>
+          </div>
+            <div style="display:inline;">
+                {{slideIndex}} of {{totalSearchMatches}}
+            </div>
+          <div class="c-pagination__controls c-pagination__controls--forward">
+            <button class="c-pagination__control" (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control" (click)="lastSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
+          </div>
+        </div>
+    </div>
+    <p>
+
+    <div style="text-align:center;margin: 0 auto;">
         <div *ngIf="slideInfo.mediaType == 'image'" >
             <a href="{{slideInfo.mediaUrl}}">
-                <img src="{{slideInfo.slideUrl}}" />
+                <img class="o-image" src="{{slideInfo.slideUrl}}" />
             </a>
         </div>
         <div *ngIf="slideInfo.mediaType == 'video'" >
@@ -21,33 +46,68 @@
             </video>
         </div>
 
-        <table id="slideInfo" cellspacing=5 >
-            <tr>
-                <td class="tdright">Name:</td>      <td class="tdleft">{{slideInfo.imageName}}</td>
-                <td class="tdright">Keywords:</td>  <td class="tdleft">{{slideInfo.keywords}}</td>
-            </tr>
+        <div class="o-grid">
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <i class="fa fa-file"></i> {{slideInfo.imageName}}
+            </div>
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <i class="fa fa-tags"></i> {{slideInfo.keywords}}
+            </div>
+        </div>
 
-            <tr>
-                <td class="tdright">Path:</td>      <td class="tdleft">{{slideInfo.path}}</td>
-                <td class="tdright">Location: </td> <td class="tdleft">{{slideInfo.locationName}}</td>
-            </tr>
+        <div class="o-grid">
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <i class="fa fa-folder"></i> {{slideInfo.path}}
+            </div>
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <a [routerLink]="['ByLocation', { lat:slideInfo.latitude, lon:slideInfo.longitude }]">
+                    <i class="fa fa-map-marker"></i> {{slideInfo.locationName}}
+                </a>
+            </div>
+        </div>
 
-            <tr>
-                <td class="tdright">Date:</td>      <td class="tdleft">
-                    <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
-                        {{slideInfo.createdDate | DateStringToLocaleDatePipe }}
-                    </a>
-                </td>
-                <td class="tdright">Geo: </td> <td *ngIf="hasLocation() == true" class="tdleft">
-                    <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
-                        <h3>
-                        <pre>{{latDms(slideInfo)}}, {{lonDms(slideInfo)}}</pre>
-                        </h3>
-                    </a>
-                </td>
-            </tr>
-        </table>
+        <div class="o-grid">
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
+                    <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(slideInfo)}}
+                </a>
+            </div>
+            <div class="result-set-info-text-left o-grid__cell c-text">
+                <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
+                    <i class="fa fa-map"></i> {{latDms(slideInfo)}}, {{lonDms(slideInfo)}}
+                </a>
+            </div>
+        </div>
+    </div>
 
+    <div *ngIf="slideInfo.warnings != undefined">
+        <br>
+        <div class="c-card c-card--secondary">
+            <div class="c-card__content c-card__content--divider">Warnings</div>
+            <div class="c-card__content c-alerts__alert--secondary" *ngFor="let warning of slideInfo.warnings">{{warning}}</div>
+        </div>
+    </div>
+
+
+    <div class="o-container o-container--xsmall">
+        <div class="c-pagination">
+          <div class="c-pagination__controls c-pagination__controls--backward">
+            <button class="c-pagination__control" (click)="firstSlide()" *ngIf="slideIndex > 1"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control" (click)="previousSlide()" *ngIf="slideIndex > 1"><i class="fa fa-chevron-left"></i></button>
+          </div>
+            <div style="display:inline;">
+                {{slideIndex}} of {{totalSearchMatches}}
+            </div>
+          <div class="c-pagination__controls c-pagination__controls--forward">
+            <button class="c-pagination__control" (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control" (click)="lastSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
+          </div>
+        </div>
+    </div>
+
+    <br *ngIf="nearbyResults != null || sameDateResults != null">
+
+    <center>
         <span *ngIf="nearbyResults != null" >
             <hr>
             <div class="slideshow-extra_title">Nearby items</div>
@@ -87,18 +147,6 @@
             <br>
             <h2 class="server-error">{{sameDateError}}</h2>
         </div>
-
     </center>
 
-    <div *ngIf="slideInfo.warnings != undefined">
-        <ol>
-            <li *ngFor="let warning of slideInfo.warnings">{{warning}}</li>
-        </ol>
-    </div>
-
-</div>
-
-<div *ngIf="error != null">
-    <a [routerLink]="['Search', {q:searchRequest.searchText, p:searchPage}]"> Back to search </a><br>
-    {{error}}
 </div>
