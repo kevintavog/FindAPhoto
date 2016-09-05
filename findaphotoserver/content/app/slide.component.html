@@ -46,36 +46,38 @@
             </video>
         </div>
 
-        <div class="o-grid">
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <i class="fa fa-file"></i> {{slideInfo.imageName}}
+        <div class="o-container o-container--large" >
+            <div class="o-grid">
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <i class="fa fa-file"></i> {{slideInfo.imageName}}
+                </div>
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <i class="fa fa-tags"></i> {{slideInfo.keywords}}
+                </div>
             </div>
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <i class="fa fa-tags"></i> {{slideInfo.keywords}}
-            </div>
-        </div>
 
-        <div class="o-grid">
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <i class="fa fa-folder"></i> {{slideInfo.path}}
+            <div class="o-grid">
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <i class="fa fa-folder"></i> {{slideInfo.path}}
+                </div>
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <a [routerLink]="['ByLocation', { lat:slideInfo.latitude, lon:slideInfo.longitude }]">
+                        <i class="fa fa-map-marker"></i> {{slideInfo.locationName}}
+                    </a>
+                </div>
             </div>
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <a [routerLink]="['ByLocation', { lat:slideInfo.latitude, lon:slideInfo.longitude }]">
-                    <i class="fa fa-map-marker"></i> {{slideInfo.locationName}}
-                </a>
-            </div>
-        </div>
 
-        <div class="o-grid">
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
-                    <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(slideInfo)}}
-                </a>
-            </div>
-            <div class="result-set-info-text-left o-grid__cell c-text">
-                <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
-                    <i class="fa fa-map"></i> {{latDms(slideInfo)}}, {{lonDms(slideInfo)}}
-                </a>
+            <div class="o-grid">
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
+                        <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(slideInfo)}}
+                    </a>
+                </div>
+                <div class="result-set-info-text-left o-grid__cell c-text">
+                    <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
+                        <i class="fa fa-map"></i> {{latDms(slideInfo)}}, {{lonDms(slideInfo)}}
+                    </a>
+                </div>
             </div>
         </div>
     </div>
