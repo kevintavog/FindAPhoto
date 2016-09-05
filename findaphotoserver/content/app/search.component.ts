@@ -34,6 +34,7 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
     ngOnInit() {
         this.showSearch = true
+        this.showResultCount = true
         this.initializeSearchRequest('s')
 
         if ("q" in this._routeParams.params) {

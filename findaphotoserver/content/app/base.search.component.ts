@@ -20,6 +20,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     public LocationsCaption: string = "Locations:"
 
     showSearch: boolean
+    showResultCount: boolean
     showGroup: boolean
     showDistance: boolean
     @Output() @Input() showFilters: boolean = false
@@ -76,6 +77,13 @@ export abstract class BaseSearchComponent extends BaseComponent {
         }
 
         this._location.go(this._pageRoute, this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + drilldown + "&p=" + this.currentPage)
+    }
+
+    currentPageNumber() {
+        if (this.searchResults != undefined) {
+            return 1 + Math.round(this.searchRequest.first / this.searchRequest.pageCount)
+        }
+        return null;
     }
 
     gotoPage(pageOneBased: number) {

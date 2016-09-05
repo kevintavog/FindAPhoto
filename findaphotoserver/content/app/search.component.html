@@ -2,7 +2,7 @@
     <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Home </li>
     <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
     <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
-    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i> Info</li>
+    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i></li>
 </ul>
 
 <p style="margin-bottom:.5em;" >
@@ -92,18 +92,23 @@
     <div class="o-container o-container--small" *ngIf="totalPages > 1">
         <div class="c-pagination">
 
-            <div *ngIf="showSearch == true && searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches">
+            <div *ngIf="showResultCount == true && searchResults.resultCount > 0 && searchResults.resultCount == searchResults.totalMatches">
                 Showing all {{searchResults.totalMatches}} items
             </div>
 
-            <div *ngIf="showSearch == true && searchResults.resultCount != searchResults.totalMatches">
-                Showing items {{searchRequest.first}} - {{searchRequest.first + searchResults.resultCount - 1}} out of {{searchResults.totalMatches}} total items
+            <div *ngIf="showResultCount == true && searchResults.resultCount != searchResults.totalMatches">
+                {{totalPages}} pages of results ({{searchResults.totalMatches}} matching items)
             </div>
 
-          <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1 && totalPages > 4">
+          <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1">
             <button class="c-pagination__control" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
             <button class="c-pagination__control" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
           </div>
+          <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage <= 1">
+            <button class="c-pagination__control" disabled="true" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control" disabled="true" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
+          </div>
+
           <div class="c-pagination__controls">
             <button class="c-pagination__page" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
             <button class="c-pagination__page" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
@@ -113,9 +118,14 @@
             <button class="c-pagination__page" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
             <button class="c-pagination__page" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
           </div>
-          <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages && totalPages > 4">
+
+          <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages">
             <button class="c-pagination__control" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
             <button class="c-pagination__control" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
+          </div>
+          <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage >= totalPages">
+            <button class="c-pagination__control" disabled="true" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control" disabled="true" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
           </div>
         </div>
     </div>
