@@ -5,7 +5,7 @@ import { Location } from '@angular/common';
 import { BaseComponent } from './base.component';
 import { SearchService } from './search.service';
 import { SearchRequestBuilder } from './search.request.builder';
-import { SearchRequest } from './search-request';
+import { SearchRequest, SortType } from './search-request';
 import { SearchResults, SearchGroup, SearchItem, SearchCategory, SearchCategoryDetail } from './search-results';
 
 
@@ -19,6 +19,8 @@ export abstract class BaseSearchComponent extends BaseComponent {
     public KeywordsCaption: string = "Keywords:"
     public LocationsCaption: string = "Locations:"
 
+    sortMenuShowing: boolean
+    sortMenuDisplayText: string
     showSearch: boolean
     showResultCount: boolean
     showGroup: boolean
@@ -51,6 +53,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
         protected _searchRequestBuilder: SearchRequestBuilder) {
             super()
             this.showGroup = true
+            this.sortMenuDisplayText = "Date: Newest"
         }
 
 
@@ -127,6 +130,14 @@ export abstract class BaseSearchComponent extends BaseComponent {
         this._router.navigate( ['Search'] )
     }
 
+    toggleSortMenu() {
+        if (this.sortMenuShowing != true) {
+            this.sortMenuShowing = true
+        } else {
+            this.sortMenuShowing = false
+        }
+    }
+
     searchToday() {
         this._router.navigate( ['ByDay'] )
     }
@@ -145,7 +156,19 @@ export abstract class BaseSearchComponent extends BaseComponent {
         }
     }
 
+    sortByDateNewest() { this.sortBy(SortType.DateNewest, "Date: Newest") }
+    sortByDateOldest() { this.sortBy(SortType.DateOldest, "Date: Oldest") }
+    sortByLocationAscending() { this.sortBy(SortType.LocationAZ, "Location: A-Z") }
+    sortByLocationDescending() { this.sortBy(SortType.LocationZA, "Location: Z-A") }
+    sortByFolderAscending() { this.sortBy(SortType.FolderAZ, "Folder: A-Z") }
+    sortByFolderDescending() { this.sortBy(SortType.FolderZA, "Folder: Z-A") }
+    sortBy(sortType: string, sortDisplayName: string) {
+        console.log("sort by %o", sortType)
+        this.sortMenuDisplayText = sortDisplayName
+    }
+
     internalSearch(updateUrl: boolean) {
+        this.sortMenuShowing = false
         var selectedCategories = new Map<string,string[]>()
         if (this.searchResults != null) {
             for (var cat of this.searchResults.categories) {

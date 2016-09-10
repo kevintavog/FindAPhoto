@@ -130,6 +130,41 @@
         </div>
     </div>
 
+    <div class="c-nav c-nav--inline" style="background-color:#202020;overflow=hidden;">
+        <span class="c-nav__item" (click)="toggleSortMenu()">Sort by
+            <span class="c-text--loud">{{sortMenuDisplayText}} <i class="fa fa-chevron-down"></i>
+            </span>
+            <div *ngIf="sortMenuShowing == true" class="o-container" style="position:relative">
+                <div class="c-drawer c-drawer--top c-drawer--visible">
+                  <ul class="c-menu">
+                    <li class="c-menu__item" (click)="sortByDateNewest()">Date: Newest</li>
+                    <li class="c-menu__item" (click)="sortByDateOldest()">Date: Oldest</li>
+                    <li class="c-menu__item" (click)="sortByLocationAscending()">Location: A-Z</li>
+                    <li class="c-menu__item" (click)="sortByLocationDescending()">Location: Z-A</li>
+                    <li class="c-menu__item" (click)="sortByFolderAscending()">Folder: A-Z</li>
+                    <li class="c-menu__item" (click)="sortByFolderDescending()">Folder: Z-A</li>
+                  </ul>
+              </div>
+            </div>
+        </span>
+
+        <span class="c-nav__item" >Filters <i class="fa fa-chevron-down"></i>
+        </span>
+
+        <!-- <div class="c-tags" style="display:inline;">
+            <button type="button" class="c-button c-button--small c-button--success c-tag" style="border-radius: 1em;">Jan 1, 2014
+                  <span class="c-tag__close">×</span>
+            </button>
+            <button type="button" class="c-button c-button--small c-button--success c-tag" style="border-radius: 1em;">Seattle
+                  <span class="c-tag__close">×</span>
+            </button>
+            <button type="button" class="c-button c-button--small c-button--success c-tag" style="border-radius: 1em;">mural
+                  <span class="c-tag__close">×</span>
+            </button>
+        </div> -->
+
+    </div>
+
 
     <div *ngFor="let group of searchResults.groups">
         <div style="clear:both;"></div>
