@@ -13,7 +13,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
 
 
     protected static QueryProperties: string = "id,city,keywords,imageName,createdDate,latitude,longitude,thumbUrl,slideUrl,warnings"
-    public static ItemsPerPage: number = 30
+    public static ItemsPerPage: number = 50
 
     public DatesCaption: string = "Dates:"
     public KeywordsCaption: string = "Keywords:"
