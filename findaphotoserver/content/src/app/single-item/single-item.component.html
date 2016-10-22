@@ -6,87 +6,87 @@
 </ul>
 
 
-<div *ngIf="slideInfo == null && error == null">
-    Loading the slide...
+<div *ngIf="itemInfo == null && error == null">
+    Loading the item...
 </div>
 
-<div class="c-alerts" *ngIf="error != undefined">
+<div *ngIf="error != undefined">
     <br>
-    <div class="c-alerts__alert c-alerts__alert--error">
+    <div class="c-alert c-alert--error">
         {{error}}
     </div>
 </div>
 
-<div *ngIf="slideInfo != null">
+<div *ngIf="itemInfo != null">
     <div class="o-container o-container--xsmall">
         <div class="c-pagination">
           <div class="c-pagination__controls c-pagination__controls--backward">
-            <button class="c-pagination__control" (click)="firstSlide()" *ngIf="slideIndex > 1"><i class="fa fa-fast-backward"></i></button>
-            <button class="c-pagination__control" (click)="previousSlide()" *ngIf="slideIndex > 1"><i class="fa fa-chevron-left"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="firstItem()" *ngIf="itemIndex > 1"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="previousItem()" *ngIf="itemIndex > 1"><i class="fa fa-chevron-left"></i></button>
           </div>
             <div style="display:inline;">
-                {{slideIndex}} of {{totalSearchMatches}}
+                {{itemIndex}} of {{totalSearchMatches}}
             </div>
           <div class="c-pagination__controls c-pagination__controls--forward">
-            <button class="c-pagination__control" (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
-            <button class="c-pagination__control" (click)="lastSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="nextItem()" *ngIf="itemIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="lastItem()" *ngIf="itemIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
           </div>
         </div>
     </div>
     <p>
 
     <div style="text-align:center;margin: 0 auto;">
-        <div *ngIf="slideInfo.mediaType == 'image'" >
-            <a href="{{slideInfo.mediaUrl}}">
-                <img class="o-image" src="{{slideInfo.slideUrl}}" />
+        <div *ngIf="itemInfo.mediaType == 'image'" >
+            <a href="{{itemInfo.mediaUrl}}">
+                <img class="o-image" src="{{itemInfo.slideUrl}}" />
             </a>
         </div>
-        <div *ngIf="slideInfo.mediaType == 'video'" >
-            <video controls autoplay src="{{slideInfo.mediaUrl}}" poster="{{slideInfo.slideUrl}}" >
+        <div *ngIf="itemInfo.mediaType == 'video'" >
+            <video controls autoplay src="{{itemInfo.mediaUrl}}" poster="{{itemInfo.slideUrl}}" >
             </video>
         </div>
 
         <div class="o-container o-container--large" >
             <div class="o-grid">
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-file"></i> {{slideInfo.imageName}}
+                    <i class="fa fa-file"></i> {{itemInfo.imageName}}
                 </div>
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-tags"></i> {{slideInfo.keywords}}
+                    <i class="fa fa-tags"></i> {{itemInfo.keywords}}
                 </div>
             </div>
 
             <div class="o-grid">
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-folder"></i> {{slideInfo.path}}
+                    <i class="fa fa-folder"></i> {{itemInfo.path}}
                 </div>
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a [routerLink]="['ByLocation', { lat:slideInfo.latitude, lon:slideInfo.longitude }]">
-                        <i class="fa fa-map-marker"></i> {{slideInfo.locationName}}
+                    <a [routerLink]="['/bylocation']" [queryParams]="{ lat:itemInfo.latitude, lon:itemInfo.longitude }">
+                        <i class="fa fa-map-marker"></i> {{itemInfo.locationName}}
                     </a>
                 </div>
             </div>
 
             <div class="o-grid">
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a [routerLink]="['ByDay', { m:itemMonth(slideInfo), d:itemDay(slideInfo) }]">
-                        <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(slideInfo)}}
+                    <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(itemInfo), d:itemDay(itemInfo) }">
+                        <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(itemInfo)}}
                     </a>
                 </div>
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a href="http://maps.google.com/maps?q={{slideInfo.latitude}},{{slideInfo.longitude}}">
-                        <i class="fa fa-map"></i> {{latDms(slideInfo)}}, {{lonDms(slideInfo)}}
+                    <a href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
+                        <i class="fa fa-map"></i> {{latDms(itemInfo)}}, {{lonDms(itemInfo)}}
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div *ngIf="slideInfo.warnings != undefined">
+    <div *ngIf="itemInfo.warnings != undefined">
         <br>
         <div class="c-card c-card--secondary">
             <div class="c-card__content c-card__content--divider">Warnings</div>
-            <div class="c-card__content c-alerts__alert--secondary" *ngFor="let warning of slideInfo.warnings">{{warning}}</div>
+            <div class="c-card__content c-alert c-alert--warning" *ngFor="let warning of itemInfo.warnings">{{warning}}</div>
         </div>
     </div>
 
@@ -94,28 +94,28 @@
     <div class="o-container o-container--xsmall">
         <div class="c-pagination">
           <div class="c-pagination__controls c-pagination__controls--backward">
-            <button class="c-pagination__control" (click)="firstSlide()" *ngIf="slideIndex > 1"><i class="fa fa-fast-backward"></i></button>
-            <button class="c-pagination__control" (click)="previousSlide()" *ngIf="slideIndex > 1"><i class="fa fa-chevron-left"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="firstItem()" *ngIf="itemIndex > 1"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="previousItem()" *ngIf="itemIndex > 1"><i class="fa fa-chevron-left"></i></button>
           </div>
             <div style="display:inline;">
-                {{slideIndex}} of {{totalSearchMatches}}
+                {{itemIndex}} of {{totalSearchMatches}}
             </div>
           <div class="c-pagination__controls c-pagination__controls--forward">
-            <button class="c-pagination__control" (click)="nextSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
-            <button class="c-pagination__control" (click)="lastSlide()" *ngIf="slideIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="nextItem()" *ngIf="itemIndex < totalSearchMatches"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="lastItem()" *ngIf="itemIndex < totalSearchMatches"><i class="fa fa-fast-forward"></i></button>
           </div>
         </div>
     </div>
 
     <br *ngIf="nearbyResults != null || sameDateResults != null">
 
-    <center>
+    <div style="text-align:center">
         <span *ngIf="nearbyResults != null" >
             <hr>
-            <div class="slideshow-extra_title">Nearby items</div>
+            <div class="singleitem-extra_title">Nearby items</div>
             <figure style="display:inline-block;" *ngFor="let item of nearbyResults">
                 <div id="thumbnail">
-                    <a [routerLink]="['ByLocation', { lat:item.latitude, lon:item.longitude }]">
+                    <a [routerLink]="['/bylocation']" [queryParams]="{ lat:item.latitude, lon:item.longitude }">
                         <img src="{{item.thumbUrl}}">
                     </a>
                 </div>
@@ -133,10 +133,10 @@
 
         <span *ngIf="sameDateResults != null" >
             <hr>
-            <div class="slideshow-extra_title">Items with the same month & day</div>
+            <div class="singleitem-extra_title">Items with the same month & day</div>
             <figure style="display:inline-block;" *ngFor="let item of sameDateResults">
                 <div id="thumbnail">
-                    <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
+                    <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(item), d:itemDay(item) }">
                         <img src="{{item.thumbUrl}}">
                     </a>
                 </div>
@@ -149,6 +149,6 @@
             <br>
             <h2 class="server-error">{{sameDateError}}</h2>
         </div>
-    </center>
+    </div>
 
 </div>

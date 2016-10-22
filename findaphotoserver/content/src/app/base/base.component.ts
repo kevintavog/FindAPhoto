@@ -1,4 +1,4 @@
-import { SearchResults,SearchGroup,SearchItem } from './search-results';
+import { SearchResults,SearchGroup,SearchItem } from '../models/search-results';
 
 interface DegreesMinutesSeconds {
     degrees: number
@@ -37,7 +37,7 @@ export abstract class BaseComponent {
         if (item.createdDate != null) {
             let date = item.createdDate
             if (typeof item.createdDate === 'string') {
-                date = new Date(item.createdDate.toString())
+                date = new Date(item.createdDate)
             }
             return date
         }
@@ -104,4 +104,5 @@ export abstract class BaseComponent {
             minutes: m,
             seconds: s};
     }
+
 }

@@ -1,34 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ROUTER_DIRECTIVES, RouteParams } from '@angular/router-deprecated';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseSearchComponent } from './base.search.component';
-import { SearchRequest } from './search-request';
-import { SearchResults,SearchGroup,SearchItem } from './search-results';
-import { SearchService } from './search.service';
-import { SearchRequestBuilder } from './search.request.builder';
+import { BaseSearchComponent } from '../base-search/base-search.component';
+import { SearchRequestBuilder } from '../models/search.request.builder';
+import { ByDayResult } from '../models/search-results';
 
-import { DateStringToLocaleDatePipe } from './datestring-to-localedate.pipe';
+import { SearchService } from '../services/search.service';
 
 @Component({
-  selector: 'bylocation',
-  templateUrl: 'app/search.component.html',
-  styleUrls:  ['app/search.component.css'],
-  directives: [ROUTER_DIRECTIVES],
-  pipes: [DateStringToLocaleDatePipe]
+  selector: 'app-search-by-location',
+  templateUrl: '../search/search.component.html',
+  styleUrls: ['../search/search.component.css']
 })
 
-export class ByLocationComponent extends BaseSearchComponent implements OnInit {
+export class SearchByLocationComponent extends BaseSearchComponent implements OnInit {
 
     constructor(
         router: Router,
-        routeParams: RouteParams,
+        route: ActivatedRoute,
         location: Location,
-        searchService: SearchService,
-        searchRequestBuilder: SearchRequestBuilder)
-    {
-        super("/byloc", router, routeParams, location, searchService, searchRequestBuilder)
-    }
+        searchRequestBuilder: SearchRequestBuilder,
+        searchService: SearchService) {
+            super("/bylocation", router, route, location, searchRequestBuilder, searchService);
+        }
 
     ngOnInit() {
         this.showSearch = false

@@ -1,16 +1,17 @@
-import { Input, Output } from "@angular/core"
-import { Router, ROUTER_DIRECTIVES, RouteParams } from '@angular/router-deprecated';
+import { Component, Input, Output } from '@angular/core';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseComponent } from './base.component';
-import { SearchService } from './search.service';
-import { SearchRequestBuilder } from './search.request.builder';
-import { SearchRequest, SortType } from './search-request';
-import { SearchResults, SearchGroup, SearchItem, SearchCategory, SearchCategoryDetail } from './search-results';
+
+import { BaseComponent } from '../base/base.component';
+import { SearchRequest, SortType } from '../models/search-request';
+import { SearchRequestBuilder } from '../models/search.request.builder';
+import { SearchCategory, SearchCategoryDetail, SearchGroup, SearchItem, SearchResults } from '../models/search-results';
+
+import { SearchService } from '../services/search.service';
 
 
-export abstract class BaseSearchComponent extends BaseComponent {
-
+export abstract class BaseSearchComponent extends BaseComponent  {
 
     protected static QueryProperties: string = "id,city,keywords,imageName,createdDate,latitude,longitude,thumbUrl,slideUrl,warnings"
     public static ItemsPerPage: number = 50
@@ -19,54 +20,60 @@ export abstract class BaseSearchComponent extends BaseComponent {
     public KeywordsCaption: string = "Keywords:"
     public LocationsCaption: string = "Locations:"
 
-    sortMenuShowing: boolean
-    sortMenuDisplayText: string
-    showSearch: boolean
-    showResultCount: boolean
-    showGroup: boolean
-    showDistance: boolean
-    @Output() @Input() showFilters: boolean = false
 
-    locationError: string
-    serverError: string
+    sortMenuShowing: boolean;
+    sortMenuDisplayText: string;
+
+    showSearch: boolean;
+    showResultCount: boolean;
+
+    showGroup: boolean;
+    showDistance: boolean;
+    @Output() @Input() showFilters: boolean = false;
+
+    locationError: string;
+    serverError: string;
     searchRequest: SearchRequest;
     searchResults: SearchResults;
     currentPage: number;
     totalPages: number;
 
-    pageMessage: string
-    pageSubMessage: string
-    typeLeftButtonText: string
-    typeRightButtonText: string
-    typeLeftButtonClass: string
-    typeRightButtonClass: string
+    pageMessage: string;
+    pageSubMessage: string;
+    typeLeftButtonText: string;
+    typeRightButtonText: string;
+    typeLeftButtonClass: string;
+    typeRightButtonClass: string;
 
-    extraProperties: string
-
+    extraProperties: string;
 
     constructor(
         private _pageRoute: string,
         protected _router: Router,
-        protected _routeParams: RouteParams,
+        protected _route: ActivatedRoute,
         protected _location: Location,
-        protected _searchService: SearchService,
-        protected _searchRequestBuilder: SearchRequestBuilder) {
+        protected _searchRequestBuilder: SearchRequestBuilder,
+        protected _searchService: SearchService,) {
             super()
             this.showGroup = true
             this.sortMenuDisplayText = "Date: Newest"
-        }
-
+    }
 
     initializeSearchRequest(searchType: string) {
         let queryProps = BaseSearchComponent.QueryProperties
         if (this.extraProperties != undefined) {
             queryProps += "," + this.extraProperties
         }
-        this.searchRequest = this._searchRequestBuilder.createRequest(this._routeParams, BaseSearchComponent.ItemsPerPage, queryProps, searchType)
+
+        this.serverError = undefined
+        this.locationError = undefined
+
+        this._route.queryParams.subscribe(params => {
+            this.searchRequest = this._searchRequestBuilder.createRequest(params, BaseSearchComponent.ItemsPerPage, queryProps, searchType)
+         })
     }
 
-
-    slideSearchLinkParameters(item: SearchItem, imageIndex: number, groupIndex: number) {
+    singleItemSearchLinkParameters(item: SearchItem, imageIndex: number, groupIndex: number) {
         let properties = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest)
         properties['id'] = item.id
         properties['i'] = imageIndex + groupIndex + this.searchRequest.first
@@ -74,12 +81,20 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
     updateUrl() {
+        let params = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest);
+
         let drilldown = this.generateDrilldown()
         if (drilldown.length > 0) {
-            drilldown = "&drilldown=" + drilldown
+            console.log("!!! handle drilldown...")
+            params['drilldown'] = drilldown;
         }
 
-        this._location.go(this._pageRoute, this._searchRequestBuilder.toSearchQueryParameters(this.searchRequest) + drilldown + "&p=" + this.currentPage)
+        if (this.currentPage > 1) {
+            params['p'] = this.currentPage;
+        }
+
+        let navigationExtras: NavigationExtras = { queryParams: params };
+        this._router.navigate( [this._pageRoute], navigationExtras);
     }
 
     currentPageNumber() {
@@ -127,7 +142,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
     home() {
-        this._router.navigate( ['Search'] )
+        this._router.navigate( ['search'] )
     }
 
     toggleSortMenu() {
@@ -139,7 +154,7 @@ export abstract class BaseSearchComponent extends BaseComponent {
     }
 
     searchToday() {
-        this._router.navigate( ['ByDay'] )
+        this._router.navigate( ['byday'] )
     }
 
     searchNearby() {
@@ -148,7 +163,12 @@ export abstract class BaseSearchComponent extends BaseComponent {
         if (window.navigator.geolocation) {
             window.navigator.geolocation.getCurrentPosition(
                 (position: Position) => {
-                    this._router.navigate( ['ByLocation', { lat:position.coords.latitude, lon:position.coords.longitude }] );
+
+                    let navigationExtras: NavigationExtras = {
+                        queryParams: { lat:position.coords.latitude, lon:position.coords.longitude }
+                    };
+
+                    this._router.navigate( ['bylocation'], navigationExtras);
                 },
                 (error: PositionError) => {
                     this.locationError = "Unable to get location: " + error.message + " (" + error.code + ")"
@@ -336,4 +356,5 @@ export abstract class BaseSearchComponent extends BaseComponent {
         }
         return undefined
     }
+
 }

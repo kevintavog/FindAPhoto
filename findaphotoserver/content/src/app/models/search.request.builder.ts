@@ -1,22 +1,10 @@
-import { RouteParams } from '@angular/router-deprecated';
 import { Injectable } from '@angular/core';
+import { Params } from '@angular/router';
 
 import { SearchRequest } from './search-request';
 
 @Injectable()
 export class SearchRequestBuilder {
-
-    toSearchQueryParameters(searchRequest: SearchRequest) {
-        switch (searchRequest.searchType) {
-            case 's':
-                return "t=s&q=" + searchRequest.searchText
-            case 'd':
-                return "t=d&m=" + searchRequest.month + "&d=" + searchRequest.day
-            case 'l':
-                return "t=l&lat=" + searchRequest.latitude + "&lon=" + searchRequest.longitude
-        }
-        return ""
-    }
 
     toLinkParametersObject(searchRequest: SearchRequest) {
         let properties = {}
@@ -37,26 +25,25 @@ export class SearchRequestBuilder {
         return properties
     }
 
-    createRequest(routeParams: RouteParams, itemsPerPage: number, queryProperties: string, defaultType: string) {
-
+    createRequest(params: Params, itemsPerPage: number, queryProperties: string, defaultType: string) {
         let searchType = defaultType
-        if ("t" in routeParams.params) {
-            searchType = routeParams.get('t')
+        if ("t" in params) {
+            searchType = params['t']
         }
 
-        let searchText = routeParams.get("q")
+        let searchText = params["q"]
         if (!searchText) {
             searchText = ""
         }
 
-        let pageNumber = +routeParams.get("p")
+        let pageNumber = +params["p"]
         if (!pageNumber || pageNumber < 1) {
             pageNumber = 1
         }
 
         let firstItem = 1
-        if ("i" in routeParams.params) {
-            firstItem = +routeParams.get('i')
+        if ("i" in params) {
+            firstItem = +params['i']
         } else {
             firstItem = 1 + ((pageNumber - 1) * itemsPerPage)
         }
@@ -65,20 +52,20 @@ export class SearchRequestBuilder {
         let today = new Date()
         let month = today.getMonth() + 1
         let day = today.getDate()
-        if ("m" in routeParams.params && "d" in routeParams.params) {
-            month = +routeParams.get('m')
-            day = +routeParams.get('d')
+        if ("m" in params && "d" in params) {
+            month = +params['m']
+            day = +params['d']
         }
 
         // Nearby search defaults to ... somewhere?
         let latitude = 0.00
         let longitude = 0.00
-        if ("lat" in routeParams.params && "lon" in routeParams.params) {
-            latitude = +routeParams.get('lat')
-            longitude = +routeParams.get('lon')
+        if ("lat" in params && "lon" in params) {
+            latitude = +params['lat']
+            longitude = +params['lon']
         }
 
-        let drilldown = routeParams.get("drilldown")
+        let drilldown = params["drilldown"]
 
         return { searchType: searchType, searchText: searchText, first: firstItem, pageCount: itemsPerPage,
             properties: queryProperties, month: month, day: day, latitude: latitude, longitude: longitude, drilldown: drilldown }

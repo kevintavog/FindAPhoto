@@ -41,14 +41,14 @@ func run(devolopmentMode bool) {
 	}
 
 	if devolopmentMode {
-		fmt.Println("Using development mode")
+		fmt.Println("*** Using development mode ***")
 		common.MediaIndexName = "dev-" + common.MediaIndexName
 		listenPort = 5000
 		easyExit = true
 	}
 
-	log.Info("Listening on port %d, using %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
-	log.Info(" Using %s for openmap reverse lookups", configuration.Current.OpenMapUrl)
+	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
+	log.Info(" Using %s for OpenStreetMap reverse lookups", configuration.Current.OpenMapUrl)
 
 	common.ElasticSearchServer = configuration.Current.ElasticSearchUrl
 
@@ -56,15 +56,23 @@ func run(devolopmentMode bool) {
 	checkOpenMapServer()
 
 	wd, _ := os.Getwd()
-	log.Info("Serving site content from %s/%s", wd, "content")
-	contentDir := http.Dir("./content/")
+	log.Info("Serving site content from %s/%s", wd, "content/dist")
+	contentDir := http.Dir("./content/dist")
 	_, e := contentDir.Open("index.html")
 	if e != nil {
-		log.Fatal("Unable to get files from the './content' folder: %s\n", e.Error())
+		log.Fatal("Unable to get files from the './content/dist' folder: %s\n", e.Error())
 	}
 	fs := http.FileServer(contentDir)
 
 	l := configureApplicationGlobals()
+
+	// For the Angular2 app, ensure the supported routes are redirected so refreshing and pasting URLs work as expected.
+	serveIndexHtmlFn := func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./content/dist/index.html") }
+	l.Get("/search", serveIndexHtmlFn)
+	l.Get("/byday", serveIndexHtmlFn)
+	l.Get("/bylocation", serveIndexHtmlFn)
+	l.Get("/singleitem", serveIndexHtmlFn)
+
 	l.Get("/", fs)
 	l.Get("/*", fs)
 	api.ConfigureRouting(l)

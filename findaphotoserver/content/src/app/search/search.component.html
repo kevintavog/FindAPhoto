@@ -9,23 +9,23 @@
 <form *ngIf="showSearch == true">
     <div class="o-container o-container--large" >
         <div class="c-input-group">
-            <input class="c-field" type="text" autofocus [(ngModel)]="searchRequest.searchText" >
-            <button class="c-button c-button c-button--primary" type="submit" (click)="userSearch()" >Search</button>
+            <input class="c-field" type="text" autofocus [(ngModel)]="searchRequest.searchText" [ngModelOptions]="{standalone: true}" >
+            <button class="c-button c-button--info" type="submit" (click)="userSearch()" >Search</button>
         </div>
     </div>
 </form>
 
 
-<div class="c-alerts" *ngIf="serverError != undefined">
+<div *ngIf="serverError != undefined">
     <br>
-    <div class="c-alerts__alert c-alerts__alert--error">
+    <div class="c-alert c-alert--error">
         {{serverError}}
     </div>
 </div>
 
-<div class="c-alerts"  *ngIf="locationError != undefined">
+<div  *ngIf="locationError != undefined">
     <br>
-    <div class="c-alerts__alert c-alerts__alert--secondary">
+    <div class="c-alert c-alert--warning">
         {{locationError}}
     </div>
 </div>
@@ -87,7 +87,7 @@
 
 
 <div *ngIf="searchResults != null">
-    <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0">No matches were found for '{{searchRequest.searchText}}'</h2>
+    <h2 class="search-results" *ngIf="showSearch == true && searchResults.totalMatches == 0">No matches were found for '{{resultsSearchText}}'</h2>
 
     <div class="o-container o-container--medium" *ngIf="totalPages > 1">
         <div class="c-pagination">
@@ -101,8 +101,8 @@
             </div>
 
           <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1">
-            <button class="c-pagination__control" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
-            <button class="c-pagination__control" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
           </div>
           <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage <= 1">
             <button class="c-pagination__control" disabled="true" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
@@ -110,18 +110,18 @@
           </div>
 
           <div class="c-pagination__controls">
-            <button class="c-pagination__page" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
-            <button class="c-pagination__page" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
-            <button class="c-pagination__page" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
-            <button class="c-pagination__page c-pagination__page--current">{{currentPage}}</button>
-            <button class="c-pagination__page" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
-            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
-            <button class="c-pagination__page" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
+            <button class="c-pagination__page c-pagination__page--current u-color-white">{{currentPage}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
+            <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
           </div>
 
           <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages">
-            <button class="c-pagination__control" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
-            <button class="c-pagination__control" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
+            <button class="c-pagination__control u-color-white" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
           </div>
           <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage >= totalPages">
             <button class="c-pagination__control" disabled="true" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
@@ -130,7 +130,9 @@
         </div>
     </div>
 
-    <div class="c-nav c-nav--inline" style="background-color:#202020;overflow=hidden;">
+<!-- Waiting for sorting & filtering to be implemented  -->
+
+    <!-- <div class="c-nav c-nav--inline" style="background-color:#202020;overflow=hidden;">
         <span class="c-nav__item" (click)="toggleSortMenu()">Sort by
             <span class="c-text--loud">{{sortMenuDisplayText}} <i class="fa fa-chevron-down"></i>
             </span>
@@ -149,7 +151,7 @@
         </span>
 
         <span class="c-nav__item" >Filters <i class="fa fa-chevron-down"></i>
-        </span>
+        </span> -->
 
         <!-- <div class="c-tags" style="display:inline;">
             <button type="button" class="c-button c-button--small c-button--success c-tag" style="border-radius: 1em;">Jan 1, 2014
@@ -161,9 +163,8 @@
             <button type="button" class="c-button c-button--small c-button--success c-tag" style="border-radius: 1em;">mural
                   <span class="c-tag__close">×</span>
             </button>
-        </div> -->
-
-    </div>
+        </div>
+    </div> -->
 
 
     <div *ngFor="let group of searchResults.groups">
@@ -173,10 +174,10 @@
             <div *ngIf="showGroup" class="result-set-header">{{group.name}}
             </div>
             <div class="result-set-grid">
-                <div class="result-set-item" *ngFor="let item of group.items; let imageIndex = index">
+                <div class="result-set-item" *ngFor="let item of group.items; let itemIndex = index">
 
                     <div class="result-set-thumbnail">
-                        <a [routerLink]="['Slide', slideSearchLinkParameters(item, imageIndex, group.resultIndex)]">
+                        <a [routerLink]="['/singleitem']" [queryParams]="singleItemSearchLinkParameters(item, itemIndex, group.resultIndex)">
                             <img src="{{item.thumbUrl}}" >
                         </a>
                     </div>
@@ -185,14 +186,14 @@
                         <div class="o-grid">
                           <div class="result-set-info-text-left o-grid__cell c-text" >{{item.imageName}}</div>
                           <div class="result-set-info-text-right o-grid__cell c-text">
-                              <a [routerLink]="['ByLocation', { id:item.id, lat:item.latitude, lon:item.longitude }]">
+                              <a [routerLink]="['/bylocation']" [queryParams]="{ id:item.id, lat:item.latitude, lon:item.longitude }">
                                   {{item.city}}
                               </a>
                           </div>
                         </div>
                         <div class="o-grid">
                           <div class="result-set-info-text-left o-grid__cell c-text">
-                              <a [routerLink]="['ByDay', { m:itemMonth(item), d:itemDay(item) }]">
+                              <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(item), d:itemDay(item) }">
                                   {{getItemLocaleDate(item)}}
                               </a>
                           </div>
@@ -219,8 +220,8 @@
         <div class="c-pagination">
 
             <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage > 1">
-              <button class="c-pagination__control" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
-              <button class="c-pagination__control" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
+              <button class="c-pagination__control u-color-white" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
+              <button class="c-pagination__control u-color-white" (click)="previousPage()"><i class="fa fa-chevron-left"></i></button>
             </div>
             <div class="c-pagination__controls c-pagination__controls--backward" *ngIf="currentPage <= 1">
               <button class="c-pagination__control" disabled="true" (click)="firstPage()"><i class="fa fa-fast-backward"></i></button>
@@ -228,18 +229,18 @@
             </div>
 
             <div class="c-pagination__controls">
-              <button class="c-pagination__page" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
-              <button class="c-pagination__page" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
-              <button class="c-pagination__page" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
-              <button class="c-pagination__page c-pagination__page--current">{{currentPage}}</button>
-              <button class="c-pagination__page" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
-              <button class="c-pagination__page" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
-              <button class="c-pagination__page" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage > 3" (click)="gotoPage(currentPage - 3)" >{{currentPage - 3}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage > 2" (click)="gotoPage(currentPage - 2)" >{{currentPage - 2}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage > 1" (click)="gotoPage(currentPage - 1)" >{{currentPage - 1}}</button>
+              <button class="c-pagination__page c-pagination__page--current u-color-white">{{currentPage}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages" (click)="gotoPage(currentPage + 1)" >{{currentPage + 1}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages - 1" (click)="gotoPage(currentPage + 2)" >{{currentPage + 2}}</button>
+              <button class="c-pagination__page u-color-white" *ngIf="currentPage < totalPages - 2" (click)="gotoPage(currentPage + 3)" >{{currentPage + 3}}</button>
             </div>
 
             <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage < totalPages">
-              <button class="c-pagination__control" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
-              <button class="c-pagination__control" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
+              <button class="c-pagination__control u-color-white" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
+              <button class="c-pagination__control u-color-white" (click)="lastPage()"><i class="fa fa-fast-forward"></i></button>
             </div>
             <div class="c-pagination__controls c-pagination__controls--forward" *ngIf="currentPage >= totalPages">
               <button class="c-pagination__control" disabled="true" (click)="nextPage()"><i class="fa fa-chevron-right"></i></button>
