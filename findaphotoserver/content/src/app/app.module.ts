@@ -13,6 +13,7 @@ import { SearchService } from './services/search.service';
 import { SearchRequestBuilder } from './models/search.request.builder';
 
 import { routing } from './app.routes';
+import { MapComponent } from './map/map.component';
 
 
 @NgModule({
@@ -21,7 +22,8 @@ import { routing } from './app.routes';
         SearchComponent,
         SearchByDayComponent,
         SearchByLocationComponent,
-        SingleItemComponent
+        SingleItemComponent,
+        MapComponent
     ],
     imports: [
         BrowserModule,

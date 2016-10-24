@@ -68,10 +68,11 @@ func run(devolopmentMode bool) {
 
 	// For the Angular2 app, ensure the supported routes are redirected so refreshing and pasting URLs work as expected.
 	serveIndexHtmlFn := func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "./content/dist/index.html") }
-	l.Get("/search", serveIndexHtmlFn)
 	l.Get("/byday", serveIndexHtmlFn)
 	l.Get("/bylocation", serveIndexHtmlFn)
+	l.Get("/map", serveIndexHtmlFn)
 	l.Get("/singleitem", serveIndexHtmlFn)
+	l.Get("/search", serveIndexHtmlFn)
 
 	l.Get("/", fs)
 	l.Get("/*", fs)

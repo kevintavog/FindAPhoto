@@ -176,6 +176,12 @@ export abstract class BaseSearchComponent extends BaseComponent  {
         }
     }
 
+    searchMap() {
+        let params = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest);
+        let navigationExtras: NavigationExtras = { queryParams: params };
+        this._router.navigate( ['map'], navigationExtras )
+    }
+
     sortByDateNewest() { this.sortBy(SortType.DateNewest, "Date: Newest") }
     sortByDateOldest() { this.sortBy(SortType.DateOldest, "Date: Oldest") }
     sortByLocationAscending() { this.sortBy(SortType.LocationAZ, "Location: A-Z") }

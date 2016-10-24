@@ -20,9 +20,12 @@
         "styles.css",
         "../node_modules/font-awesome/css/font-awesome.min.css",
         "../node_modules/blaze/dist/blaze.min.css",
-        "../node_modules/blaze/dist/blaze.colors.min.css"
+        "../node_modules/blaze/dist/blaze.colors.min.css",
+        "../node_modules/leaflet/dist/leaflet.css"
       ],
-      "scripts": [],
+      "scripts": [
+          "../node_modules/leaflet/dist/leaflet.js"
+      ],
       "environments": {
         "source": "environments/environment.ts",
         "dev": "environments/environment.ts",

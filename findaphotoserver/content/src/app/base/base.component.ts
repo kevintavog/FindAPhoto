@@ -1,4 +1,4 @@
-import { SearchResults,SearchGroup,SearchItem } from '../models/search-results';
+import { SearchItem } from '../models/search-results';
 
 interface DegreesMinutesSeconds {
     degrees: number
