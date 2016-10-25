@@ -59,13 +59,13 @@
 
             <div class="o-grid">
                 <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(itemInfo), d:itemDay(itemInfo) }">
-                        <i class="fa fa-calendar"></i> {{getItemLocaleDateAndTime(itemInfo)}}
+                    <a [routerLink]="['/byday']" [queryParams]="{ m:displayer.itemMonth(itemInfo), d:displayer.itemDay(itemInfo) }">
+                        <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(itemInfo)}}
                     </a>
                 </div>
                 <div class="result-set-info-text-left o-grid__cell c-text">
                     <a href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
-                        <i class="fa fa-map"></i> {{latDms(itemInfo)}}, {{lonDms(itemInfo)}}
+                        <i class="fa fa-map"></i> {{displayer.latDms(itemInfo)}}, {{displayer.lonDms(itemInfo)}}
                     </a>
                 </div>
             </div>
@@ -116,9 +116,9 @@
             </figure>
         </span>
 
-        <div *ngIf="nearbyError != null" >
+        <div *ngIf="nearbySearchResultsProvider.serverError != null" >
             <br>
-            <h2 class="server-error">{{nearbyError}}</h2>
+            <h2 class="server-error">{{nearbySearchResultsProvider.serverError}}</h2>
         </div>
 
         <span *ngIf="sameDateResults != null" >
@@ -126,18 +126,18 @@
             <div class="singleitem-extra_title">Items with the same month & day</div>
             <figure style="display:inline-block;" *ngFor="let item of sameDateResults">
                 <div id="thumbnail">
-                    <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(item), d:itemDay(item) }">
+                    <a [routerLink]="['/byday']" [queryParams]="{ m:displayer.itemMonth(item), d:displayer.itemDay(item) }">
                         <img src="{{item.thumbUrl}}">
                     </a>
                 </div>
 
-                <figcaption> {{item.city}} ({{itemYear(item)}}) </figcaption>
+                <figcaption> {{item.city}} ({{displayer.itemYear(item)}}) </figcaption>
             </figure>
         </span>
 
-        <div *ngIf="sameDateError != null" >
+        <div *ngIf="bydaySearchResultsProvider.serverError != null" >
             <br>
-            <h2 class="server-error">{{sameDateError}}</h2>
+            <h2 class="server-error">{{bydaySearchResultsProvider.serverError}}</h2>
         </div>
     </div>
 

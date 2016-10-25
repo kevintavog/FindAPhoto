@@ -146,8 +146,8 @@
                         </div>
                         <div class="o-grid">
                           <div class="result-set-info-text-left o-grid__cell c-text">
-                              <a [routerLink]="['/byday']" [queryParams]="{ m:itemMonth(item), d:itemDay(item) }">
-                                  {{getItemLocaleDate(item)}}
+                              <a [routerLink]="['/byday']" [queryParams]="{ m:displayer.itemMonth(item), d:displayer.itemDay(item) }">
+                                  {{displayer.getItemLocaleDate(item)}}
                               </a>
                           </div>
                           <div class="result-set-info-text-right o-grid__cell c-text">{{item.keywords}}</div>

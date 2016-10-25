@@ -6,6 +6,7 @@ import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { ByDayResult } from '../models/search-results';
 
+import { DataDisplayer } from '../providers/data-displayer';
 import { NavigationProvider } from '../providers/navigation.provider';
 import { SearchResultsProvider } from '../providers/search-results.provider';
 
@@ -23,7 +24,8 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         location: Location,
         searchRequestBuilder: SearchRequestBuilder,
         searchResultsProvider: SearchResultsProvider,
-        navigationProvider: NavigationProvider) {
+        navigationProvider: NavigationProvider,
+        private displayer: DataDisplayer) {
             super("/bylocation", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
         }
 
@@ -78,10 +80,10 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
     }
 
     setLocationNameFallbacktMessage() {
-        this.pageMessage = "Pictures near: " + this.latitudeDms(
+        this.pageMessage = "Pictures near: " + this.displayer.latitudeDms(
             this._searchResultsProvider.searchRequest.latitude)
             + ", "
-            + this.longitudeDms(this._searchResultsProvider.searchRequest.longitude)
+            + this.displayer.longitudeDms(this._searchResultsProvider.searchRequest.longitude)
         this.pageSubMessage = undefined
     }
 }

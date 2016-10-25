@@ -3,7 +3,6 @@ import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
 
-import { BaseComponent } from '../base/base.component';
 import { SearchRequest, SortType } from '../models/search-request';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { SearchCategory, SearchCategoryDetail, SearchGroup, SearchItem, SearchResults } from '../models/search-results';
@@ -13,7 +12,7 @@ import { NavigationProvider } from '../providers/navigation.provider';
 import { SearchResultsProvider } from '../providers/search-results.provider';
 
 
-export abstract class BaseSearchComponent extends BaseComponent  {
+export abstract class BaseSearchComponent  {
 
 
     public DatesCaption: string = "Dates:"
@@ -40,7 +39,6 @@ export abstract class BaseSearchComponent extends BaseComponent  {
         protected _searchRequestBuilder: SearchRequestBuilder,
         protected _searchResultsProvider: SearchResultsProvider,
         protected _navigationProvider: NavigationProvider) {
-            super()
             this.uiState.showGroup = true
             this.uiState.sortMenuDisplayText = "Date: Newest"
 

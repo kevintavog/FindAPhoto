@@ -2,12 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseComponent } from '../base/base.component';
 import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequest } from '../models/search-request';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { SearchItem } from '../models/search-results';
 
+import { DataDisplayer } from '../providers/data-displayer';
 import { SearchResultsProvider } from '../providers/search-results.provider';
 import { SearchService } from '../services/search.service';
 
@@ -18,7 +18,7 @@ import { SearchService } from '../services/search.service';
     styleUrls: ['./single-item.component.css']
 })
 
-export class SingleItemComponent extends BaseComponent implements OnInit {
+export class SingleItemComponent implements OnInit {
     private static QueryProperties: string = "id,slideUrl,imageName,createdDate,keywords,city,thumbUrl,latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings"
     private static NearbyProperties: string = "id,thumbUrl,latitude,longitude,distancekm"
     private static SameDateProperties: string = "id,thumbUrl,createdDate,city"
@@ -46,8 +46,8 @@ export class SingleItemComponent extends BaseComponent implements OnInit {
         protected _location: Location,
         protected _searchRequestBuilder: SearchRequestBuilder,
         protected _searchResultsProvider: SearchResultsProvider,
-        protected searchService: SearchService) {
-            super()
+        protected searchService: SearchService,
+        private displayer: DataDisplayer) {
             _searchResultsProvider.searchStartingCallback = (context) => {}
             _searchResultsProvider.searchCompletedCallback = (context) => this.loadItemCompleted()
 
@@ -156,8 +156,8 @@ export class SingleItemComponent extends BaseComponent implements OnInit {
     }
 
     loadSameDate() {
-        let month = this.itemMonth(this.itemInfo)
-        let day = this.itemDay(this.itemInfo)
+        let month = this.displayer.itemMonth(this.itemInfo)
+        let day = this.displayer.itemDay(this.itemInfo)
         if (month < 0 || day < 0) { return }
 
 

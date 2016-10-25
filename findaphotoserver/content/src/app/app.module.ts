@@ -9,7 +9,7 @@ import { SearchByDayComponent } from './search-by-day/search-by-day.component';
 import { SearchByLocationComponent } from './search-by-location/search-by-location.component';
 import { SingleItemComponent } from './single-item/single-item.component';
 
-import { SearchResultsProvider } from './providers/search-results.provider'
+import { SearchResultsProvider } from './providers/search-results.provider';
 import { SearchService } from './services/search.service';
 import { SearchRequestBuilder } from './models/search.request.builder';
 

@@ -8,6 +8,7 @@ import { Observable }         from 'rxjs/Observable';
 import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 
+import { DataDisplayer } from '../providers/data-displayer';
 import { NavigationProvider } from '../providers/navigation.provider';
 import { SearchResultsProvider } from '../providers/search-results.provider';
 
@@ -27,7 +28,8 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             location: Location,
             searchRequestBuilder: SearchRequestBuilder,
             searchResultsProvider: SearchResultsProvider,
-            navigationProvider: NavigationProvider) {
+            navigationProvider: NavigationProvider,
+            private displayer: DataDisplayer) {
         super("/search", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 
