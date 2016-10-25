@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseSearchComponent } from '../base-search/base-search.component';
-import { SearchRequestBuilder } from '../models/search.request.builder';
-import { ByDayResult } from '../models/search-results';
+import { BaseSearchComponent } from './base-search.component';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
+import { ByDayResult } from '../../models/search-results';
 
-import { NavigationProvider } from '../providers/navigation.provider';
-import { SearchResultsProvider } from '../providers/search-results.provider';
+import { DataDisplayer } from '../../providers/data-displayer';
+import { NavigationProvider } from '../../providers/navigation.provider';
+import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 @Component({
   selector: 'app-search-by-day',
@@ -27,7 +28,8 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       location: Location,
       searchRequestBuilder: SearchRequestBuilder,
       searchResultsProvider: SearchResultsProvider,
-      navigationProvider: NavigationProvider) {
+      navigationProvider: NavigationProvider,
+      private displayer: DataDisplayer) {
           super("/byday", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 

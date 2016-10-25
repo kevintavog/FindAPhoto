@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AppComponent } from './app.component';
-import { SearchComponent } from './search/search.component';
-import { SearchByDayComponent } from './search-by-day/search-by-day.component';
-import { SearchByLocationComponent } from './search-by-location/search-by-location.component';
-import { SingleItemComponent } from './single-item/single-item.component';
+import { MapComponent } from './components/map/map.component';
+import { SearchComponent } from './components/search/search.component';
+import { SearchByDayComponent } from './components/search/search-by-day.component';
+import { SearchByLocationComponent } from './components/search/search-by-location.component';
+import { SingleItemComponent } from './components/single-item/single-item.component';
 
 import { SearchResultsProvider } from './providers/search-results.provider';
 import { SearchService } from './services/search.service';
@@ -17,7 +18,6 @@ import { DataDisplayer } from './providers/data-displayer';
 import { NavigationProvider } from './providers/navigation.provider';
 
 import { routing } from './app.routes';
-import { MapComponent } from './map/map.component';
 import { PagingComponent } from './components/paging/paging.component';
 import { HeaderComponent } from './components/header/header.component';
 import { AlertsComponent } from './components/alerts/alerts.component';

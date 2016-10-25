@@ -3,13 +3,13 @@ import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
 
-import { SearchRequest, SortType } from '../models/search-request';
-import { SearchRequestBuilder } from '../models/search.request.builder';
-import { SearchCategory, SearchCategoryDetail, SearchGroup, SearchItem, SearchResults } from '../models/search-results';
-import { UIState } from '../models/ui-state'
+import { SearchRequest, SortType } from '../../models/search-request';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
+import { SearchCategory, SearchCategoryDetail, SearchGroup, SearchItem, SearchResults } from '../../models/search-results';
+import { UIState } from '../../models/ui-state'
 
-import { NavigationProvider } from '../providers/navigation.provider';
-import { SearchResultsProvider } from '../providers/search-results.provider';
+import { NavigationProvider } from '../../providers/navigation.provider';
+import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 
 export abstract class BaseSearchComponent  {

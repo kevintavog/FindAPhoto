@@ -5,12 +5,12 @@ import { Location } from '@angular/common';
 import { Observable }         from 'rxjs/Observable';
 
 
-import { BaseSearchComponent } from '../base-search/base-search.component';
-import { SearchRequestBuilder } from '../models/search.request.builder';
+import { BaseSearchComponent } from './base-search.component';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
 
-import { DataDisplayer } from '../providers/data-displayer';
-import { NavigationProvider } from '../providers/navigation.provider';
-import { SearchResultsProvider } from '../providers/search-results.provider';
+import { DataDisplayer } from '../../providers/data-displayer';
+import { NavigationProvider } from '../../providers/navigation.provider';
+import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 @Component({
     selector: 'app-search',

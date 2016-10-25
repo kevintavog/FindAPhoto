@@ -2,18 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseSearchComponent } from '../base-search/base-search.component';
-import { SearchRequestBuilder } from '../models/search.request.builder';
-import { ByDayResult } from '../models/search-results';
+import { BaseSearchComponent } from './base-search.component';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
+import { ByDayResult } from '../../models/search-results';
 
-import { DataDisplayer } from '../providers/data-displayer';
-import { NavigationProvider } from '../providers/navigation.provider';
-import { SearchResultsProvider } from '../providers/search-results.provider';
+import { DataDisplayer } from '../../providers/data-displayer';
+import { NavigationProvider } from '../../providers/navigation.provider';
+import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 @Component({
   selector: 'app-search-by-location',
-  templateUrl: '../search/search.component.html',
-  styleUrls: ['../search/search.component.css']
+  templateUrl: './search.component.html',
+  styleUrls: ['./search.component.css']
 })
 
 export class SearchByLocationComponent extends BaseSearchComponent implements OnInit {

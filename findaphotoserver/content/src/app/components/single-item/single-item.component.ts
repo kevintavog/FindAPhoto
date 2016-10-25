@@ -2,14 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { BaseSearchComponent } from '../base-search/base-search.component';
-import { SearchRequest } from '../models/search-request';
-import { SearchRequestBuilder } from '../models/search.request.builder';
-import { SearchItem } from '../models/search-results';
+import { SearchRequest } from '../../models/search-request';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
+import { SearchItem } from '../../models/search-results';
 
-import { DataDisplayer } from '../providers/data-displayer';
-import { SearchResultsProvider } from '../providers/search-results.provider';
-import { SearchService } from '../services/search.service';
+import { DataDisplayer } from '../../providers/data-displayer';
+import { SearchResultsProvider } from '../../providers/search-results.provider';
+import { SearchService } from '../../services/search.service';
 
 
 @Component({
