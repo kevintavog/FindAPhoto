@@ -9,21 +9,31 @@ import { SearchByDayComponent } from './search-by-day/search-by-day.component';
 import { SearchByLocationComponent } from './search-by-location/search-by-location.component';
 import { SingleItemComponent } from './single-item/single-item.component';
 
+import { SearchResultsProvider } from './providers/search-results.provider'
 import { SearchService } from './services/search.service';
 import { SearchRequestBuilder } from './models/search.request.builder';
 
+import { DataDisplayer } from './providers/data-displayer';
+import { NavigationProvider } from './providers/navigation.provider';
+
 import { routing } from './app.routes';
 import { MapComponent } from './map/map.component';
+import { PagingComponent } from './components/paging/paging.component';
+import { HeaderComponent } from './components/header/header.component';
+import { AlertsComponent } from './components/alerts/alerts.component';
 
 
 @NgModule({
     declarations: [
         AppComponent,
+        MapComponent,
+        PagingComponent,
         SearchComponent,
         SearchByDayComponent,
         SearchByLocationComponent,
         SingleItemComponent,
-        MapComponent
+        HeaderComponent,
+        AlertsComponent
     ],
     imports: [
         BrowserModule,
@@ -32,7 +42,10 @@ import { MapComponent } from './map/map.component';
         routing
     ],
     providers: [
+        DataDisplayer,
+        NavigationProvider,
         SearchRequestBuilder,
+        SearchResultsProvider,
         SearchService
     ],
     bootstrap: [

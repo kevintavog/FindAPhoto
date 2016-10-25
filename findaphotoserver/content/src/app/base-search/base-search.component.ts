@@ -7,36 +7,21 @@ import { BaseComponent } from '../base/base.component';
 import { SearchRequest, SortType } from '../models/search-request';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { SearchCategory, SearchCategoryDetail, SearchGroup, SearchItem, SearchResults } from '../models/search-results';
+import { UIState } from '../models/ui-state'
 
-import { SearchService } from '../services/search.service';
+import { NavigationProvider } from '../providers/navigation.provider';
+import { SearchResultsProvider } from '../providers/search-results.provider';
 
 
 export abstract class BaseSearchComponent extends BaseComponent  {
 
-    protected static QueryProperties: string = "id,city,keywords,imageName,createdDate,latitude,longitude,thumbUrl,slideUrl,warnings"
-    public static ItemsPerPage: number = 50
 
     public DatesCaption: string = "Dates:"
     public KeywordsCaption: string = "Keywords:"
     public LocationsCaption: string = "Locations:"
 
+    uiState = new UIState()
 
-    sortMenuShowing: boolean;
-    sortMenuDisplayText: string;
-
-    showSearch: boolean;
-    showResultCount: boolean;
-
-    showGroup: boolean;
-    showDistance: boolean;
-    @Output() @Input() showFilters: boolean = false;
-
-    locationError: string;
-    serverError: string;
-    searchRequest: SearchRequest;
-    searchResults: SearchResults;
-    currentPage: number;
-    totalPages: number;
 
     pageMessage: string;
     pageSubMessage: string;
@@ -53,133 +38,49 @@ export abstract class BaseSearchComponent extends BaseComponent  {
         protected _route: ActivatedRoute,
         protected _location: Location,
         protected _searchRequestBuilder: SearchRequestBuilder,
-        protected _searchService: SearchService,) {
+        protected _searchResultsProvider: SearchResultsProvider,
+        protected _navigationProvider: NavigationProvider) {
             super()
-            this.showGroup = true
-            this.sortMenuDisplayText = "Date: Newest"
+            this.uiState.showGroup = true
+            this.uiState.sortMenuDisplayText = "Date: Newest"
+
+            _searchResultsProvider.searchStartingCallback = (context) => this.searchStartingCallback(context)
+            _searchResultsProvider.searchCompletedCallback = (context) => this.searchCompletedCallback(context)
+
+            _navigationProvider.updateSearchCallback = () => this.internalSearch(true)
     }
 
     initializeSearchRequest(searchType: string) {
-        let queryProps = BaseSearchComponent.QueryProperties
+        let queryProps = SearchResultsProvider.QueryProperties
         if (this.extraProperties != undefined) {
             queryProps += "," + this.extraProperties
         }
 
-        this.serverError = undefined
-        this.locationError = undefined
-
-        this._route.queryParams.subscribe(params => {
-            this.searchRequest = this._searchRequestBuilder.createRequest(params, BaseSearchComponent.ItemsPerPage, queryProps, searchType)
-         })
+        this._navigationProvider.locationError = undefined
+        this._searchResultsProvider.initializeRequest(queryProps, searchType);
     }
 
     singleItemSearchLinkParameters(item: SearchItem, imageIndex: number, groupIndex: number) {
-        let properties = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest)
+        let properties = this._searchRequestBuilder.toLinkParametersObject(this._searchResultsProvider.searchRequest)
         properties['id'] = item.id
-        properties['i'] = imageIndex + groupIndex + this.searchRequest.first
+        properties['i'] = imageIndex + groupIndex + this._searchResultsProvider.searchRequest.first
         return properties
     }
 
     updateUrl() {
-        let params = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest);
-
+        let params = this._searchRequestBuilder.toLinkParametersObject(this._searchResultsProvider.searchRequest);
         let drilldown = this.generateDrilldown()
         if (drilldown.length > 0) {
             console.log("!!! handle drilldown...")
             params['drilldown'] = drilldown;
         }
 
-        if (this.currentPage > 1) {
-            params['p'] = this.currentPage;
+        if (this._searchResultsProvider.currentPage > 1) {
+            params['p'] = this._searchResultsProvider.currentPage;
         }
 
         let navigationExtras: NavigationExtras = { queryParams: params };
         this._router.navigate( [this._pageRoute], navigationExtras);
-    }
-
-    currentPageNumber() {
-        if (this.searchResults != undefined) {
-            return 1 + Math.round(this.searchRequest.first / this.searchRequest.pageCount)
-        }
-        return null;
-    }
-
-    gotoPage(pageOneBased: number) {
-        if (this.currentPage != pageOneBased) {
-            this.searchRequest.first = 1 + (pageOneBased - 1) * BaseSearchComponent.ItemsPerPage
-            this.internalSearch(true)
-        }
-    }
-
-    firstPage() {
-        if (this.currentPage > 1) {
-            this.searchRequest.first = 1
-            this.internalSearch(true)
-        }
-    }
-
-    lastPage() {
-        if (this.currentPage < this.totalPages) {
-            this.searchRequest.first = (this.totalPages - 1) * BaseSearchComponent.ItemsPerPage
-            this.internalSearch(true)
-        }
-    }
-
-    previousPage() {
-        if (this.currentPage > 1) {
-            let zeroBasedPage = this.currentPage - 1
-            this.searchRequest.first = 1 + ((zeroBasedPage - 1) * BaseSearchComponent.ItemsPerPage)
-            this.internalSearch(true)
-        }
-    }
-
-    nextPage() {
-        if (this.currentPage < this.totalPages) {
-            let zeroBasedPage = this.currentPage - 1
-            this.searchRequest.first = 1 + ((zeroBasedPage + 1) * BaseSearchComponent.ItemsPerPage)
-            this.internalSearch(true)
-        }
-    }
-
-    home() {
-        this._router.navigate( ['search'] )
-    }
-
-    toggleSortMenu() {
-        if (this.sortMenuShowing != true) {
-            this.sortMenuShowing = true
-        } else {
-            this.sortMenuShowing = false
-        }
-    }
-
-    searchToday() {
-        this._router.navigate( ['byday'] )
-    }
-
-    searchNearby() {
-        this.locationError = undefined
-
-        if (window.navigator.geolocation) {
-            window.navigator.geolocation.getCurrentPosition(
-                (position: Position) => {
-
-                    let navigationExtras: NavigationExtras = {
-                        queryParams: { lat:position.coords.latitude, lon:position.coords.longitude }
-                    };
-
-                    this._router.navigate( ['bylocation'], navigationExtras);
-                },
-                (error: PositionError) => {
-                    this.locationError = "Unable to get location: " + error.message + " (" + error.code + ")"
-                })
-        }
-    }
-
-    searchMap() {
-        let params = this._searchRequestBuilder.toLinkParametersObject(this.searchRequest);
-        let navigationExtras: NavigationExtras = { queryParams: params };
-        this._router.navigate( ['map'], navigationExtras )
     }
 
     sortByDateNewest() { this.sortBy(SortType.DateNewest, "Date: Newest") }
@@ -190,69 +91,48 @@ export abstract class BaseSearchComponent extends BaseComponent  {
     sortByFolderDescending() { this.sortBy(SortType.FolderZA, "Folder: Z-A") }
     sortBy(sortType: string, sortDisplayName: string) {
         console.log("sort by %o", sortType)
-        this.sortMenuDisplayText = sortDisplayName
+        this.uiState.sortMenuDisplayText = sortDisplayName
     }
 
-    internalSearch(updateUrl: boolean) {
-        this.sortMenuShowing = false
+    searchStartingCallback(context: Map<string,any>) {
+        this.uiState.sortMenuShowing = false
         var selectedCategories = new Map<string,string[]>()
-        if (this.searchResults != null) {
-            for (var cat of this.searchResults.categories) {
+        if (this._searchResultsProvider.searchResults != null) {
+            for (var cat of this._searchResultsProvider.searchResults.categories) {
                this.saveSelectedCategories(cat.field, cat.details, selectedCategories)
             }
 
-            this.searchRequest.drilldown = this.generateDrilldown()
+            this._searchResultsProvider.searchRequest.drilldown = this.generateDrilldown()
         }
 
-        this.searchResults = undefined
-        this.serverError = undefined
         this.pageMessage = undefined
 
-        this._searchService.search(this.searchRequest).subscribe(
-            results => {
-                this.searchResults = results
+        context['selectedCategories'] = selectedCategories
+    }
 
-                let resultIndex = 0
-                for (var group of this.searchResults.groups) {
-                    group.resultIndex = resultIndex
-                    resultIndex += group.items.length
-                }
+    searchCompletedCallback(context: Map<string,any>) {
+        this.processSearchResults()
 
-                let pageCount = this.searchResults.totalMatches / BaseSearchComponent.ItemsPerPage
-                this.totalPages = ((pageCount) | 0) + (pageCount > Math.floor(pageCount) ? 1 : 0)
-                this.currentPage = 1 + (this.searchRequest.first / BaseSearchComponent.ItemsPerPage) | 0
+        let selectedCategories: Map<string,string[]> = context['selectedCategories']
+        selectedCategories.forEach((value, key) => {
+            this.selectSavedCategories(key.split("/"), value)
+        })
 
-                this.processSearchResults()
+        if (context['updateUrl']) { this.updateUrl() }
+    }
 
-                var dates = this.categoryDate()
-                if (dates != null) {
-                    for (var detail of dates.details) {
-                        if (detail.value.length == 8 && Number.isInteger(Number(detail.value))) {
-                            let year = Number(detail.value.substring(0, 4))
-                            let month = Number(detail.value.substring(4, 6))
-                            let day = Number(detail.value.substring(6, 8))
-
-                            detail.displayValue = new Date(year, month - 1, day).toLocaleDateString()
-                        }
-                    }
-                }
-
-                selectedCategories.forEach((value, key) => {
-                    this.selectSavedCategories(key.split("/"), value)
-                })
-
-                if (updateUrl) { this.updateUrl() }
-            },
-            error => this.serverError = error
-       );
+    internalSearch(updateUrl: boolean) {
+        let context = new Map<string,any>()
+        context['updateUrl'] = updateUrl
+        this._searchResultsProvider.search(context)
     }
 
     selectSavedCategories(categoryPath:string[], valueArray:string[]) {
-        if (this.searchResults == undefined || this.searchResults.categories == undefined) {
+        if (this._searchResultsProvider.searchResults == undefined || this._searchResultsProvider.searchResults.categories == undefined) {
             return
         }
 
-        for (let category of this.searchResults.categories) {
+        for (let category of this._searchResultsProvider.searchResults.categories) {
             if (category.field == categoryPath[0] && category.details != undefined) {
                 this.selectSavedCategoryChildren(category.details, categoryPath.slice(1), valueArray)
             }
@@ -296,8 +176,8 @@ export abstract class BaseSearchComponent extends BaseComponent  {
     //      Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
     generateDrilldown() : string {
         var selectedCategories = new Map<string,string[]>()
-        if (this.searchResults != null) {
-            for (var cat of this.searchResults.categories) {
+        if (this._searchResultsProvider.searchResults != null) {
+            for (var cat of this._searchResultsProvider.searchResults.categories) {
                this.saveSelectedCategories(cat.field, cat.details, selectedCategories)
             }
         }
@@ -325,42 +205,8 @@ export abstract class BaseSearchComponent extends BaseComponent  {
         }
     }
 
-    categoryDate() : SearchCategory {
-        return this.categoryByField("date")
-    }
-
-    categoryKeywords() : SearchCategory {
-        return this.categoryByField("keywords")
-    }
-
-    categoryPlacenames() : SearchCategory {
-        return this.categoryByField("countryName")
-    }
-
-    categoryByField(field: string) : SearchCategory {
-        for (var category of this.searchResults.categories) {
-            if (category.field == field) { return category }
-        }
-        return null
-    }
-
-    toggleFilterPanel() {
-        if (this.showFilters != true) {
-            this.showFilters = true
-        } else {
-            this.showFilters = false
-        }
-    }
-
     abstract processSearchResults() : void
     typeLeftButton() {}
     typeRightButton() {}
-
-    firstResult() {
-        if (this.searchResults != undefined && this.searchResults.totalMatches > 0) {
-            return this.searchResults.groups[0].items[0]
-        }
-        return undefined
-    }
 
 }

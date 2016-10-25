@@ -10,24 +10,13 @@ export class SearchService {
 
     constructor(private _http: Http) { }
 
-    search(request: SearchRequest) {
-        switch (request.searchType) {
-            case 's':
-                return this.searchByText(request.searchText, request.properties, request.first, request.pageCount, request.drilldown)
-            case 'd':
-                return this.searchByDay(request.month, request.day, request.properties, request.first, request.pageCount, false, request.drilldown)
-            case 'l':
-                return this.searchByLocation(request.latitude, request.longitude, request.properties, request.first, request.pageCount, request.drilldown)
-        }
-
-        return Observable.throw("Unknown search type: " + request.searchType)
-    }
 
     searchByText(searchText: string, properties: string, first: number, pageCount: number, drilldown: string) {
        var url = "/api/search?q=" + searchText + "&first=" + first + "&count=" + pageCount + "&properties=" + properties + "&categories=keywords,placename,date"
        if (drilldown != undefined && drilldown.length > 0) {
            url += "&drilldown=" + drilldown
        }
+
        return this._http.get(url)
                    .map(response => response.json())
                    .catch(this.handleError);

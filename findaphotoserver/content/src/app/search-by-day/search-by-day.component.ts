@@ -6,7 +6,8 @@ import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { ByDayResult } from '../models/search-results';
 
-import { SearchService } from '../services/search.service';
+import { NavigationProvider } from '../providers/navigation.provider';
+import { SearchResultsProvider } from '../providers/search-results.provider';
 
 @Component({
   selector: 'app-search-by-day',
@@ -25,15 +26,16 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       route: ActivatedRoute,
       location: Location,
       searchRequestBuilder: SearchRequestBuilder,
-      searchService: SearchService) {
-          super("/byday", router, route, location, searchRequestBuilder, searchService);
+      searchResultsProvider: SearchResultsProvider,
+      navigationProvider: NavigationProvider) {
+          super("/byday", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 
     ngOnInit() {
-        this.showSearch = false
-        this.showResultCount = true
+        this.uiState.showSearch = false
+        this.uiState.showResultCount = true
         this.initializeSearchRequest('d')
-        this.activeDate = new Date(2016, this.searchRequest.month - 1, this.searchRequest.day, 0, 0, 0, 0)
+        this.activeDate = new Date(2016, this._searchResultsProvider.searchRequest.month - 1, this._searchResultsProvider.searchRequest.day, 0, 0, 0, 0)
         this.internalSearch(false)
     }
 
@@ -42,9 +44,9 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
         this.pageMessage = "Pictures from " + SearchByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
 
         this.typeLeftButtonClass = "fa fa-arrow-left"
-        this.typeLeftButtonText = this.byDayString(this.searchResults.previousAvailableByDay)
+        this.typeLeftButtonText = this.byDayString(this._searchResultsProvider.searchResults.previousAvailableByDay)
         this.typeRightButtonClass = "fa fa-arrow-right"
-        this.typeRightButtonText = this.byDayString(this.searchResults.nextAvailableByDay)
+        this.typeRightButtonText = this.byDayString(this._searchResultsProvider.searchResults.nextAvailableByDay)
     }
 
     byDayString(byday: ByDayResult) {
@@ -55,7 +57,8 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
 
     typeLeftButton() {
         let navigationExtras: NavigationExtras = {
-            queryParams: { m:this.searchResults.previousAvailableByDay.month, d:this.searchResults.previousAvailableByDay.day }
+            queryParams: { m:this._searchResultsProvider.searchResults.previousAvailableByDay.month,
+                            d:this._searchResultsProvider.searchResults.previousAvailableByDay.day }
         };
 
         this._router.navigate( ['byday'], navigationExtras);
@@ -63,7 +66,8 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
 
     typeRightButton() {
         let navigationExtras: NavigationExtras = {
-            queryParams: { m:this.searchResults.nextAvailableByDay.month, d:this.searchResults.nextAvailableByDay.day }
+            queryParams: { m:this._searchResultsProvider.searchResults.nextAvailableByDay.month,
+                d:this._searchResultsProvider.searchResults.nextAvailableByDay.day }
         };
 
         this._router.navigate( ['byday'], navigationExtras);

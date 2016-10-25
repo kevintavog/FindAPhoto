@@ -1,23 +1,18 @@
 <div class="box">
     <div class="row header">
-        <ul class="c-nav c-nav--inline">
-            <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Home </li>
-            <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
-            <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
-            <li class="c-nav__item" (click)="searchMap()" ><i class="fa fa-map"></i> Map</li>
-            <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i></li>
-        </ul>
+        <app-header></app-header>
 
     </div>
 
 
     <div class="row content" id="map-container"  >
+        <app-alerts></app-alerts>
         <div class="map-container" id="map" >
         </div>
     </div>
 
     <!-- <div class="row footer">
-        
+
     </div> -->
 
 </div>

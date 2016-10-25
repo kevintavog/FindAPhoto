@@ -6,7 +6,8 @@ import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { ByDayResult } from '../models/search-results';
 
-import { SearchService } from '../services/search.service';
+import { NavigationProvider } from '../providers/navigation.provider';
+import { SearchResultsProvider } from '../providers/search-results.provider';
 
 @Component({
   selector: 'app-search-by-location',
@@ -21,14 +22,15 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         route: ActivatedRoute,
         location: Location,
         searchRequestBuilder: SearchRequestBuilder,
-        searchService: SearchService) {
-            super("/bylocation", router, route, location, searchRequestBuilder, searchService);
+        searchResultsProvider: SearchResultsProvider,
+        navigationProvider: NavigationProvider) {
+            super("/bylocation", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
         }
 
     ngOnInit() {
-        this.showSearch = false
-        this.showDistance = true
-        this.showGroup = false
+        this.uiState.showSearch = false
+        this.uiState.showDistance = true
+        this.uiState.showGroup = false
 
         this.extraProperties = "locationName,locationDisplayName,distancekm"
         this.initializeSearchRequest('l')
@@ -37,33 +39,34 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
     }
 
     processSearchResults() {
-        let firstResult = this.firstResult()
+        let firstResult = this._searchResultsProvider.firstResult()
         if (firstResult != undefined && firstResult.locationName != null) {
-            if (firstResult.latitude == this.searchRequest.latitude &&
-                firstResult.longitude == this.searchRequest.longitude) {
+            if (firstResult.latitude == this._searchResultsProvider.searchRequest.latitude &&
+                firstResult.longitude == this._searchResultsProvider.searchRequest.longitude) {
                     this.setLocationName(firstResult.locationName, firstResult.locationDisplayName)
                     return
                 }
         }
 
+        this.setLocationNameFallbacktMessage();
         // Ask the server for something nearby the given location
-        this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1, null).subscribe(
-            results => {
-                let messageSet = false
-                if (results.totalMatches > 0) {
-                    let item = results.groups[0].items[0]
-                    if (item.distancekm <= 500) {
-                        this.setLocationName(item.locationName, item.locationDetailedName)
-                        messageSet = true
-                    }
-                }
-
-                if (!messageSet) {
-                    this.setLocationNameFallbacktMessage()
-                }
-            },
-            error => { this.setLocationNameFallbacktMessage() }
-        );
+        // this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1, null).subscribe(
+        //     results => {
+        //         let messageSet = false
+        //         if (results.totalMatches > 0) {
+        //             let item = results.groups[0].items[0]
+        //             if (item.distancekm <= 500) {
+        //                 this.setLocationName(item.locationName, item.locationDetailedName)
+        //                 messageSet = true
+        //             }
+        //         }
+        //
+        //         if (!messageSet) {
+        //             this.setLocationNameFallbacktMessage()
+        //         }
+        //     },
+        //     error => { this.setLocationNameFallbacktMessage() }
+        // );
 
     }
 
@@ -75,7 +78,10 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
     }
 
     setLocationNameFallbacktMessage() {
-        this.pageMessage = "Pictures near: " + this.latitudeDms(this.searchRequest.latitude) + ", " + this.longitudeDms(this.searchRequest.longitude)
+        this.pageMessage = "Pictures near: " + this.latitudeDms(
+            this._searchResultsProvider.searchRequest.latitude)
+            + ", "
+            + this.longitudeDms(this._searchResultsProvider.searchRequest.longitude)
         this.pageSubMessage = undefined
     }
 }

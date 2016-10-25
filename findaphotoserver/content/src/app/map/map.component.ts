@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { Map } from "leaflet";
 
+
 @Component({
     selector: 'app-map',
     templateUrl: './map.component.html',
@@ -10,6 +11,7 @@ import { Map } from "leaflet";
 
 export class MapComponent implements OnInit {
     map: Map
+
 
     constructor() { }
 

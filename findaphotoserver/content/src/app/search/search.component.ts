@@ -8,7 +8,8 @@ import { Observable }         from 'rxjs/Observable';
 import { BaseSearchComponent } from '../base-search/base-search.component';
 import { SearchRequestBuilder } from '../models/search.request.builder';
 
-import { SearchService } from '../services/search.service';
+import { NavigationProvider } from '../providers/navigation.provider';
+import { SearchResultsProvider } from '../providers/search-results.provider';
 
 @Component({
     selector: 'app-search',
@@ -25,13 +26,14 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             route: ActivatedRoute,
             location: Location,
             searchRequestBuilder: SearchRequestBuilder,
-            searchService: SearchService) {
-        super("/search", router, route, location, searchRequestBuilder, searchService);
+            searchResultsProvider: SearchResultsProvider,
+            navigationProvider: NavigationProvider) {
+        super("/search", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 
     ngOnInit() {
-        this.showSearch = true
-        this.showResultCount = true
+        this.uiState.showSearch = true
+        this.uiState.showResultCount = true
         this.initializeSearchRequest('s')
 
 
@@ -44,9 +46,9 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
     userSearch() {
         // If the search is new or different, navigate so we can use browser back to get to previous search results
-        if (this.resultsSearchText && this.resultsSearchText != this.searchRequest.searchText) {
+        if (this.resultsSearchText && this.resultsSearchText != this._searchResultsProvider.searchRequest.searchText) {
             let navigationExtras: NavigationExtras = {
-                queryParams: { q: this.searchRequest.searchText }
+                queryParams: { q: this._searchResultsProvider.searchRequest.searchText }
             };
 
             this._router.navigate( ['search'], navigationExtras);
@@ -57,6 +59,6 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
     }
 
     processSearchResults() {
-        this.resultsSearchText = this.searchRequest.searchText
+        this.resultsSearchText = this._searchResultsProvider.searchRequest.searchText
     }
 }

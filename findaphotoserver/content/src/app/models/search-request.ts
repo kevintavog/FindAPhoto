@@ -20,6 +20,7 @@ export interface SearchRequest {
     // A by date search
     month: number;
     day: number;
+    byDayRandom: boolean;
 
     // A nearby search
     latitude: number;

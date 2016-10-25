@@ -21,7 +21,11 @@ export class SearchRequestBuilder {
                 properties['lat'] = searchRequest.latitude
                 properties['lon'] = searchRequest.longitude
                 break
+            default:
+                console.log("Unknown search type: %s", searchRequest.searchType)
+                throw new Error("Unknown search type: " + searchRequest.searchType)
         }
+
         return properties
     }
 
@@ -68,6 +72,6 @@ export class SearchRequestBuilder {
         let drilldown = params["drilldown"]
 
         return { searchType: searchType, searchText: searchText, first: firstItem, pageCount: itemsPerPage,
-            properties: queryProperties, month: month, day: day, latitude: latitude, longitude: longitude, drilldown: drilldown }
+            properties: queryProperties, month: month, day: day, byDayRandom: false, latitude: latitude, longitude: longitude, drilldown: drilldown }
     }
 }

@@ -1,21 +1,11 @@
-<ul class="c-nav c-nav--inline">
-    <li class="c-nav__item" (click)="home()" ><i class="fa fa-home"></i> Back to search </li>
-    <li class="c-nav__item" (click)="searchNearby()" ><i class="fa fa-location-arrow"></i> Nearby</li>
-    <li class="c-nav__item" (click)="searchToday()" ><i class="fa fa-calendar"></i> On this day</li>
-    <li class="c-nav__item c-nav__item--right" ><i class="fa fa-info"></i></li>
-</ul>
+<app-header></app-header>
 
 
 <div *ngIf="itemInfo == null && error == null">
     Loading the item...
 </div>
 
-<div *ngIf="error != undefined">
-    <br>
-    <div class="c-alert c-alert--error">
-        {{error}}
-    </div>
-</div>
+<app-alerts></app-alerts>
 
 <div *ngIf="itemInfo != null">
     <div class="o-container o-container--xsmall">
