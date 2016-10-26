@@ -1,4 +1,4 @@
-import { Component, Input, Output } from '@angular/core';
+import { Component, OnDestroy, Input, Output } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
@@ -12,14 +12,13 @@ import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 
-export abstract class BaseSearchComponent  {
+export abstract class BaseSearchComponent implements OnDestroy {
 
+    public DatesCaption: string = "Dates:";
+    public KeywordsCaption: string = "Keywords:";
+    public LocationsCaption: string = "Locations:";
 
-    public DatesCaption: string = "Dates:"
-    public KeywordsCaption: string = "Keywords:"
-    public LocationsCaption: string = "Locations:"
-
-    uiState = new UIState()
+    uiState = new UIState();
 
 
     pageMessage: string;
@@ -38,13 +37,19 @@ export abstract class BaseSearchComponent  {
         protected _searchRequestBuilder: SearchRequestBuilder,
         protected _searchResultsProvider: SearchResultsProvider,
         protected _navigationProvider: NavigationProvider) {
-            this.uiState.showGroup = true
-            this.uiState.sortMenuDisplayText = "Date: Newest"
+            this.uiState.showGroup = true;
+            this.uiState.sortMenuDisplayText = "Date: Newest";
 
-            _searchResultsProvider.searchStartingCallback = (context) => this.searchStartingCallback(context)
-            _searchResultsProvider.searchCompletedCallback = (context) => this.searchCompletedCallback(context)
+            _searchResultsProvider.searchStartingCallback = (context) => this.searchStartingCallback(context);
+            _searchResultsProvider.searchCompletedCallback = (context) => this.searchCompletedCallback(context);
 
-            _navigationProvider.updateSearchCallback = () => this.internalSearch(true)
+            _navigationProvider.updateSearchCallback = () => this.internalSearch(true);
+    }
+
+    ngOnDestroy() {
+        this._searchResultsProvider.searchStartingCallback = null;
+        this._searchResultsProvider.searchCompletedCallback = null;
+        this._navigationProvider.updateSearchCallback = null;
     }
 
 

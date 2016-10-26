@@ -21,43 +21,38 @@ import { SearchService } from '../../services/search.service';
 })
 
 export class MapComponent implements OnInit {
-    map: Map
-    thumbsInStrip = new Array<SearchItem>()
-    mapSearchResultsProvider: SearchResultsProvider
-    distanceMarkerGroup: FeatureGroup
-    markerIcon: Icon
-    highlightedMarkerIcon: Icon
-    selectedMarker: Marker
+    public static QueryProperties: string = "id,imageName,latitude,longitude,thumbUrl"
+
+    map: Map;
+    cluster: MarkerClusterGroup;
+    thumbsInStrip = new Array<SearchItem>();
+    distanceMarkerGroup: FeatureGroup;
+    markerIcon: Icon;
+    highlightedMarkerIcon: Icon;
+    selectedMarker: Marker;
 
 
     constructor(
         private route: ActivatedRoute,
         private navigationProvider: NavigationProvider,
-        searchRequestBuilder: SearchRequestBuilder,
-        searchService: SearchService) {
+        private searchResultsProvider: SearchResultsProvider) {
 
-            this.mapSearchResultsProvider = new SearchResultsProvider(searchService, route, searchRequestBuilder)
-            this.mapSearchResultsProvider.searchStartingCallback = (context) => {}
-            this.mapSearchResultsProvider.searchCompletedCallback = (context) => this.mapSearchCompleted()
+            searchResultsProvider.searchStartingCallback = (context) => {};
+            searchResultsProvider.searchCompletedCallback = (context) => this.mapSearchCompleted();
     }
 
     ngOnInit() {
         this.navigationProvider.initialize()
-        this.mapSearchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 's')
+        this.searchResultsProvider.initializeRequest(MapComponent.QueryProperties, 's')
+        this.searchResultsProvider.searchRequest.pageCount = 100;
         this.initializeMap()
 
 
         this.route.queryParams.subscribe(params => {
             if ('q' in params || 't' in params) {
-                this.mapSearchResultsProvider.search(null)
+                this.startSearch();
             }
         })
-
-// Will want to use the leaflet markercluster
-// https://github.com/Leaflet/Leaflet.markercluster
-// https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/leaflet-markercluster
-
-
 
         this.markerIcon = L.icon({
             iconUrl: 'assets/leaflet/marker-icon.png',
@@ -78,23 +73,16 @@ export class MapComponent implements OnInit {
     		popupAnchor: [1, -34],
     		shadowSize:  [41, 41]
         });
-//
-//
-// L.marker([51.51195,-0.1322], { icon: markerIcon }).addTo(this.map);
-// let marker = L.marker([51.5, -0.09]).addTo(this.map);
-let circle = L.circle([51.508, -0.11], {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5,
-    radius: 500
-}).addTo(this.map);
+    }
 
+    startSearch() {
+        this.thumbsInStrip = new Array<SearchItem>();
+        this.searchResultsProvider.search(null);
     }
 
     mapSearchCompleted() {
-        this.thumbsInStrip = new Array<SearchItem>()
-        if (this.mapSearchResultsProvider.searchResults) {
-            for (let group of this.mapSearchResultsProvider.searchResults.groups) {
+        if (this.searchResultsProvider.searchResults) {
+            for (let group of this.searchResultsProvider.searchResults.groups) {
                 if (this.thumbsInStrip.length >= 50) {
                     break
                 }
@@ -108,29 +96,36 @@ let circle = L.circle([51.508, -0.11], {
             }
 
             let markers = new Array<Marker>();
-            for (let group of this.mapSearchResultsProvider.searchResults.groups) {
+            for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
-                    let marker = L.marker(
-                        [item.latitude, item.longitude],
-                        {
-                            title: item.imageName,
-                            icon: this.markerIcon
-                        })
+                    if (item.latitude && item.longitude) {
+                        let marker = L.marker(
+                            [item.latitude, item.longitude],
+                            {
+                                title: item.imageName,
+                                icon: this.markerIcon
+                            });
 
-                    marker.on('click', () => {
-                        this.removeHighlight()
-                        marker.setIcon(this.highlightedMarkerIcon)
-                        this.selectedMarker = marker
-                    })
-                    markers.push(marker)
+                        marker.on('click', () => {
+                            this.removeHighlight();
+                            marker.setIcon(this.highlightedMarkerIcon);
+                            this.selectedMarker = marker;
+                        })
+                        markers.push(marker);
+                    }
                 }
             }
 
-            let cluster = L.markerClusterGroup();
-            cluster.addLayer(L.layerGroup(markers));
-            this.map.addLayer(cluster);
+            this.cluster.addLayer(L.layerGroup(markers));
 
-            // L.featureGroup([L.layerGroup(markers)]).addTo(this.map);
+            let results = this.searchResultsProvider.searchResults;
+            let request = this.searchResultsProvider.searchRequest;
+            let totalMatches = results.totalMatches;
+            let retrieved = request.first + results.resultCount - 1;
+            if (retrieved < totalMatches) {
+                this.searchResultsProvider.searchRequest.first = request.first + request.pageCount;
+                this.searchResultsProvider.search(null);
+            }
         }
     }
 
@@ -161,5 +156,8 @@ let circle = L.circle([51.508, -0.11], {
         L.control.scale({ position: "bottomright" }).addTo(this.map);
 
         this.map.on('click', () => { this.removeHighlight() })
+
+        this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );
+        this.map.addLayer(this.cluster);
     }
 }

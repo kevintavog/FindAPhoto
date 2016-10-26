@@ -34,17 +34,16 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.uiState.showSearch = true
-        this.uiState.showResultCount = true
-        this.navigationProvider.initialize()
-        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 's')
-
+        this.uiState.showSearch = true;
+        this.uiState.showResultCount = true;
+        this.navigationProvider.initialize();
+        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 's');
 
         this._route.queryParams.subscribe(params => {
             if ('q' in params || 't' in params) {
                 this.internalSearch(false)
             }
-        })
+        });
     }
 
     userSearch() {
@@ -55,7 +54,7 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             };
 
             this._router.navigate( ['search'], navigationExtras);
-            return
+            return;
         }
 
         this.internalSearch(true)
