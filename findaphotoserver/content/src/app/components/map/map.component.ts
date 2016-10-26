@@ -1,7 +1,9 @@
+
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { Map } from "leaflet";
+import { FeatureGroup, Icon, Layer, LayerGroup, Map, Marker } from "leaflet";
+import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results'
 import { SearchRequestBuilder } from '../../models/search.request.builder';
@@ -22,10 +24,10 @@ export class MapComponent implements OnInit {
     map: Map
     thumbsInStrip = new Array<SearchItem>()
     mapSearchResultsProvider: SearchResultsProvider
-    distanceMarkerGroup: L.FeatureGroup
-    markerIcon: L.Icon
-    highlightedMarkerIcon: L.Icon
-    selectedMarker: L.Marker
+    distanceMarkerGroup: FeatureGroup
+    markerIcon: Icon
+    highlightedMarkerIcon: Icon
+    selectedMarker: Marker
 
 
     constructor(
@@ -105,7 +107,7 @@ let circle = L.circle([51.508, -0.11], {
                 }
             }
 
-            let markers = new Array<L.Marker>();
+            let markers = new Array<Marker>();
             for (let group of this.mapSearchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
                     let marker = L.marker(
@@ -124,7 +126,11 @@ let circle = L.circle([51.508, -0.11], {
                 }
             }
 
-            let group = L.featureGroup([L.layerGroup(markers)]).addTo(this.map);
+            let cluster = L.markerClusterGroup();
+            cluster.addLayer(L.layerGroup(markers));
+            this.map.addLayer(cluster);
+
+            // L.featureGroup([L.layerGroup(markers)]).addTo(this.map);
         }
     }
 

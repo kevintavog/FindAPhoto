@@ -21,10 +21,13 @@
         "../node_modules/font-awesome/css/font-awesome.min.css",
         "../node_modules/blaze/dist/blaze.min.css",
         "../node_modules/blaze/dist/blaze.colors.min.css",
-        "../node_modules/leaflet/dist/leaflet.css"
+        "../node_modules/leaflet/dist/leaflet.css",
+        "../node_modules/leaflet.markercluster/dist/MarkerCluster.css",
+        "../node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css"
       ],
       "scripts": [
-          "../node_modules/leaflet/dist/leaflet.js"
+          "../node_modules/leaflet/dist/leaflet.js",
+          "../node_modules/leaflet.markercluster/dist/leaflet.markercluster.js"
       ],
       "environments": {
         "source": "environments/environment.ts",
