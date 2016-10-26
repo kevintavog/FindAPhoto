@@ -2,6 +2,10 @@
     <div class="row header">
         <app-header></app-header>
 
+        <div style="width:auto; height:auto; overflow-x:scroll; overflow-y:hidden; white-space:nowrap; box-sizing:border-box; border: 5px solid #686868; background-color:#686868" >
+            <img style="height:60px; display:inline-block; vertical-align:middle; border-left: 10px solid #686868;" src="{{item.thumbUrl}}" *ngFor="let item of thumbsInStrip" >
+        </div>
+
     </div>
 
 

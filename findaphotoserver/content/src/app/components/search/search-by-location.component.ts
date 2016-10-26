@@ -34,8 +34,9 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         this.uiState.showDistance = true
         this.uiState.showGroup = false
 
-        this.extraProperties = "locationName,locationDisplayName,distancekm"
-        this.initializeSearchRequest('l')
+        let queryProps = SearchResultsProvider.QueryProperties += ",locationName,locationDisplayName,distancekm"
+        this._navigationProvider.initialize()
+        this._searchResultsProvider.initializeRequest(queryProps, 'l');
 
         this.internalSearch(false)
     }

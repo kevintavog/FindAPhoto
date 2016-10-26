@@ -11,9 +11,9 @@ import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 @Component({
-  selector: 'app-search-by-day',
-  templateUrl: '../search/search.component.html',
-  styleUrls: ['../search/search.component.css']
+    selector: 'app-search-by-day',
+    templateUrl: '../search/search.component.html',
+    styleUrls: ['../search/search.component.css']
 })
 
 export class SearchByDayComponent extends BaseSearchComponent implements OnInit {
@@ -27,8 +27,8 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       route: ActivatedRoute,
       location: Location,
       searchRequestBuilder: SearchRequestBuilder,
-      searchResultsProvider: SearchResultsProvider,
-      navigationProvider: NavigationProvider,
+      private searchResultsProvider: SearchResultsProvider,
+      private navigationProvider: NavigationProvider,
       private displayer: DataDisplayer) {
           super("/byday", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
@@ -36,7 +36,9 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
     ngOnInit() {
         this.uiState.showSearch = false
         this.uiState.showResultCount = true
-        this.initializeSearchRequest('d')
+        this.navigationProvider.initialize()
+        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 'd')
+
         this.activeDate = new Date(2016, this._searchResultsProvider.searchRequest.month - 1, this._searchResultsProvider.searchRequest.day, 0, 0, 0, 0)
         this.internalSearch(false)
     }

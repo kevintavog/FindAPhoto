@@ -29,7 +29,6 @@ export abstract class BaseSearchComponent  {
     typeLeftButtonClass: string;
     typeRightButtonClass: string;
 
-    extraProperties: string;
 
     constructor(
         private _pageRoute: string,
@@ -48,15 +47,6 @@ export abstract class BaseSearchComponent  {
             _navigationProvider.updateSearchCallback = () => this.internalSearch(true)
     }
 
-    initializeSearchRequest(searchType: string) {
-        let queryProps = SearchResultsProvider.QueryProperties
-        if (this.extraProperties != undefined) {
-            queryProps += "," + this.extraProperties
-        }
-
-        this._navigationProvider.locationError = undefined
-        this._searchResultsProvider.initializeRequest(queryProps, searchType);
-    }
 
     singleItemSearchLinkParameters(item: SearchItem, imageIndex: number, groupIndex: number) {
         let properties = this._searchRequestBuilder.toLinkParametersObject(this._searchResultsProvider.searchRequest)
@@ -93,6 +83,8 @@ export abstract class BaseSearchComponent  {
     }
 
     searchStartingCallback(context: Map<string,any>) {
+        if (!context) { return }
+
         this.uiState.sortMenuShowing = false
         var selectedCategories = new Map<string,string[]>()
         if (this._searchResultsProvider.searchResults != null) {
@@ -109,6 +101,8 @@ export abstract class BaseSearchComponent  {
     }
 
     searchCompletedCallback(context: Map<string,any>) {
+        if (!context) { return }
+
         this.processSearchResults()
 
         let selectedCategories: Map<string,string[]> = context['selectedCategories']

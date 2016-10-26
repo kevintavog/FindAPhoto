@@ -27,8 +27,8 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             route: ActivatedRoute,
             location: Location,
             searchRequestBuilder: SearchRequestBuilder,
-            searchResultsProvider: SearchResultsProvider,
-            navigationProvider: NavigationProvider,
+            private searchResultsProvider: SearchResultsProvider,
+            private navigationProvider: NavigationProvider,
             private displayer: DataDisplayer) {
         super("/search", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
@@ -36,7 +36,8 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
     ngOnInit() {
         this.uiState.showSearch = true
         this.uiState.showResultCount = true
-        this.initializeSearchRequest('s')
+        this.navigationProvider.initialize()
+        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 's')
 
 
         this._route.queryParams.subscribe(params => {

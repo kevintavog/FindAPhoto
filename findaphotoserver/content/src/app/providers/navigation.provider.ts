@@ -17,6 +17,10 @@ export class NavigationProvider {
         protected _router: Router
     ) {}
 
+    initialize() {
+        this.locationError = undefined
+    }
+
     home() {
         this._router.navigate( ['search'] )
     }
