@@ -2,9 +2,12 @@
 
 <p style="margin-bottom:.5em;" >
 <form *ngIf="uiState.showSearch == true">
+    
     <div class="o-container o-container--large" >
         <div class="c-input-group">
-            <input class="c-field" type="text" autofocus [(ngModel)]="_searchResultsProvider.searchRequest.searchText" [ngModelOptions]="{standalone: true}" >
+            <div class="o-field">
+                <input class="c-field" type="text" autofocus [(ngModel)]="_searchResultsProvider.searchRequest.searchText" [ngModelOptions]="{standalone: true}" >
+            </div>
             <button class="c-button c-button--info" type="submit" (click)="userSearch()" >Search</button>
         </div>
     </div>
