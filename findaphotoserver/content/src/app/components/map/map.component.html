@@ -1,16 +1,29 @@
 <div class="box">
     <div class="row header">
         <app-header></app-header>
-
-        <div style="width:auto; height:auto; overflow-x:scroll; overflow-y:hidden; white-space:nowrap; box-sizing:border-box; border: 5px solid #686868; background-color:#686868" >
-            <img style="height:60px; display:inline-block; vertical-align:middle; border-left: 10px solid #686868;" src="{{item.thumbUrl}}" *ngFor="let item of thumbsInStrip" >
-        </div>
-
     </div>
 
 
     <div class="row content" id="map-container"  >
         <app-alerts></app-alerts>
+
+        <div >
+            <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="fitBounds()">Fit map</button>
+        </div>
+
+
+        <div *ngIf="isLoading" >
+            <div style="float:left; margin-left:10px; margin-right:10px;" >
+                Loading {{totalMatches}} items:
+            </div>
+            <div class="c-progress x-medium">
+                <div class="c-progress__bar c-progress__bar--info c-progress--rounded" [style.width]="percentageLoadedWidth"></div>
+            </div>
+        </div>
+        <div *ngIf="!isLoading" style="margin-left:10px;" >
+            {{totalMatches}} total matches
+        </div>
+
         <div class="map-container" id="map" >
         </div>
     </div>

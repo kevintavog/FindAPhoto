@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { FeatureGroup, Icon, Layer, LayerGroup, Map, Marker } from "leaflet";
+import { FeatureGroup, Icon, LatLngBounds, LatLngBoundsLiteral, LatLngTuple, Layer, LayerGroup, Map, Marker, Popup } from "leaflet";
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results'
@@ -23,13 +23,30 @@ import { SearchService } from '../../services/search.service';
 export class MapComponent implements OnInit {
     public static QueryProperties: string = "id,imageName,latitude,longitude,thumbUrl"
 
-    map: Map;
-    cluster: MarkerClusterGroup;
-    thumbsInStrip = new Array<SearchItem>();
-    distanceMarkerGroup: FeatureGroup;
     markerIcon: Icon;
     highlightedMarkerIcon: Icon;
+
+    map: Map;
+    cluster: MarkerClusterGroup;
     selectedMarker: Marker;
+    popup: Popup;
+
+    southWestCornerLatLng: LatLngTuple;
+    northEastCornerLatLng: LatLngTuple;
+
+    isLoading: boolean;
+    totalMatches: number;
+    matchesRetrieved: number;
+
+
+    get percentageLoadedWidth() {
+        return this.percentageLoaded.toString() + "%";
+    }
+
+    get percentageLoaded() {
+        if (!this.isLoading) { return 100; }
+        return Math.round(this.matchesRetrieved * 100 / this.totalMatches);
+    }
 
 
     constructor(
@@ -76,29 +93,27 @@ export class MapComponent implements OnInit {
     }
 
     startSearch() {
-        this.thumbsInStrip = new Array<SearchItem>();
+        this.southWestCornerLatLng = [90, 180];
+        this.northEastCornerLatLng = [-90, -180];
+
+        this.totalMatches = this.matchesRetrieved = 0;
+        this.isLoading = true;
         this.searchResultsProvider.search(null);
     }
 
     mapSearchCompleted() {
         if (this.searchResultsProvider.searchResults) {
-            for (let group of this.searchResultsProvider.searchResults.groups) {
-                if (this.thumbsInStrip.length >= 50) {
-                    break
-                }
-                for (let item of group.items) {
-                    this.thumbsInStrip.push(item)
-
-                    if (this.thumbsInStrip.length >= 50) {
-                        break
-                    }
-                }
-            }
-
             let markers = new Array<Marker>();
             for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
                     if (item.latitude && item.longitude) {
+
+                        if (item.latitude < this.southWestCornerLatLng[0]) { this.southWestCornerLatLng[0] = item.latitude; }
+                        if (item.longitude < this.southWestCornerLatLng[1]) { this.southWestCornerLatLng[1] = item.longitude; }
+
+                        if (item.latitude > this.northEastCornerLatLng[0]) { this.northEastCornerLatLng[0] = item.latitude; }
+                        if (item.longitude > this.northEastCornerLatLng[1]) { this.northEastCornerLatLng[1] = item.longitude; }
+
                         let marker = L.marker(
                             [item.latitude, item.longitude],
                             {
@@ -106,11 +121,23 @@ export class MapComponent implements OnInit {
                                 icon: this.markerIcon
                             });
 
+                        marker.on('mouseover', () => {
+                            this.popup.setLatLng([item.latitude, item.longitude]);
+                            this.popup.setContent(
+                                '<div> '
+                                + `<img src="${item.thumbUrl}" (click)="showItem(${item})" >`
+                                + ' </div>');
+                            this.map.openPopup(this.popup);
+                        });
+
                         marker.on('click', () => {
-                            this.removeHighlight();
-                            marker.setIcon(this.highlightedMarkerIcon);
-                            this.selectedMarker = marker;
-                        })
+                            this.popup.setLatLng([item.latitude, item.longitude]);
+                            this.popup.setContent(
+                                '<div> '
+                                + `<img src="${item.thumbUrl}" >`
+                                + ' </div>');
+                            this.map.openPopup(this.popup);
+                        });
                         markers.push(marker);
                     }
                 }
@@ -118,15 +145,34 @@ export class MapComponent implements OnInit {
 
             this.cluster.addLayer(L.layerGroup(markers));
 
+
             let results = this.searchResultsProvider.searchResults;
             let request = this.searchResultsProvider.searchRequest;
-            let totalMatches = results.totalMatches;
-            let retrieved = request.first + results.resultCount - 1;
-            if (retrieved < totalMatches) {
+
+
+            // Only fit bounds after the first search - otherwise, the map will jump around, which is unpleasant.
+            if (request.first == 1) {
+                this.fitBounds();
+            }
+
+            this.totalMatches = results.totalMatches;
+            this.matchesRetrieved = request.first + results.resultCount - 1;
+
+            if (this.matchesRetrieved < this.totalMatches) {
                 this.searchResultsProvider.searchRequest.first = request.first + request.pageCount;
                 this.searchResultsProvider.search(null);
+            } else {
+                this.isLoading = false;
             }
         }
+    }
+
+    showItem(item: SearchItem) {
+        console.log(`showItem: ${item.imageName}`);
+    }
+
+    fitBounds() {
+        this.map.fitBounds([this.southWestCornerLatLng, this.northEastCornerLatLng], null);
     }
 
     removeHighlight() {
@@ -155,9 +201,16 @@ export class MapComponent implements OnInit {
 
         L.control.scale({ position: "bottomright" }).addTo(this.map);
 
-        this.map.on('click', () => { this.removeHighlight() })
+        this.map.on('click', () => { this.removeHighlight() });
+
 
         this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );
         this.map.addLayer(this.cluster);
+
+
+        this.popup = L.popup();
+        // this.popup.on('click', () => {
+        //     console.log("popup click")
+        // })
     }
 }
