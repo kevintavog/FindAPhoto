@@ -29,7 +29,7 @@ export interface SearchItem {
   locationDisplayName: string;
   longitude: number;
   mediaType: string;
-  mediaUrl: string
+  mediaUrl: string;
   mimeType: string;
   path: string;
   slideUrl: string;

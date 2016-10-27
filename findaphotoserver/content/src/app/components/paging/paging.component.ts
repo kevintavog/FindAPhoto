@@ -14,10 +14,10 @@ export class PagingComponent {
 
     constructor(protected searchResultsProvider: SearchResultsProvider, protected navigationProvider: NavigationProvider) { }
 
-    get currentPage():number { return this.searchResultsProvider.currentPage }
-    get totalPages():number { return this.searchResultsProvider.totalPages }
+    get currentPage(): number { return this.searchResultsProvider.currentPage; }
+    get totalPages(): number { return this.searchResultsProvider.totalPages; }
 
     gotoPage(pageNumber: number) {
-        this.navigationProvider.gotoPage(pageNumber)
+        this.navigationProvider.gotoPage(pageNumber);
     }
 }

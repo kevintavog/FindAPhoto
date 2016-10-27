@@ -1,10 +1,10 @@
 export class SortType {
-    static DateOldest = 'do'
-    static DateNewest = 'dn'
-    static LocationAZ = 'la'
-    static LocationZA = 'lz'
-    static FolderAZ = 'fa'
-    static FolderZA = 'fz'
+    static DateOldest = 'do';
+    static DateNewest = 'dn';
+    static LocationAZ = 'la';
+    static LocationZA = 'lz';
+    static FolderAZ = 'fa';
+    static FolderZA = 'fz';
 }
 
 export interface SearchRequest {

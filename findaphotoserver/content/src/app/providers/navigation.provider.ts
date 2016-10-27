@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core'
+import { Injectable } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
 
 import { SearchRequestBuilder } from '../models/search.request.builder';
@@ -18,51 +18,59 @@ export class NavigationProvider {
     ) {}
 
     initialize() {
-        this.locationError = undefined
+        this.locationError = undefined;
     }
 
     home() {
-        this._router.navigate( ['search'] )
+        this._router.navigate( ['search'] );
     }
 
     searchToday() {
-        this._router.navigate( ['byday'] )
+        let navigationExtras: NavigationExtras = { queryParams: { } };
+        this._router.navigate( ['byday'], navigationExtras );
+        this._searchResultsProvider.search(new Map<string, any>());
+    }
+
+    searchByDay(month: number, day: number) {
+        let navigationExtras: NavigationExtras = { queryParams: { m: month, d: day } };
+        this._router.navigate(['byday'], navigationExtras);
+        this.updateSearchCallback();
     }
 
     searchNearby() {
-        this.locationError = undefined
+        this.locationError = undefined;
 
         if (window.navigator.geolocation) {
-            let timer = setTimeout( () => this.locationError = "Unable to get location: timeout", 5000)
+            let timer = setTimeout( () => this.locationError = 'Unable to get location: timeout', 5000);
 
             window.navigator.geolocation.getCurrentPosition(
                 (position: Position) => {
 
                     let navigationExtras: NavigationExtras = {
-                        queryParams: { lat:position.coords.latitude, lon:position.coords.longitude }
+                        queryParams: { lat: position.coords.latitude, lon: position.coords.longitude }
                     };
 
                     this._router.navigate( ['bylocation'], navigationExtras);
                 },
                 (error: PositionError) => {
-                    this.locationError = "Unable to get location: " + error.message + " (" + error.code + ")"
+                    this.locationError = 'Unable to get location: ' + error.message + ' (' + error.code + ')';
                 },
-                { timeout: 5000 })
+                { timeout: 5000 });
 
-            clearTimeout(timer)
+            clearTimeout(timer);
         } else {
-            this.locationError = "Unable to get window.navigator.geolocation"
+            this.locationError = 'Unable to get window.navigator.geolocation';
         }
     }
 
     searchMap() {
         let params = this._searchRequestBuilder.toLinkParametersObject(this._searchResultsProvider.searchRequest);
         let navigationExtras: NavigationExtras = { queryParams: params };
-        this._router.navigate( ['map'], navigationExtras )
+        this._router.navigate( ['map'], navigationExtras );
     }
 
     gotoPage(pageOneBased: number) {
-        if (this._searchResultsProvider.currentPage != pageOneBased) {
+        if (this._searchResultsProvider.currentPage !== pageOneBased) {
             this._searchResultsProvider.searchRequest.first = 1 + (pageOneBased - 1) * SearchResultsProvider.ItemsPerPage;
             this.updateSearchCallback();
         }
@@ -70,30 +78,31 @@ export class NavigationProvider {
 
     firstPage() {
         if (this._searchResultsProvider.currentPage > 1) {
-            this._searchResultsProvider.searchRequest.first = 1
+            this._searchResultsProvider.searchRequest.first = 1;
             this.updateSearchCallback();
         }
     }
 
     lastPage() {
         if (this._searchResultsProvider.currentPage < this._searchResultsProvider.totalPages) {
-            this._searchResultsProvider.searchRequest.first = (this._searchResultsProvider.totalPages - 1) * SearchResultsProvider.ItemsPerPage
+            this._searchResultsProvider.searchRequest.first =
+                (this._searchResultsProvider.totalPages - 1) * SearchResultsProvider.ItemsPerPage;
             this.updateSearchCallback();
         }
     }
 
     previousPage() {
         if (this._searchResultsProvider.currentPage > 1) {
-            let zeroBasedPage = this._searchResultsProvider.currentPage - 1
-            this._searchResultsProvider.searchRequest.first = 1 + ((zeroBasedPage - 1) * SearchResultsProvider.ItemsPerPage)
+            let zeroBasedPage = this._searchResultsProvider.currentPage - 1;
+            this._searchResultsProvider.searchRequest.first = 1 + ((zeroBasedPage - 1) * SearchResultsProvider.ItemsPerPage);
             this.updateSearchCallback();
         }
     }
 
     nextPage() {
         if (this._searchResultsProvider.currentPage < this._searchResultsProvider.totalPages) {
-            let zeroBasedPage = this._searchResultsProvider.currentPage - 1
-            this._searchResultsProvider.searchRequest.first = 1 + ((zeroBasedPage + 1) * SearchResultsProvider.ItemsPerPage)
+            let zeroBasedPage = this._searchResultsProvider.currentPage - 1;
+            this._searchResultsProvider.searchRequest.first = 1 + ((zeroBasedPage + 1) * SearchResultsProvider.ItemsPerPage);
             this.updateSearchCallback();
         }
     }

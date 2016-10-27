@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { Observable }         from 'rxjs/Observable';
-
 
 import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
@@ -30,7 +28,7 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             private searchResultsProvider: SearchResultsProvider,
             private navigationProvider: NavigationProvider,
             private displayer: DataDisplayer) {
-        super("/search", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+        super('/search', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 
     ngOnInit() {
@@ -41,14 +39,14 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
         this._route.queryParams.subscribe(params => {
             if ('q' in params || 't' in params) {
-                this.internalSearch(false)
+                this.internalSearch(false);
             }
         });
     }
 
     userSearch() {
         // If the search is new or different, navigate so we can use browser back to get to previous search results
-        if (this.resultsSearchText && this.resultsSearchText != this._searchResultsProvider.searchRequest.searchText) {
+        if (this.resultsSearchText && this.resultsSearchText !== this._searchResultsProvider.searchRequest.searchText) {
             let navigationExtras: NavigationExtras = {
                 queryParams: { q: this._searchResultsProvider.searchRequest.searchText }
             };
@@ -57,10 +55,10 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             return;
         }
 
-        this.internalSearch(true)
+        this.internalSearch(true);
     }
 
     processSearchResults() {
-        this.resultsSearchText = this._searchResultsProvider.searchRequest.searchText
+        this.resultsSearchText = this._searchResultsProvider.searchRequest.searchText;
     }
 }

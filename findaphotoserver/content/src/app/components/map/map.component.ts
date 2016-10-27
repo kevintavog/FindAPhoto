@@ -2,16 +2,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { FeatureGroup, Icon, LatLngBounds, LatLngBoundsLiteral, LatLngTuple, Layer, LayerGroup, Map, Marker, Popup } from "leaflet";
+import { Icon, LatLngTuple, Map, Marker, Popup } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
-import { SearchItem } from '../../models/search-results'
-import { SearchRequestBuilder } from '../../models/search.request.builder';
+import { SearchItem } from '../../models/search-results';
 
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
-
-import { SearchService } from '../../services/search.service';
 
 
 @Component({
@@ -21,7 +18,7 @@ import { SearchService } from '../../services/search.service';
 })
 
 export class MapComponent implements OnInit {
-    public static QueryProperties: string = "id,imageName,latitude,longitude,thumbUrl"
+    public static QueryProperties: string = 'id,imageName,latitude,longitude,thumbUrl';
 
     markerIcon: Icon;
     highlightedMarkerIcon: Icon;
@@ -40,7 +37,7 @@ export class MapComponent implements OnInit {
 
 
     get percentageLoadedWidth() {
-        return this.percentageLoaded.toString() + "%";
+        return this.percentageLoaded.toString() + '%';
     }
 
     get percentageLoaded() {
@@ -59,26 +56,26 @@ export class MapComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.navigationProvider.initialize()
-        this.searchResultsProvider.initializeRequest(MapComponent.QueryProperties, 's')
+        this.navigationProvider.initialize();
+        this.searchResultsProvider.initializeRequest(MapComponent.QueryProperties, 's');
         this.searchResultsProvider.searchRequest.pageCount = 100;
-        this.initializeMap()
+        this.initializeMap();
 
 
         this.route.queryParams.subscribe(params => {
             if ('q' in params || 't' in params) {
                 this.startSearch();
             }
-        })
+        });
 
         this.markerIcon = L.icon({
             iconUrl: 'assets/leaflet/marker-icon.png',
             iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
             shadowUrl: 'assets/leaflet/marker-shadow.png',
             iconSize:    [25, 41],
-    		iconAnchor:  [12, 41],
-    		popupAnchor: [1, -34],
-    		shadowSize:  [41, 41]
+            iconAnchor:  [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize:  [41, 41]
         });
 
         this.highlightedMarkerIcon = L.icon({
@@ -86,9 +83,9 @@ export class MapComponent implements OnInit {
             iconRetinaUrl: 'assets/leaflet/marker-highlight-2x.png',
             shadowUrl: 'assets/leaflet/marker-shadow.png',
             iconSize:    [25, 41],
-    		iconAnchor:  [12, 41],
-    		popupAnchor: [1, -34],
-    		shadowSize:  [41, 41]
+            iconAnchor:  [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize:  [41, 41]
         });
     }
 
@@ -151,7 +148,7 @@ export class MapComponent implements OnInit {
 
 
             // Only fit bounds after the first search - otherwise, the map will jump around, which is unpleasant.
-            if (request.first == 1) {
+            if (request.first === 1) {
                 this.fitBounds();
             }
 
@@ -177,12 +174,12 @@ export class MapComponent implements OnInit {
 
     removeHighlight() {
         if (this.selectedMarker) {
-            this.selectedMarker.setIcon(this.markerIcon)
+            this.selectedMarker.setIcon(this.markerIcon);
         }
     }
 
     initializeMap() {
-        if (this.map) { return }
+        if (this.map) { return; }
 
         this.map = L.map('map', {
             center: [20, 0],
@@ -191,7 +188,7 @@ export class MapComponent implements OnInit {
             zoomControl: false
         });
 
-        L.control.zoom({ position: "topright" }).addTo(this.map);
+        L.control.zoom({ position: 'topright' }).addTo(this.map);
 
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -199,9 +196,9 @@ export class MapComponent implements OnInit {
                 'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
         }).addTo(this.map);
 
-        L.control.scale({ position: "bottomright" }).addTo(this.map);
+        L.control.scale({ position: 'bottomright' }).addTo(this.map);
 
-        this.map.on('click', () => { this.removeHighlight() });
+        this.map.on('click', () => { this.removeHighlight(); });
 
 
         this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );

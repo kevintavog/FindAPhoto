@@ -1,104 +1,104 @@
-import { Injectable } from '@angular/core'
+import { Injectable } from '@angular/core';
 import { SearchItem } from '../models/search-results';
 
 interface DegreesMinutesSeconds {
-    degrees: number
-    minutes: number
-    seconds: number
+    degrees: number;
+    minutes: number;
+    seconds: number;
 }
 
 @Injectable()
 export class DataDisplayer {
 
     itemYear(item: SearchItem) {
-        let date = this.getItemDate(item)
+        let date = this.getItemDate(item);
         if (date != null) {
-            return date.getFullYear()
+            return date.getFullYear();
         }
-        return -1
+        return -1;
     }
 
     itemMonth(item: SearchItem) {
-        let date = this.getItemDate(item)
+        let date = this.getItemDate(item);
         if (date != null) {
-            return date.getMonth() + 1
+            return date.getMonth() + 1;
         }
-        return -1
+        return -1;
     }
 
     itemDay(item: SearchItem) {
-        let date = this.getItemDate(item)
+        let date = this.getItemDate(item);
         if (date != null) {
-            return date.getDate()
+            return date.getDate();
         }
-        return -1
+        return -1;
     }
 
     getItemDate(item: SearchItem) {
         if (item.createdDate != null) {
-            let date = item.createdDate
+            let date = item.createdDate;
             if (typeof item.createdDate === 'string') {
-                date = new Date(item.createdDate)
+                date = new Date(item.createdDate);
             }
-            return date
+            return date;
         }
-        return undefined
+        return undefined;
     }
 
     getItemLocaleDate(item: SearchItem) {
         if (item.createdDate != null) {
-            return new Date(item.createdDate).toLocaleDateString()
+            return new Date(item.createdDate).toLocaleDateString();
         }
-        return undefined
+        return undefined;
     }
 
     getItemLocaleDateAndTime(item: SearchItem) {
         if (item.createdDate != null) {
-            let d = new Date(item.createdDate)
-            return d.toLocaleDateString() + "  " + d.toLocaleTimeString()
+            let d = new Date(item.createdDate);
+            return d.toLocaleDateString() + '  ' + d.toLocaleTimeString();
         }
-        return undefined
+        return undefined;
     }
 
     lonDms(item: SearchItem) {
-        return this.longitudeDms(item.longitude)
+        return this.longitudeDms(item.longitude);
     }
 
     longitudeDms(longitude: number) {
-        return this.convertToDms(longitude, ["E", "W"])
+        return this.convertToDms(longitude, ['E', 'W']);
     }
 
     latDms(item: SearchItem) {
-        return this.latitudeDms(item.latitude)
+        return this.latitudeDms(item.latitude);
     }
 
     latitudeDms(latitude: number) {
-        return this.convertToDms(latitude, ["N", "S"])
+        return this.convertToDms(latitude, ['N', 'S']);
     }
 
 
-    convertToDms(degrees: number, refValues: string[]) : string {
-        var dms = this.degreesToDms(degrees)
-        var ref = refValues[0]
+    convertToDms(degrees: number, refValues: string[]): string {
+        let dms = this.degreesToDms(degrees);
+        let ref = refValues[0];
         if (dms.degrees < 0) {
-            ref = refValues[1]
-            dms.degrees *= -1
+            ref = refValues[1];
+            dms.degrees *= -1;
         }
-        return dms.degrees + "° " + dms.minutes + "' " + dms.seconds.toFixed(2) + "\" " + refValues[1]
+        return dms.degrees + '° ' + dms.minutes + '\' ' + dms.seconds.toFixed(2) + '\" ' + refValues[1];
     }
 
-    degreesToDms(degrees: number):DegreesMinutesSeconds {
+    degreesToDms(degrees: number): DegreesMinutesSeconds {
 
-        var d = degrees
+        let d = degrees;
         if (d < 0) {
-            d = Math.ceil(d)
+            d = Math.ceil(d);
         } else {
-            d = Math.floor(d)
+            d = Math.floor(d);
         }
 
-        var minutesSeconds = Math.abs(degrees - d) * 60.0
-        var m = Math.floor(minutesSeconds)
-        var s = (minutesSeconds - m) * 60.0
+        let minutesSeconds = Math.abs(degrees - d) * 60.0;
+        let m = Math.floor(minutesSeconds);
+        let s = (minutesSeconds - m) * 60.0;
 
         return {
             degrees: d,

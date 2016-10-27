@@ -4,7 +4,6 @@ import { Location } from '@angular/common';
 
 import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
-import { ByDayResult } from '../../models/search-results';
 
 import { DataDisplayer } from '../../providers/data-displayer';
 import { NavigationProvider } from '../../providers/navigation.provider';
@@ -26,34 +25,35 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         searchResultsProvider: SearchResultsProvider,
         navigationProvider: NavigationProvider,
         private displayer: DataDisplayer) {
-            super("/bylocation", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+            super('/bylocation', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
         }
 
     ngOnInit() {
-        this.uiState.showSearch = false
-        this.uiState.showDistance = true
-        this.uiState.showGroup = false
+        this.uiState.showSearch = false;
+        this.uiState.showDistance = true;
+        this.uiState.showGroup = false;
 
-        let queryProps = SearchResultsProvider.QueryProperties += ",locationName,locationDisplayName,distancekm"
-        this._navigationProvider.initialize()
+        let queryProps = SearchResultsProvider.QueryProperties += ',locationName,locationDisplayName,distancekm';
+        this._navigationProvider.initialize();
         this._searchResultsProvider.initializeRequest(queryProps, 'l');
 
-        this.internalSearch(false)
+        this.internalSearch(false);
     }
 
     processSearchResults() {
-        let firstResult = this._searchResultsProvider.firstResult()
-        if (firstResult != undefined && firstResult.locationName != null) {
-            if (firstResult.latitude == this._searchResultsProvider.searchRequest.latitude &&
-                firstResult.longitude == this._searchResultsProvider.searchRequest.longitude) {
-                    this.setLocationName(firstResult.locationName, firstResult.locationDisplayName)
-                    return
+        let firstResult = this._searchResultsProvider.firstResult();
+        if (firstResult !== undefined && firstResult.locationName != null) {
+            if (firstResult.latitude === this._searchResultsProvider.searchRequest.latitude &&
+                firstResult.longitude === this._searchResultsProvider.searchRequest.longitude) {
+                    this.setLocationName(firstResult.locationName, firstResult.locationDisplayName);
+                    return;
                 }
         }
 
         this.setLocationNameFallbacktMessage();
         // Ask the server for something nearby the given location
-        // this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, "distancekm,locationName,locationDisplayName", 1, 1, null).subscribe(
+        // this._searchService.searchByLocation(this.searchRequest.latitude, this.searchRequest.longitude, 
+        //      "distancekm,locationName,locationDisplayName", 1, 1, null).subscribe(
         //     results => {
         //         let messageSet = false
         //         if (results.totalMatches > 0) {
@@ -74,17 +74,17 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
     }
 
     setLocationName(name: string, displayName: string) {
-        this.pageMessage = "Pictures near: " + name
-        if (displayName != undefined) {
-            this.pageSubMessage = displayName
+        this.pageMessage = 'Pictures near: ' + name;
+        if (displayName !== undefined) {
+            this.pageSubMessage = displayName;
         }
     }
 
     setLocationNameFallbacktMessage() {
-        this.pageMessage = "Pictures near: " + this.displayer.latitudeDms(
+        this.pageMessage = 'Pictures near: ' + this.displayer.latitudeDms(
             this._searchResultsProvider.searchRequest.latitude)
-            + ", "
-            + this.displayer.longitudeDms(this._searchResultsProvider.searchRequest.longitude)
-        this.pageSubMessage = undefined
+            + ', '
+            + this.displayer.longitudeDms(this._searchResultsProvider.searchRequest.longitude);
+        this.pageSubMessage = undefined;
     }
 }

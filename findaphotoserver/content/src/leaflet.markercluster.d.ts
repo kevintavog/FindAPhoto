@@ -4,8 +4,6 @@
 // Definitions by: Robert Imig <https://github.com/rimig>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-//import { FeatureGroup, Icon, Layer, LayerGroup, Map, Marker, PolylineOptions } from "leaflet";
-
 // This can't possibly be the proper way to handle references - a relative path?
 /// <reference path="../node_modules/@types/leaflet/index.d.ts" />
 
@@ -107,10 +105,10 @@ declare namespace L {
       * Bulk methods for adding and removing markers and should be favoured over the
       * single versions when doing bulk addition/removal of markers.
       */
-      addLayers(layers:Layer[]):this;
-      removeLayers(layers:Layer[]):this;
+      addLayers(layers: Layer[]): this;
+      removeLayers(layers: Layer[]): this;
 
-      clearLayers():this;
+      clearLayers(): this;
 
       /*
       * If you have a marker in your MarkerClusterGroup and you want to get the visible
@@ -122,10 +120,10 @@ declare namespace L {
       * If you have customized the clusters icon to use some data from the contained markers,
       * and later that data changes, use this method to force a refresh of the cluster icons.
       */
-      refreshClusters():this;
-      refreshClusters(layerGroup:LayerGroup):this;
-      refreshClusters(marker: Marker):this;
-      refreshClusters(markers: Marker[]):this;
+      refreshClusters(): this;
+      refreshClusters(layerGroup: LayerGroup): this;
+      refreshClusters(marker: Marker): this;
+      refreshClusters(markers: Marker[]): this;
 
       /*
       * Returns the total number of markers contained within that cluster.

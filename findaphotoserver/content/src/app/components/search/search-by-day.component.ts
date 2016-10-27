@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
 import { BaseSearchComponent } from './base-search.component';
@@ -17,7 +17,8 @@ import { SearchResultsProvider } from '../../providers/search-results.provider';
 })
 
 export class SearchByDayComponent extends BaseSearchComponent implements OnInit {
-    private static monthNames: string[] = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
+    private static monthNames: string[] = [
+        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
 
     activeDate: Date;
 
@@ -30,50 +31,51 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       private searchResultsProvider: SearchResultsProvider,
       private navigationProvider: NavigationProvider,
       private displayer: DataDisplayer) {
-          super("/byday", router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+          super('/byday', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
     }
 
     ngOnInit() {
-        this.uiState.showSearch = false
-        this.uiState.showResultCount = true
-        this.navigationProvider.initialize()
-        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 'd')
+        this.uiState.showSearch = false;
+        this.uiState.showResultCount = true;
+        this.navigationProvider.initialize();
+        this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 'd');
 
-        this.activeDate = new Date(2016, this._searchResultsProvider.searchRequest.month - 1, this._searchResultsProvider.searchRequest.day, 0, 0, 0, 0)
-        this.internalSearch(false)
+        this.internalSearch(false);
     }
 
     processSearchResults() {
-        // DOES NOT honor locale...
-        this.pageMessage = "Pictures from " + SearchByDayComponent.monthNames[this.activeDate.getMonth()] + "  " + this.activeDate.getDate()
+        this.activeDate = new Date(
+            2016,
+            this._searchResultsProvider.searchRequest.month - 1,
+            this._searchResultsProvider.searchRequest.day, 0, 0, 0, 0);
 
-        this.typeLeftButtonClass = "fa fa-arrow-left"
-        this.typeLeftButtonText = this.byDayString(this._searchResultsProvider.searchResults.previousAvailableByDay)
-        this.typeRightButtonClass = "fa fa-arrow-right"
-        this.typeRightButtonText = this.byDayString(this._searchResultsProvider.searchResults.nextAvailableByDay)
+        // DOES NOT honor locale...
+        this.pageMessage = 'Pictures from '
+            + SearchByDayComponent.monthNames[this.activeDate.getMonth()]
+            + '  ' + this.activeDate.getDate();
+
+        this.typeLeftButtonClass = 'fa fa-arrow-left';
+        this.typeLeftButtonText = this.byDayString(this._searchResultsProvider.searchResults.previousAvailableByDay);
+        this.typeRightButtonClass = 'fa fa-arrow-right';
+        this.typeRightButtonText = this.byDayString(this._searchResultsProvider.searchResults.nextAvailableByDay);
     }
 
     byDayString(byday: ByDayResult) {
-        if (byday == undefined)
-            return null
-        return SearchByDayComponent.monthNames[byday.month - 1] + " " + byday.day
+        if (byday === undefined) {
+            return null;
+        }
+        return SearchByDayComponent.monthNames[byday.month - 1] + ' ' + byday.day;
     }
 
     typeLeftButton() {
-        let navigationExtras: NavigationExtras = {
-            queryParams: { m:this._searchResultsProvider.searchResults.previousAvailableByDay.month,
-                            d:this._searchResultsProvider.searchResults.previousAvailableByDay.day }
-        };
-
-        this._router.navigate( ['byday'], navigationExtras);
+        this.navigationProvider.searchByDay(
+                this._searchResultsProvider.searchResults.previousAvailableByDay.month,
+                this._searchResultsProvider.searchResults.previousAvailableByDay.day);
     }
 
     typeRightButton() {
-        let navigationExtras: NavigationExtras = {
-            queryParams: { m:this._searchResultsProvider.searchResults.nextAvailableByDay.month,
-                d:this._searchResultsProvider.searchResults.nextAvailableByDay.day }
-        };
-
-        this._router.navigate( ['byday'], navigationExtras);
+        this.navigationProvider.searchByDay(
+                this._searchResultsProvider.searchResults.nextAvailableByDay.month,
+                this._searchResultsProvider.searchResults.nextAvailableByDay.day);
     }
 }

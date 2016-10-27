@@ -13,19 +13,19 @@ export class UIState {
 
 
     toggleSortMenu() {
-        if (this.sortMenuShowing != true) {
-            this.sortMenuShowing = true
+        if (this.sortMenuShowing !== true) {
+            this.sortMenuShowing = true;
         } else {
-            this.sortMenuShowing = false
+            this.sortMenuShowing = false;
         }
     }
 
 
     toggleFilterPanel() {
-        if (this.showFilters != true) {
-            this.showFilters = true
+        if (this.showFilters !== true) {
+            this.showFilters = true;
         } else {
-            this.showFilters = false
+            this.showFilters = false;
         }
     }
 }
