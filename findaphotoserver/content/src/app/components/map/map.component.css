@@ -22,9 +22,11 @@
 }
 
 .box .row.footer {
-  flex: 0 1 40px;
+  flex: 0 1 auto;
 }
 
 .map-container {
+    position: absolute;
     height:100%;
+    width:100%;
 }

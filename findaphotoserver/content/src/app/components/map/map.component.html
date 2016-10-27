@@ -3,8 +3,7 @@
         <app-header></app-header>
     </div>
 
-
-    <div class="row content" id="map-container"  >
+    <div class="row header">
         <app-alerts></app-alerts>
 
         <div >
@@ -23,7 +22,9 @@
         <div *ngIf="!isLoading" style="margin-left:10px;" >
             {{totalMatches}} total matches
         </div>
+    </div>
 
+    <div class="row content" id="map-container"  >
         <div class="map-container" id="map" >
         </div>
     </div>
