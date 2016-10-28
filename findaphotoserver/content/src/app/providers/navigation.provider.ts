@@ -28,10 +28,14 @@ export class NavigationProvider {
     searchToday() {
         let navigationExtras: NavigationExtras = { queryParams: { } };
         this._router.navigate( ['byday'], navigationExtras );
-        this._searchResultsProvider.search(new Map<string, any>());
+        this._searchResultsProvider.search(null);
     }
 
     searchByDay(month: number, day: number) {
+        this._searchResultsProvider.searchRequest.day = day;
+        this._searchResultsProvider.searchRequest.month = month;
+        this._searchResultsProvider.searchRequest.searchType = 'd';
+
         let navigationExtras: NavigationExtras = { queryParams: { m: month, d: day } };
         this._router.navigate(['byday'], navigationExtras);
         this.updateSearchCallback();
