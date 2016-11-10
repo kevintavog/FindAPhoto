@@ -1,54 +1,22 @@
 .box {
   display: flex;
-  /*flex-flow: column;*/
   flex-direction: column;
+  flex: 1;
   height: 100%;
   width: 100%;
-  position: absolute;
 }
 
-.box .row {
-  border: 1px dotted grey;
+.content-container {
+  display: flex;
+  flex: 1;
 }
 
-.box .row.header {
-  flex: 0 1 auto;
-  /* The above is shorthand for:
-  flex-grow: 0,
-  flex-shrink: 1,
-  flex-basis: auto
-  */
+.map-content {
+  flex: 1;
 }
-
-.box .row.content {
-  position: relative;
-  flex: 1 1 auto;
-  height:100%;
-  width:100%;
-}
-
-.box .row.footer {
-  flex: 0 1 auto;
-}
-
-.map-box {
-    /*position: relative;*/
-    display: block;
-    height:100%;
-    width:100%;
-    /*display: flex;
-    flex-flow: row;*/
-}
-
-/*.map-container {
-    flex: 1 1 auto;
-    height:100%;
-    width:100%;
-}*/
 
 .info-container {
-  height:100%;
-  flex: 0 1;
+  flex: 0;
   padding: 5px;
 }
 
