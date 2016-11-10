@@ -1,7 +1,10 @@
 .box {
   display: flex;
-  flex-flow: column;
+  /*flex-flow: column;*/
+  flex-direction: column;
   height: 100%;
+  width: 100%;
+  position: absolute;
 }
 
 .box .row {
@@ -18,15 +21,43 @@
 }
 
 .box .row.content {
+  position: relative;
   flex: 1 1 auto;
+  height:100%;
+  width:100%;
 }
 
 .box .row.footer {
   flex: 0 1 auto;
 }
 
-.map-container {
-    position: absolute;
+.map-box {
+    /*position: relative;*/
+    display: block;
     height:100%;
     width:100%;
+    /*display: flex;
+    flex-flow: row;*/
+}
+
+/*.map-container {
+    flex: 1 1 auto;
+    height:100%;
+    width:100%;
+}*/
+
+.info-container {
+  height:100%;
+  flex: 0 1;
+  padding: 5px;
+}
+
+.info-no-item {
+  width:255px;
+  display:block;
+}
+
+.info-image {
+  width:255px;
+  display:block;
 }
