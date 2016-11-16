@@ -34,11 +34,13 @@
                 Hover over an image or select an image for information. 
             </div>
 
-            <div *ngIf="currentItem" >
-                <img class="info-image " src="{{currentItem.thumbUrl}}" />
-                <div class="c-paragraph"> <i class="fa fa-file"></i> {{currentItem.imageName}} </div>
-                <div class="c-paragraph"> <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(currentItem)}} </div>
-                <div class="c-paragraph"> <i class="fa fa-map-marker"></i> {{currentItem.locationDisplayName}} </div>
+            <div *ngIf="currentItem" class="info-image-and-text" >
+                <img class="info-image" src="{{currentItem.thumbUrl}}" />
+                <div class="info-text-container">
+                    <div class="c-paragraph info-text"> <i class="fa fa-file"></i> {{currentItem.imageName}} </div>
+                    <div class="c-paragraph info-text"> <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(currentItem)}} </div>
+                    <div class="c-paragraph info-text"> <i class="fa fa-map-marker"></i> {{currentItem.locationDisplayName}} </div>
+                </div>
             </div>
         </aside>
     </div>

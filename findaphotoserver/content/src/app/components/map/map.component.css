@@ -18,14 +18,46 @@
 .info-container {
   flex: 0;
   padding: 5px;
+  min-width: 200px;
 }
 
-.info-no-item {
-  width:255px;
-  display:block;
+@media screen and (orientation:landscape) {
+  .info-no-item {
+  }
+
+  .info-image {
+  }
 }
 
-.info-image {
-  width:255px;
-  display:block;
+@media screen and (orientation:portrait) {
+  .content-container {
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .info-container {
+    flex: 0;
+    flex-direction: column;
+    padding: 5px;
+    clear:both;
+  }
+
+  .info-image-and-text {
+    display:flex;
+    align-items: flex-start;  
+  }
+
+  .info-no-item {
+  }
+
+  .info-image {
+  }
+
+  .info-text-container {
+    flex: 1;
+  }
+
+  .info-text {
+    display:inline;
+  }
 }
