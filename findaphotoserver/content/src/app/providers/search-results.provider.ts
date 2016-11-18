@@ -49,7 +49,7 @@ export class SearchResultsProvider {
                 }
 
                 let pageCount = this.searchResults.totalMatches / SearchResultsProvider.ItemsPerPage;
-                this.totalPages = Math.round(pageCount + (pageCount > Math.floor(pageCount) ? 1 : 0));
+                this.totalPages = Math.round(pageCount);
                 this.currentPage = Math.round(1 + (this.searchRequest.first / SearchResultsProvider.ItemsPerPage));
 
                 let dates = this.categoryDate();
