@@ -14,7 +14,8 @@ import (
 	"github.com/kevintavog/findaphoto/indexer/steps/getexif"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 var BadJson int64
@@ -89,7 +90,7 @@ func dequeue() {
 			Type(common.MediaTypeName).
 			Query(termQuery).
 			Pretty(true).
-			Do()
+			Do(context.TODO())
 		if err != nil {
 			atomic.AddInt64(&CheckFailed, 1)
 			log.Error("Error checking document existence for '%s': %s", candidateFile.AliasedPath, err.Error())

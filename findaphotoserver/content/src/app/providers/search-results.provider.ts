@@ -140,8 +140,10 @@ export class SearchResultsProvider {
     }
 
     categoryByField(field: string): SearchCategory {
-        for (let category of this.searchResults.categories) {
-            if (category.field === field) { return category; }
+        if (this.searchResults.categories != null) {
+            for (let category of this.searchResults.categories) {
+                if (category.field === field) { return category; }
+            }
         }
         return null;
     }

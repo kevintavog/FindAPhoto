@@ -93,8 +93,10 @@ console.log('sort by %o', sortType);
         this.uiState.sortMenuShowing = false;
         let selectedCategories = new Map<string, string[]>();
         if (this._searchResultsProvider.searchResults != null) {
-            for (let cat of this._searchResultsProvider.searchResults.categories) {
-               this.saveSelectedCategories(cat.field, cat.details, selectedCategories);
+            if (this._searchResultsProvider.searchResults.categories != null) {
+                for (let cat of this._searchResultsProvider.searchResults.categories) {
+                    this.saveSelectedCategories(cat.field, cat.details, selectedCategories);
+                }
             }
 
             this._searchResultsProvider.searchRequest.drilldown = this.generateDrilldown();
@@ -173,7 +175,7 @@ console.log('sort by %o', sortType);
     //      Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
     generateDrilldown(): string {
         let selectedCategories = new Map<string, string[]>();
-        if (this._searchResultsProvider.searchResults != null) {
+        if (this._searchResultsProvider.searchResults != null && this._searchResultsProvider.searchResults.categories != null) {
             for (let cat of this._searchResultsProvider.searchResults.categories) {
                this.saveSelectedCategories(cat.field, cat.details, selectedCategories);
             }

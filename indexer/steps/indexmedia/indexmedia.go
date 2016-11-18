@@ -7,7 +7,8 @@ import (
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 var IndexedFiles int64
@@ -50,7 +51,7 @@ func dequeue() {
 			Type(common.MediaTypeName).
 			Id(media.Path).
 			BodyJson(media).
-			Do()
+			Do(context.TODO())
 
 		if err != nil {
 			atomic.AddInt64(&FailedIndexAttempts, 1)

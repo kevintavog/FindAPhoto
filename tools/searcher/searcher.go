@@ -10,7 +10,7 @@ import (
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 func addDateRangeQuery(search *elastic.SearchService) *elastic.BoolQuery {

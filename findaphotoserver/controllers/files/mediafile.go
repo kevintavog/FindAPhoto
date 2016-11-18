@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/go-playground/lars"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
@@ -41,7 +42,7 @@ func Media(c lars.Context) {
 			Index(common.MediaIndexName).
 			Type(common.MediaTypeName).
 			Query(elastic.NewTermQuery("_id", mediaId)).
-			Do()
+			Do(context.TODO())
 		if err != nil {
 			fc.AppContext.FieldLogger.Add("invalidMediaPrefix", "true")
 			fc.Ctx.Response().WriteHeader(http.StatusNotFound)

@@ -4,7 +4,8 @@ import (
 	"errors"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 func CreateFindAPhotoIndex(client *elastic.Client) error {
@@ -12,6 +13,7 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 
 	mapping := `{
 		"settings": {
+			"max_result_window": 100000,
 			"number_of_shards": 1,
 	        "number_of_replicas": 0
 		},
@@ -226,7 +228,7 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 		}
 	}`
 
-	response, err := client.CreateIndex(MediaIndexName).BodyString(mapping).Do()
+	response, err := client.CreateIndex(MediaIndexName).BodyString(mapping).Do(context.TODO())
 	if err != nil {
 		return err
 	}

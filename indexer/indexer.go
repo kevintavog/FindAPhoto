@@ -18,7 +18,8 @@ import (
 
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 func main() {
@@ -119,7 +120,7 @@ func checkServerAndIndex() {
 		log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
 	}
 
-	exists, err := client.IndexExists(common.MediaIndexName).Do()
+	exists, err := client.IndexExists(common.MediaIndexName).Do(context.TODO())
 	if err != nil {
 		log.Fatal("Failed querying index: %s", err.Error())
 	}

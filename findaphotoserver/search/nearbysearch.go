@@ -3,7 +3,7 @@ package search
 import (
 	"reflect"
 
-	"gopkg.in/olivere/elastic.v3"
+	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
 )

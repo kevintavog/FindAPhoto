@@ -1,7 +1,7 @@
 package search
 
 import (
-	"gopkg.in/olivere/elastic.v3"
+	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
 )
@@ -48,4 +48,28 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
 	return invokeSearch(search, &query, GroupByPath, so.CategoryOptions, so.DrilldownOptions, nil)
+}
+
+func (so *SearchOptions) ScrollSearch() (*SearchResult, error) {
+	client := common.CreateClient()
+	scroll := client.Scroll(common.MediaIndexName).
+		Type(common.MediaTypeName).
+		Sort("datetime", false).
+		Pretty(true)
+
+	var query elastic.Query
+	if so.Query == "" {
+		query = elastic.NewMatchAllQuery()
+	} else {
+		query = elastic.NewQueryStringQuery(so.Query).
+			Field("path"). // Folder name
+			Field("monthname").
+			Field("dayname").
+			Field("keywords").
+			Field("placename") // Full reverse location lookup
+	}
+
+	scroll.Query(query)
+
+	return invokeScrollSearch(scroll, &query, so.Index, so.Count, GroupByPath, so.CategoryOptions, so.DrilldownOptions, nil)
 }

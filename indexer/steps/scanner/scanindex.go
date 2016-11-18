@@ -8,7 +8,8 @@ import (
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 var MediaScanned int64
@@ -21,7 +22,7 @@ func RemoveFiles() {
 	scrollResponse, err := client.Scroll(common.MediaIndexName).
 		Size(100).
 		Type(common.MediaTypeName).
-		Do()
+		Do(context.TODO())
 	if err != nil {
 		log.Error("Failed starting scan: %s", err.Error())
 		return
@@ -32,7 +33,7 @@ func RemoveFiles() {
 		results, err := client.Scroll(common.MediaIndexName).
 			Size(100).
 			ScrollId(scrollId).
-			Do()
+			Do(context.TODO())
 		if err != nil {
 			if el, ok := err.(*elastic.Error); ok {
 				if el.Status == http.StatusNotFound {
@@ -75,7 +76,7 @@ func RemoveFiles() {
 					Index(common.MediaIndexName).
 					Type(common.MediaTypeName).
 					Id(media.Path).
-					Do()
+					Do(context.TODO())
 				if err != nil {
 					log.Error("Failed removing document '%s' from index: %s", media.Path, err.Error())
 				} else if deleteResponse.Found != true {

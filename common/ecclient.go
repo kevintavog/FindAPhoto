@@ -6,7 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 import klog "github.com/ian-kent/go-log/log"
@@ -41,7 +42,7 @@ func AddWarning(client *elastic.Client, id string, newWarnings []string) {
 		Index(MediaIndexName).
 		Type(MediaTypeName).
 		Query(elastic.NewTermQuery("_id", id)).
-		Do()
+		Do(context.TODO())
 	if err != nil {
 		klog.Error("Unable to find document for warning: %q (on %q): %q", joinedWarnings, id, err.Error())
 		return
@@ -69,7 +70,7 @@ func AddWarning(client *elastic.Client, id string, newWarnings []string) {
 			Type(MediaTypeName).
 			Id(id).
 			Doc(updatedDoc).
-			Do()
+			Do(context.TODO())
 		if err != nil {
 			klog.Error("Failed updating document with warning %q (on %q): %q", joinedWarnings, id, err.Error())
 			return

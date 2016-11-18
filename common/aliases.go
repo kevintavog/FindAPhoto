@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/ian-kent/go-log/log"
-	"gopkg.in/olivere/elastic.v3"
+	"golang.org/x/net/context"
+	"gopkg.in/olivere/elastic.v5"
 )
 
 // Artificially limits the number of aliases - can easily handle more, but the search needs to be updated
@@ -148,7 +149,7 @@ func loadAliases(client *elastic.Client) error {
 		Query(elastic.NewMatchAllQuery()).
 		Size(maxAliasCount).
 		Sort("datetime", false) // Sort by created date, descending
-	result, err := search.Do()
+	result, err := search.Do(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -212,7 +213,7 @@ func addNewAlias(path string) error {
 		Type(AliasTypeName).
 		Id(ad.Alias).
 		BodyJson(ad).
-		Do()
+		Do(context.TODO())
 	if err != nil {
 		return err
 	}
