@@ -110,17 +110,42 @@ func populateDimensions(media *common.Media, candidate *common.CandidateFile) {
 }
 
 func populateKeywords(media *common.Media, candidate *common.CandidateFile) {
+	// Keywords are the union of items from IPTC.Keywords (an array) & XMP.Subject (comma separated list)
+	var keywordMap = make(map[string]bool)
+
 	switch keyType := candidate.Exif.IPTC.Keywords.(type) {
 	default:
 		candidate.AddWarning(fmt.Sprintf("Unexpected keyword type %T (%q)", keyType, candidate.Exif.IPTC.Keywords))
 	case []interface{}:
 		for _, s := range candidate.Exif.IPTC.Keywords.([]interface{}) {
-			media.Keywords = append(media.Keywords, s.(string))
+			keywordMap[s.(string)] = true
 		}
 	case interface{}:
-		media.Keywords = []string{candidate.Exif.IPTC.Keywords.(string)}
+		for _, s := range []string{candidate.Exif.IPTC.Keywords.(string)} {
+			keywordMap[s] = true
+		}
 	case nil:
 		// Nothing to do, keywords not present
+	}
+
+	// And the keywords in XMP.Subject
+	switch subjectType := candidate.Exif.XMP.Subject.(type) {
+	default:
+		candidate.AddWarning(fmt.Sprintf("Unexpected subject type %T (%q)", subjectType, candidate.Exif.XMP.Subject))
+	case []interface{}:
+		for _, s := range candidate.Exif.XMP.Subject.([]interface{}) {
+			keywordMap[s.(string)] = true
+		}
+	case interface{}:
+		for _, s := range []string{candidate.Exif.XMP.Subject.(string)} {
+			keywordMap[s] = true
+		}
+	case nil:
+		// Nothing to do, subject not present
+	}
+
+	for k, _ := range keywordMap {
+		media.Keywords = append(media.Keywords, k)
 	}
 }
 

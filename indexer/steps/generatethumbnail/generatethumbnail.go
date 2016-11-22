@@ -129,13 +129,13 @@ func generateVideo(fullPath, thumbPath string) {
 
 	err := common.CreateDirectory(path.Dir(tmpFilename))
 	if err != nil {
-		log.Fatal("Unable to create temporary directory for thumbnail generation (%s): %s", tmpFilename, err.Error())
+		log.Error("Unable to create temporary directory for thumbnail generation (%s): %s", tmpFilename, err.Error())
 	}
 
 	out, err := exec.Command(common.FfmpegPath, "-i", fullPath, "-ss", "00:00:01.0", "-vframes", "1", tmpFilename).Output()
 	if err != nil {
 		atomic.AddInt64(&FailedVideo, 1)
-		log.Fatal("Failed executing ffmpeg for '%s': %s (%s)", fullPath, err.Error(), out)
+		log.Error("Failed executing ffmpeg for '%s': %s (%s)", fullPath, err.Error(), out)
 	}
 
 	if exists, _ := common.PathExists(tmpFilename); !exists {

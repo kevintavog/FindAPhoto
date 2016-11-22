@@ -102,6 +102,7 @@ type ExifOutput struct {
 	EXIF       ExifOutputExif
 	IPTC       ExifOutputIptc
 	Quicktime  ExifOutputQuicktime
+	XMP        ExifOutputXmp
 	Composite  ExifOutputComposite
 }
 
@@ -141,6 +142,10 @@ type ExifOutputQuicktime struct {
 	ImageWidth        int
 	ImageHeight       int
 	Duration          string
+}
+
+type ExifOutputXmp struct {
+	Subject interface{} // Some are []string - others are string. Exiftool seems to be the source
 }
 
 type ExifOutputComposite struct {
