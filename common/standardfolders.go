@@ -3,6 +3,7 @@ package common
 import (
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/ian-kent/go-log/log"
@@ -16,9 +17,19 @@ var LocationCacheDirectory string
 var ExifToolPath string
 var FfmpegPath string
 var VipsThumbnailPath string
+var ExecutingDirectory string
+var IndexerPath string
 
 func InitDirectories(appName string) {
 	if HomeDirectory == "" {
+		exeDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("Unable to get executing directory: %s", err)
+		}
+
+		ExecutingDirectory = exeDir
+		IndexerPath = ExecutingDirectory + "/indexer"
+
 		if runtime.GOOS == "darwin" {
 			HomeDirectory = os.Getenv("HOME")
 			LogDirectory = path.Join(HomeDirectory, "Library", "Logs", appName)

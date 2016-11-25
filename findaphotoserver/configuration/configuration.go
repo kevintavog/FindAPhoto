@@ -17,6 +17,7 @@ type Configuration struct {
 	OpenMapUrl       string
 	OpenMapKey       string
 	VipsExists       bool
+	DefaultIndexPath string
 }
 
 var Current Configuration

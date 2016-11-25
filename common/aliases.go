@@ -33,6 +33,12 @@ func InitializeAliases(client *elastic.Client) error {
 	return loadAliases(client)
 }
 
+func VisitAllPaths(callback func(alias AliasDocument)) {
+	for _, ab := range aliasAndPath {
+		callback(ab)
+	}
+}
+
 func AliasForPath(path string) (string, error) {
 	// Return an existing alias for the given path, add a new alias if necessary
 	ad := findViaPath(path)

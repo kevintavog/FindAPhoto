@@ -10,6 +10,6 @@ func IsExecWorking(commandName string, args ...string) bool {
 }
 
 func CheckExec(commandName string, args ...string) (string, error) {
-	b, err := exec.Command(commandName, args...).Output()
+	b, err := exec.Command(commandName, args...).CombinedOutput()
 	return string(b), err
 }

@@ -35,7 +35,7 @@ func main() {
 	generatethumbnail.VipsExists = common.IsExecWorking(common.VipsThumbnailPath, "--vips-version")
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -o -k [-i] [-c] [--reindex]"
+	app.Spec = "-p -s -o -k [-i] [-c] [--reindex] [-v]"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
@@ -43,6 +43,7 @@ func main() {
 	cachedLocationsServer := app.StringOpt("c", "", "The URL for the cached location server (optional)")
 	forceIndex := app.BoolOpt("reindex", false, "Force everything to be re-indexed; current index not deleted. (optional)")
 	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
+	app.Version("v", "Show the version and exit")
 	app.Action = func() {
 
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
