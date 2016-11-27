@@ -101,7 +101,7 @@ func dequeue() {
 
 		atomic.AddInt64(&ThumbnailsCreated, 1)
 		if ThumbnailsCreated%500 == 0 {
-			log.Error("Generated thumbnail %d [%s]", ThumbnailsCreated, thumbnailInfo.FullPath)
+			log.Info("Generated thumbnail %d [%s]", ThumbnailsCreated, thumbnailInfo.FullPath)
 		}
 	}
 }
