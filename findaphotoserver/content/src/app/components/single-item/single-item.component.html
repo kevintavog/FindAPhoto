@@ -25,10 +25,10 @@
     </div>
     <p>
 
-    <div style="text-align:center;margin: 0 auto;">
+    <div style="">
         <div *ngIf="itemInfo.mediaType == 'image'" >
             <a href="{{itemInfo.mediaUrl}}">
-                <img class="o-image" src="{{itemInfo.slideUrl}}" />
+                <img class="o-image centered-image" src="{{itemInfo.slideUrl}}" />
             </a>
         </div>
         <div *ngIf="itemInfo.mediaType == 'video'" >
@@ -36,37 +36,46 @@
             </video>
         </div>
 
-        <div class="o-container o-container--large" >
+        <div class="o-container info-container" >
             <div class="o-grid">
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-file"></i> {{itemInfo.imageName}}
-                </div>
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-tags"></i> {{itemInfo.keywords}}
-                </div>
-            </div>
+                <div class="o-grid__cell">
+                    <div class="o-grid">
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <i class="fa fa-file"></i> {{itemInfo.imageName}}
+                        </div>
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <i class="fa fa-tags"></i> {{itemInfo.keywords}}
+                        </div>
+                    </div>
 
-            <div class="o-grid">
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <i class="fa fa-folder"></i> {{itemInfo.path}}
-                </div>
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a [routerLink]="['/bylocation']" [queryParams]="{ lat:itemInfo.latitude, lon:itemInfo.longitude }">
-                        <i class="fa fa-map-marker"></i> {{itemInfo.locationName}}
-                    </a>
-                </div>
-            </div>
+                    <div class="o-grid">
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <i class="fa fa-folder"></i> {{itemInfo.path}}
+                        </div>
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <a [routerLink]="['/bylocation']" [queryParams]="{ lat:itemInfo.latitude, lon:itemInfo.longitude }">
+                                <i class="fa fa-map-marker"></i> {{itemInfo.locationName}}
+                            </a>
+                        </div>
+                    </div>
 
-            <div class="o-grid">
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a [routerLink]="['/byday']" [queryParams]="{ m:displayer.itemMonth(itemInfo), d:displayer.itemDay(itemInfo) }">
-                        <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(itemInfo)}}
-                    </a>
+                    <div class="o-grid">
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <a [routerLink]="['/byday']" [queryParams]="{ m:displayer.itemMonth(itemInfo), d:displayer.itemDay(itemInfo) }">
+                                <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(itemInfo)}}
+                            </a>
+                        </div>
+                        <div class="result-set-info-text-left o-grid__cell c-text">
+                            <a href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
+                                <i class="fa fa-map"></i> {{displayer.latDms(itemInfo)}}, {{displayer.lonDms(itemInfo)}}
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="result-set-info-text-left o-grid__cell c-text">
-                    <a href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
-                        <i class="fa fa-map"></i> {{displayer.latDms(itemInfo)}}, {{displayer.lonDms(itemInfo)}}
-                    </a>
+
+                <div class="o-grid__cell o-grid__cell--width-20">
+                    <div class="map-content" id="singleMap" >
+                    </div>
                 </div>
             </div>
         </div>

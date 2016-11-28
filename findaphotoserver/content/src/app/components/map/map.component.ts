@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
-import { Icon, LatLngTuple, Map, Marker, Popup } from 'leaflet';
+import { Icon, LatLngTuple, Map, Marker } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results';
@@ -27,7 +27,6 @@ export class MapComponent implements OnInit {
     map: Map;
     cluster: MarkerClusterGroup;
     selectedMarker: Marker;
-    popup: Popup;
 
     currentItem: SearchItem;
 
@@ -118,32 +117,17 @@ export class MapComponent implements OnInit {
                         let marker = L.marker(
                             [item.latitude, item.longitude],
                             {
-                                // title: item.imageName, // tooltip?
                                 icon: this.markerIcon
                             });
 
                         marker.on('mouseover', () => {
                             this.currentItem = item;
                             this.selectMarker(marker);
-
-                            // this.popup.setLatLng([item.latitude, item.longitude]);
-                            // this.popup.setContent(
-                            //     '<div> '
-                            //     + `<img src="${item.thumbUrl}" (click)="showItem(${item})" >`
-                            //     + ' </div>');
-                            // this.map.openPopup(this.popup);
                         });
 
                         marker.on('click', () => {
                             this.currentItem = item;
                             this.selectMarker(marker);
-
-                            // this.popup.setLatLng([item.latitude, item.longitude]);
-                            // this.popup.setContent(
-                            //     '<div> '
-                            //     + `<img src="${item.thumbUrl}" >`
-                            //     + ' </div>');
-                            // this.map.openPopup(this.popup);
                         });
                         markers.push(marker);
                     }
@@ -216,8 +200,5 @@ export class MapComponent implements OnInit {
 
         this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );
         this.map.addLayer(this.cluster);
-
-
-        this.popup = L.popup();
     }
 }

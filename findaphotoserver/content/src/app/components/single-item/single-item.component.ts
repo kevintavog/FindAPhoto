@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
+import { Icon, LatLngTuple, Map, Marker } from 'leaflet';
+
 import { SearchRequestBuilder } from '../../models/search.request.builder';
 import { SearchItem } from '../../models/search-results';
 
@@ -31,6 +33,11 @@ export class SingleItemComponent implements OnInit {
     sameDateError: string;
     nearbySearchResultsProvider: SearchResultsProvider;
     bydaySearchResultsProvider: SearchResultsProvider;
+
+    map: Map;
+    marker: Marker;
+    markerIcon: Icon;
+
 
     get totalSearchMatches() {
         if (!this._searchResultsProvider.searchResults) {
@@ -63,7 +70,6 @@ export class SingleItemComponent implements OnInit {
         this.itemInfo = undefined;
         this.nearbySearchResultsProvider.initializeRequest('', 'l');
         this.bydaySearchResultsProvider.initializeRequest('', 'd');
-
         this._searchResultsProvider.initializeRequest(SingleItemComponent.QueryProperties, 's');
 
         this._route.queryParams.subscribe(params => {
@@ -115,6 +121,30 @@ export class SingleItemComponent implements OnInit {
         if (this._searchResultsProvider.searchResults.groups.length > 0
             && this._searchResultsProvider.searchResults.groups[0].items.length > 0) {
             this.itemInfo = this._searchResultsProvider.searchResults.groups[0].items[0];
+
+            // The map can't be initialized until the *ngIf finishes processesing the 'this.itemInfo' update
+            // (because the element used for the map doesn't yet exist)
+            setInterval( () => {
+                if (this.hasLocation) {
+                    this.initializeMap();
+
+                    let location:LatLngTuple = [this.itemInfo.latitude, this.itemInfo.longitude];
+                    this.map.setView(location, this.map.getZoom());
+
+                    if (this.marker) {
+                        this.marker.setLatLng(location);
+                    } else {
+                        this.marker = L.marker(location, { icon: this.markerIcon });
+                        this.marker.addTo(this.map);
+                    }
+                } else {
+                    if (this.marker) {
+                        this.marker.remove();
+                        this.marker = null;
+                    }
+                }
+            },
+            1);
 
             this.loadNearby();
             this.loadSameDate();
@@ -208,5 +238,33 @@ export class SingleItemComponent implements OnInit {
         }
         let navigationExtras: NavigationExtras = { queryParams: params };
         return navigationExtras;
+    }
+
+    initializeMap() {
+        if (this.map) { return; }
+
+        this.markerIcon = L.icon({
+            iconUrl: 'assets/leaflet/marker-icon.png',
+            iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+            shadowUrl: 'assets/leaflet/marker-shadow.png',
+            iconSize:    [25, 41],
+            iconAnchor:  [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize:  [41, 41]
+        });
+
+        this.map = L.map('singleMap', {
+            center: [20, 0],
+            zoom: 14,
+            minZoom: 3,
+            zoomControl: false
+        });
+
+        L.control.zoom({ position: 'topright' }).addTo(this.map);
+
+        L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a>'
+        }).addTo(this.map);
     }
 }
