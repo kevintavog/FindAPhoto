@@ -60,6 +60,14 @@ export class DataDisplayer {
         return undefined;
     }
 
+    dateToLocaleDateAndTime(date: Date) {
+        if (date != null) {
+            let d = new Date(date);
+            return d.toLocaleDateString() + '  ' + d.toLocaleTimeString();
+        }
+        return undefined;
+    }
+
     lonDms(item: SearchItem) {
         return this.longitudeDms(item.longitude);
     }

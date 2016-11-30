@@ -1,0 +1,49 @@
+a{color: white;}
+a:visited{
+    color:white;
+}
+.path {
+    background: #484848;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+}
+.field {
+    background: #484848;
+    float:left;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.fieldValueInfo {
+    background: #484848;
+    float:left;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+}
+.fieldValuesContainer {
+    clear:both;
+    background: #686868;    
+    padding: 10px 10px 10px 10px;
+	-webkit-flex-wrap: wrap;
+	display: flex;
+	flex-wrap: wrap;
+}
+.searchHint {
+    background: #484848;
+    float:left;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+}
+.searchHintDescription {
+    float:left;
+    margin-right: 10px;
+}
+.searchHintQuery {
+    float:left;
+    text-decoration: underline;
+}

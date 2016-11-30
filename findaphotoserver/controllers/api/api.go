@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/lars"
+	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
@@ -25,11 +26,11 @@ type InvalidRequest struct {
 }
 
 func (ir *InvalidRequest) Error() string {
-	return ir.message
+	return ir.message + " -- " + getDetailedErrorMessage(ir.err)
 }
 
 func (ie *InternalError) Error() string {
-	return ie.message
+	return ie.message + " -- " + getDetailedErrorMessage(ie.err)
 }
 
 func ConfigureRouting(l *lars.LARS) {
@@ -39,6 +40,11 @@ func ConfigureRouting(l *lars.LARS) {
 	api.Get("/search", Search)
 	api.Get("/nearby", Nearby)
 	api.Get("/by-day", ByDay)
+
+	index := api.Group("/index")
+	index.Get("/fields/:field", IndexAField)
+	index.Get("/fields", IndexFields)
+	index.Get("/", Index)
 }
 
 func handleErrors(c lars.Context) {
@@ -68,6 +74,19 @@ func handleErrors(c lars.Context) {
 	}()
 
 	fc.Ctx.Next()
+}
+
+func getDetailedErrorMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	if ee, ok := err.(*elastic.Error); ok {
+		if ee.Details != nil && ee.Details.CausedBy != nil {
+			return fmt.Sprintf("%s: %s", ee.Error(), ee.Details.CausedBy["reason"])
+		}
+	}
+	return err.Error()
 }
 
 func float64FromQuery(ctx *lars.Ctx, name string) float64 {

@@ -20,9 +20,10 @@ const maxAliasCount = 100
 const AliasTypeName = "alias"
 
 type AliasDocument struct {
-	Path      string    `json:"path"`
-	Alias     string    `json:"alias"`
-	DateAdded time.Time `json:"datetimeadded"`
+	Path            string    `json:"path"`
+	Alias           string    `json:"alias"`
+	DateAdded       time.Time `json:"datetimeadded"`
+	DateLastIndexed time.Time `json:datetimelastindexed`
 }
 
 var aliasAndPath []AliasDocument
@@ -112,6 +113,28 @@ func PathForAlias(alias string) (string, error) {
 	}
 
 	return "", errors.New(fmt.Sprintf("Unable to find path for %s", alias))
+}
+
+func UpdateLastIndexed(alias string) error {
+	aliasDocument := findViaAlias(alias)
+	if aliasDocument != nil {
+		aliasDocument.DateLastIndexed = time.Now()
+
+		client := CreateClient()
+		_, err := client.Update().
+			Index(MediaIndexName).
+			Type(AliasTypeName).
+			Id(aliasDocument.Alias).
+			Doc(aliasDocument).
+			Do(context.TODO())
+		if err != nil {
+			return err
+		}
+	} else {
+		return errors.New(fmt.Sprintf("Failed updating alias: Cannot find alias '%s'", alias))
+	}
+
+	return nil
 }
 
 func extactAlias(aliasAndPath string) (string, string) {

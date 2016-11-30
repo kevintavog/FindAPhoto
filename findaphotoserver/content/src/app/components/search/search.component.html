@@ -79,7 +79,7 @@
         Showing all {{_searchResultsProvider.searchResults.totalMatches}} items
     </div>
 
-    <div *ngIf="uiState.showResultCount == true && _searchResultsProvider.searchResults.resultCount != _searchResultsProvider.searchResults.totalMatches">
+    <div *ngIf="uiState.showResultCount == true && _searchResultsProvider.searchResults.totalMatches > 0">
         <b>{{_searchResultsProvider.totalPages}}</b> pages / <b>{{_searchResultsProvider.searchResults.totalMatches}}</b> matching items
     </div>
 

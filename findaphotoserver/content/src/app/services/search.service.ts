@@ -52,6 +52,27 @@ export class SearchService {
             .catch(this.handleError);
     }
 
+    indexStats(properties: string) {
+        let url = '/api/index?properties=' + properties;
+        return this._http.get(url)
+            .map(response => response.json())
+            .catch(this.handleError);
+    }
+
+    indexFields() {
+        let url = '/api/index/fields';
+        return this._http.get(url)
+            .map(response => response.json())
+            .catch(this.handleError);
+    }
+
+    indexFieldValues(fieldName: string) {
+        let url = '/api/index/fields/' + fieldName;
+        return this._http.get(url)
+            .map(response => response.json())
+            .catch(this.handleError);
+    }
+
     private handleError(response: Response) {
         if (response.type === ResponseType.Error) {
             return Observable.throw('Server not accessible');

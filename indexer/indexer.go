@@ -81,6 +81,10 @@ func main() {
 		scanner.Scan(*scanPath, alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)
+		err = common.UpdateLastIndexed(alias)
+		if err != nil {
+			log.Warn("Failed updating indexed date: '%s'", err.Error())
+		}
 	}
 
 	app.Run(os.Args)

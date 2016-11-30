@@ -21,8 +21,20 @@ export class NavigationProvider {
         this.locationError = undefined;
     }
 
+    info() {
+        this._router.navigate( ['info'] );
+    }
+
     home() {
         this._router.navigate( ['search'] );
+    }
+
+    searchWithQuery(query: string) {
+        this._searchResultsProvider.searchRequest.searchType = 't';
+
+        let navigationExtras: NavigationExtras = { queryParams: { q: query } };
+        this._router.navigate( ['search'], navigationExtras );
+        this._searchResultsProvider.search(null);
     }
 
     searchToday() {
@@ -110,5 +122,4 @@ export class NavigationProvider {
             this.updateSearchCallback();
         }
     }
-
 }

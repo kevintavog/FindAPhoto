@@ -18,9 +18,10 @@ import { DataDisplayer } from './providers/data-displayer';
 import { NavigationProvider } from './providers/navigation.provider';
 
 import { routing } from './app.routes';
-import { PagingComponent } from './components/paging/paging.component';
-import { HeaderComponent } from './components/header/header.component';
 import { AlertsComponent } from './components/alerts/alerts.component';
+import { InfoComponent } from './components/info/info.component';
+import { HeaderComponent } from './components/header/header.component';
+import { PagingComponent } from './components/paging/paging.component';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import { AlertsComponent } from './components/alerts/alerts.component';
         SearchByLocationComponent,
         SingleItemComponent,
         HeaderComponent,
-        AlertsComponent
+        AlertsComponent,
+        InfoComponent
     ],
     imports: [
         BrowserModule,

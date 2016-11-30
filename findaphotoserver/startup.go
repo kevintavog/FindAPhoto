@@ -20,6 +20,8 @@ import (
 func run(devolopmentMode bool) {
 	listenPort := 2000
 	easyExit := false
+	log.Info("FindAPhoto %s", versionString())
+	api.FindAPhotoVersionNumber = versionString()
 
 	if !common.IsExecWorking(common.ExifToolPath, "-ver") {
 		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)

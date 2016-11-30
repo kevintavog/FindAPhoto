@@ -24,18 +24,81 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 			    },
 				"properties" : {
 					"date" : {
-					  "type" : "string"
+					  "type" : "keyword"
 					},
 					"datetime" : {
 					  "type" : "date",
 					  "format": "yyyy-MM-dd'T'HH:mm:ssZ"
 					},
-					"filename" : {
-					  "type" : "string",
+					"keywords" : {
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"dayname" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"warnings" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"placename" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"monthname" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"mimetype" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"displayname" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"filename" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"hierarchicalname" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
 			            }
 					  }
 					},
@@ -46,179 +109,151 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 					  "type" : "long"
 					},
 					"path" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"signature" : {
-					  "type" : "string",
-					  "index" : "not_analyzed"
+					  "type" : "keyword"
 					},
 					
 					"aperture" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"exposureprogram" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"exposuretime" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"flash" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"fnumber" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"focallength" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"iso" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"whitebalance" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"lensinfo" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"lensmodel" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"cameramake" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"cameramodel" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 
 					"cityname" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"sitename" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"countryname" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"countrycode" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					},
 					"statename" : {
-					  "type" : "string",
+					  "type" : "text",
 			          "fields": {
 			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
-			            }
-					  }
-					},
-					"cityname" : {
-					  "type" : "string",
-			          "fields": {
-			            "value": { 
-			              "type":  "string",
-			              "index": "not_analyzed"
+			              "type":  "keyword"
 			            }
 					  }
 					}

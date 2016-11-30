@@ -1,5 +1,6 @@
 import { Routes, RouterModule } from '@angular/router';
 
+import { InfoComponent } from './components/info/info.component';
 import { MapComponent } from './components/map/map.component';
 import { SearchComponent } from './components/search/search.component';
 import { SearchByDayComponent } from './components/search/search-by-day.component';
@@ -11,6 +12,7 @@ const routes: Routes = [
     { path: '', redirectTo: 'search', pathMatch : 'full' },
     { path: 'byday', component: SearchByDayComponent },
     { path: 'bylocation', component: SearchByLocationComponent },
+    { path: 'info', component: InfoComponent },
     { path: 'map', component: MapComponent },
     { path: 'search', component: SearchComponent },
     { path: 'singleitem', component: SingleItemComponent },

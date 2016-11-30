@@ -1,0 +1,77 @@
+<app-header></app-header>
+<div *ngIf="serverError != undefined">
+    <br>
+    <div class="c-alert c-alert--error">
+        {{serverError}}
+    </div>
+</div>
+
+<h1>
+Find A Photo {{versionNumber}}
+</h1>
+
+<div *ngIf="!hasPaths()">
+  No paths have been configured, there is nothing to index.
+</div>
+
+<div *ngIf="hasPaths()">
+  <h3>
+    <i class="fa fa-picture-o"></i> {{imageCount}} photos
+    <br>
+    <i class="fa fa-video-camera"></i> {{videoCount}} videos
+    <br>
+    <i class="fa fa-clone"></i> {{imageCount + videoCount}} items
+    <br>
+
+    <div style="clear:both;" class="c-alert c-alert--warning" *ngIf="warningCount > 0" >
+      <i class="fa fa-warning"></i> There are {{warningCount}} warning(s)
+    </div>
+  </h3>
+
+  <div style="clear:both;" *ngIf="paths">
+    <br>
+    <h3> <i class="fa fa-folder"></i> Indexed paths: </h3>
+    <div class="path" *ngFor="let p of paths">
+      <div *ngIf="p.lastIndexed != null">
+        {{p.path}} -- last indexed: {{displayer.dateToLocaleDateAndTime(p.lastIndexed)}}
+      </div>
+      <div *ngIf="p.lastIndexed == null">
+        {{p.path}} -- has never been indexed
+      </div>
+    </div>
+  </div>
+
+  <div style="clear:both;" *ngIf="fields">
+    <br>
+    <h3> <i class="fa fa-map-signs"></i> Fields that can be used when searching: </h3>
+      <div class="field" *ngFor="let f of fields" (click)="getValuesForField(f)">
+        {{f}}
+        <br>
+      </div>
+  </div>
+
+  <div class="fieldValuesContainer" *ngIf="fieldNameWithValues != null" >
+    <div class="c-alert c-alert--error" *ngIf="fieldNameServerError != null" >
+      Server error getting field values: {{fieldNameServerError}}
+    </div>
+
+    <div *ngIf="fieldValues != null">
+      <h3> <i class="fa fa-list"></i> Top values for the field '{{fieldNameWithValues}}'</h3>
+      <div class="fieldValueInfo" *ngFor="let fv of fieldValues">
+        {{fv}}
+      </div>
+    </div>
+  </div>
+
+  <div style="clear:both;" >
+    <br>
+    <h3> <i class="fa fa-lightbulb-o"></i> Search examples: </h3>
+      <div class="searchHint" *ngFor="let sh of searchHints">
+        <a [routerLink]="['/search']" [queryParams]="{ q: sh.query }">
+          <div class="searchHintDescription">{{sh.description}}</div>
+          <div class="searchHintQuery">{{sh.query}}</div>
+        </a>
+      </div>
+  </div>
+
+</div>
