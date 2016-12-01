@@ -53,6 +53,10 @@ a:visited{
 	padding:0 3px 0 0;
 }
 
+.search-results {
+    text-align: center;
+}
+
 .page-message {
     font-size: 2em;
     margin-top: 0;

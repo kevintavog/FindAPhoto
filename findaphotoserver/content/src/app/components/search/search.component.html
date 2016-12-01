@@ -75,11 +75,11 @@
 <div *ngIf="_searchResultsProvider.searchResults != null">
     <h2 class="search-results" *ngIf="uiState.showSearch == true && _searchResultsProvider.searchResults.totalMatches == 0">No matches were found for '{{resultsSearchText}}'</h2>
 
-    <div *ngIf="uiState.showResultCount == true && resultCount > 0 && _searchResultsProvider.searchResults.resultCount == _searchResultsProvider.searchResults.totalMatches">
+    <div class="search-results" *ngIf="uiState.showResultCount == true && _searchResultsProvider.searchResults.totalMatches > 0 && _searchResultsProvider.totalPages <= 1">
         Showing all {{_searchResultsProvider.searchResults.totalMatches}} items
     </div>
 
-    <div *ngIf="uiState.showResultCount == true && _searchResultsProvider.searchResults.totalMatches > 0">
+    <div class="search-results" *ngIf="uiState.showResultCount == true && _searchResultsProvider.searchResults.totalMatches > 0 && _searchResultsProvider.totalPages > 1">
         <b>{{_searchResultsProvider.totalPages}}</b> pages / <b>{{_searchResultsProvider.searchResults.totalMatches}}</b> matching items
     </div>
 
