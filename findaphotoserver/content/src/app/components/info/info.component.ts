@@ -35,6 +35,7 @@ export class InfoComponent implements OnInit {
     fieldNameServerError: string;
     fieldValues: [string];
 
+    duplicateCount: number;
     imageCount: number;
     paths: [PathAndDate]
     versionNumber: string;
@@ -59,8 +60,9 @@ export class InfoComponent implements OnInit {
 
     ngOnInit() {
       this.serverError = null;
-      this.searchService.indexStats('imageCount,paths,versionNumber,videoCount,warningCount').subscribe(
+      this.searchService.indexStats('duplicateCount,imageCount,paths,versionNumber,videoCount,warningCount').subscribe(
             results => {
+              this.duplicateCount = results.duplicateCount;
               this.imageCount = results.imageCount;
               this.paths = results.paths;
               this.versionNumber = results.versionNumber;

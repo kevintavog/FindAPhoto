@@ -21,6 +21,10 @@ a:visited{
     max-width:78em;
 }
 
+.warnings-container {
+    background-color:#202020;
+}
+
 @media (max-width: 1024px){
     .info-container {
         max-width:64em;

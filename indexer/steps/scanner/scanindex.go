@@ -3,14 +3,12 @@ package scanner
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"os"
 
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/ian-kent/go-log/log"
 	"golang.org/x/net/context"
-	"gopkg.in/olivere/elastic.v5"
 )
 
 var MediaScanned int64
@@ -21,34 +19,17 @@ func RemoveFiles() {
 	client := common.CreateClient()
 
 	scrollService := client.Scroll(common.MediaIndexName).Type(common.MediaTypeName).Size(100)
-
-	_, err := scrollService.Do(context.TODO())
-	if err != nil {
-		log.Error("Failed starting scan: %s", err.Error())
-		return
-	}
-
-	checked := 0
-	removed := 0
 	for {
 		results, err := scrollService.Do(context.TODO())
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			if el, ok := err.(*elastic.Error); ok {
-				if el.Status == http.StatusNotFound {
-					break
-				}
-			}
-
 			log.Error("Failed scanning index: %s", err.Error())
 			break
 		}
 
 		for _, hit := range results.Hits.Hits {
-			checked += 1
-
 			var media common.Media
 			err := json.Unmarshal(*hit.Source, &media)
 			if err != nil {
@@ -74,7 +55,6 @@ func RemoveFiles() {
 			}
 
 			if removeDocument {
-				removed += 1
 				MediaRemoved += 1
 				deleteResponse, err := client.Delete().
 					Index(common.MediaIndexName).
@@ -89,6 +69,4 @@ func RemoveFiles() {
 			}
 		}
 	}
-
-	log.Info("Remover checked %d files and removed %d of them", checked, removed)
 }

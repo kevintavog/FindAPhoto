@@ -18,9 +18,12 @@ Find A Photo {{versionNumber}}
   <h3>
     <i class="fa fa-picture-o"></i> {{imageCount}} photos
     <br>
-    <i class="fa fa-video-camera"></i> {{videoCount}} videos
+    <i class="fa fa-film"></i> {{videoCount}} videos
     <br>
-    <i class="fa fa-clone"></i> {{imageCount + videoCount}} items
+    <i class="fa fa-files-o"></i> {{imageCount + videoCount}} items
+    <br>
+    <div *ngIf="duplicateCount > 0"><i class="fa fa-clone"></i> {{duplicateCount}} duplicate items were ignored</div>
+    <div *ngIf="duplicateCount == 0"><i class="fa fa-clone"></i> There are NO duplicate items</div>
     <br>
 
     <div style="clear:both;" class="c-alert c-alert--warning" *ngIf="warningCount > 0" >

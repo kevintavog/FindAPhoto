@@ -79,6 +79,7 @@ func main() {
 		}
 
 		scanStartTime := time.Now()
+		helpers.InitializeDuplicates()
 		scanner.Scan(*scanPath, alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)

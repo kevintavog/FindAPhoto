@@ -38,8 +38,9 @@ func IsDuplicate(client *elastic.Client, signature string, aliasedPath string, m
 	}
 
 	// Is this a recent item?
-	if isRecentItem(signature) {
+	if isRecent, original := isRecentItem(signature); isRecent {
 		atomic.AddInt64(&DuplicatesIgnored, 1)
+		AddDuplicateToIndex(client, aliasedPath, original)
 		return true
 	}
 
@@ -71,6 +72,12 @@ func IsDuplicate(client *elastic.Client, signature string, aliasedPath string, m
 	pathExists := pathSearchResult.TotalHits() > 0
 
 	if signatureExists && !pathExists {
+		media := returnFirstMatch(signatureExistsResult)
+		if media != nil {
+			AddDuplicateToIndex(client, aliasedPath, media.Path)
+		} else {
+			log.Error("Unable to get original path from duplicate search result")
+		}
 		atomic.AddInt64(&DuplicatesIgnored, 1)
 		return true
 	}
@@ -79,8 +86,9 @@ func IsDuplicate(client *elastic.Client, signature string, aliasedPath string, m
 		recentItemsLock.Lock()
 		defer recentItemsLock.Unlock()
 
-		_, exists := recentItems[signature]
+		original, exists := recentItems[signature]
 		if exists {
+			AddDuplicateToIndex(client, aliasedPath, original)
 			return true
 		}
 		recentItems[signature] = aliasedPath
@@ -93,12 +101,12 @@ func IsDuplicate(client *elastic.Client, signature string, aliasedPath string, m
 	return false
 }
 
-func isRecentItem(signature string) bool {
+func isRecentItem(signature string) (bool, string) {
 	recentItemsLock.Lock()
 	defer recentItemsLock.Unlock()
 
-	_, ok := recentItems[signature]
-	return ok
+	original, ok := recentItems[signature]
+	return ok, original
 }
 
 func shouldCheckExpiredItems() bool {

@@ -83,7 +83,7 @@
 
     <div *ngIf="itemInfo.warnings != undefined">
         <br>
-        <div class="c-card c-card--secondary">
+        <div class="c-card c-card--secondary warnings-container">
             <div class="c-card__content c-card__content--divider">Warnings</div>
             <div class="c-card__content c-alert c-alert--warning" *ngFor="let warning of itemInfo.warnings">{{warning}}</div>
         </div>

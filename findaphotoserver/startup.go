@@ -66,6 +66,7 @@ func run(devolopmentMode bool) {
 	}
 	l.Get("/byday", serveIndexHtmlFn)
 	l.Get("/bylocation", serveIndexHtmlFn)
+	l.Get("/info", serveIndexHtmlFn)
 	l.Get("/map", serveIndexHtmlFn)
 	l.Get("/singleitem", serveIndexHtmlFn)
 	l.Get("/search", serveIndexHtmlFn)

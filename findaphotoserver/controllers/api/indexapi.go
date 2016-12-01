@@ -30,9 +30,10 @@ func Index(c lars.Context) {
 
 	fc.AppContext.FieldLogger.Time("index", func() {
 		props := make(map[string]interface{})
+		client := common.CreateClient()
 
 		for _, name := range propertiesFilter {
-			v := getValue(name)
+			v := getValue(name, client)
 			if v != nil {
 				props[name] = v
 			}
@@ -42,23 +43,26 @@ func Index(c lars.Context) {
 	})
 }
 
-func getValue(name string) interface{} {
+func getValue(name string, client *elastic.Client) interface{} {
 	switch strings.ToLower(name) {
+
+	case "duplicatecount":
+		return getDuplicateCount(client)
+
+	case "imagecount":
+		return getCountsSearch(client, "mimetype:image*")
 
 	case "paths":
 		return getAliasedPaths()
-
-	case "imagecount":
-		return getCountsSearch("mimetype:image*")
 
 	case "versionnumber":
 		return FindAPhotoVersionNumber
 
 	case "videocount":
-		return getCountsSearch("mimetype:video*")
+		return getCountsSearch(client, "mimetype:video*")
 
 	case "warningcount":
-		return getCountsSearch("warnings:*")
+		return getCountsSearch(client, "warnings:*")
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
@@ -79,8 +83,7 @@ func getAliasedPaths() []PathAndDate {
 	return allPaths
 }
 
-func getCountsSearch(query string) int64 {
-	client := common.CreateClient()
+func getCountsSearch(client *elastic.Client, query string) int64 {
 	search := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
@@ -94,6 +97,17 @@ func getCountsSearch(query string) int64 {
 		panic(&InvalidRequest{message: fmt.Sprintf("Failed searching for count (%s)", query), err: err})
 	}
 	return result.TotalHits()
+}
+
+func getDuplicateCount(client *elastic.Client) int64 {
+	count, err := client.Count().
+		Index(common.MediaIndexName).
+		Type(common.DuplicateTypeName).
+		Do(context.TODO())
+	if err != nil {
+		panic(&InvalidRequest{message: "Failed searching for duplicate count", err: err})
+	}
+	return count
 }
 
 func getStatsPropertiesFilter(propertiesFilter string) []string {
