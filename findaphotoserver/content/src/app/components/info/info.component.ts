@@ -53,6 +53,7 @@ export class InfoComponent implements OnInit {
         new SearchHints('Range, everything from 2015 and 2016', 'date:[2015* TO date:2016*]'),
         new SearchHints('All trips from 2015 and 2016', 'keywords:trip AND date:[2015* TO date:2016*]'),
         new SearchHints('The placename is more than 10 meters from the location', 'cachedlocationdistancemeters:>10'),
+        new SearchHints('Everything from outside of Washington state', 'statename:* AND NOT statename:Washington'),
       ];
     }
 
