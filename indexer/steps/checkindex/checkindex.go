@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/helpers"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/getexif"
@@ -84,11 +85,14 @@ func dequeue() {
 			log.Info("Checking [%d] for %s", ChecksMade, candidateFile.AliasedPath)
 		}
 
-		termQuery := elastic.NewTermQuery("_id", candidateFile.AliasedPath)
-		searchResult, err := client.Search().
+		if helpers.IsDuplicate(client, candidateFile.Signature, candidateFile.AliasedPath, false) {
+			continue
+		}
+
+		pathSearchResult, err := client.Search().
 			Index(common.MediaIndexName).
 			Type(common.MediaTypeName).
-			Query(termQuery).
+			Query(elastic.NewTermQuery("_id", candidateFile.AliasedPath)).
 			Pretty(true).
 			Do(context.TODO())
 		if err != nil {
@@ -97,10 +101,10 @@ func dequeue() {
 			continue
 		}
 
-		if ForceIndex || searchResult.TotalHits() != 1 {
+		if ForceIndex || pathSearchResult.TotalHits() != 1 {
 			getexif.Enqueue(candidateFile)
 		} else {
-			hit := searchResult.Hits.Hits[0]
+			hit := pathSearchResult.Hits.Hits[0]
 			var media common.Media
 			err := json.Unmarshal(*hit.Source, &media)
 			if err != nil {

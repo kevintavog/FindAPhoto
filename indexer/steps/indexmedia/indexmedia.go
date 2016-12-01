@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/helpers"
 
 	"github.com/ian-kent/go-log/log"
 	"golang.org/x/net/context"
@@ -45,6 +46,12 @@ func Enqueue(media *common.Media) {
 func dequeue() {
 	var client = common.CreateClient()
 	for media := range queue {
+
+		// Check to see if a duplicate item has been added (it might pass the same check in the
+		// scan and fail here - due to the queue between that check and storing the file.
+		if helpers.IsDuplicate(client, media.Signature, media.Path, true) {
+			continue
+		}
 
 		response, err := client.Index().
 			Index(common.MediaIndexName).

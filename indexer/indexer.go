@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/helpers"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkindex"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
@@ -109,8 +110,8 @@ func emitStats(seconds float64) {
 	log.Info("%d image thumbnails created, %d failed; %d video thumbnails created, %d failed; %d failed thumbnail checks",
 		generatethumbnail.GeneratedImage, generatethumbnail.FailedImage, generatethumbnail.GeneratedVideo, generatethumbnail.FailedVideo, checkthumbnail.FailedChecks)
 
-	log.Info("%d files indexed, %d failed and %d added due to detected changes",
-		indexmedia.IndexedFiles, indexmedia.FailedIndexAttempts, indexmedia.ChangedFiles)
+	log.Info("%d files indexed, %d duplicates ignored, %d failed and %d added due to detected changes",
+		indexmedia.IndexedFiles, helpers.DuplicatesIgnored, indexmedia.FailedIndexAttempts, indexmedia.ChangedFiles)
 
 	log.Info("%d media scanned, %d removed from the index",
 		scanner.MediaScanned, scanner.MediaRemoved)
