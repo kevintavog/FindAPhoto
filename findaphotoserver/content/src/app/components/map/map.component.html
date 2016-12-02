@@ -34,7 +34,11 @@
             <div class="info-text-container">
                 <div class="c-paragraph info-text"> <i class="fa fa-file"></i> {{currentItem.imageName}} </div>
                 <div class="c-paragraph info-text"> <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(currentItem)}} </div>
-                <div class="c-paragraph info-text"> <i class="fa fa-map-marker"></i> {{currentItem.locationDisplayName}} </div>
+                <div class="c-paragraph info-text">
+                    <a style="pointer-events:auto" href="http://maps.google.com/maps/place?t=h&z=18&q={{currentItem.latitude}},{{currentItem.longitude}}&ll={{currentItem.latitude}},{{currentItem.longitude}}">
+                         <i class="fa fa-map-marker"></i> {{currentItem.locationDisplayName}} 
+                    </a>
+                </div>
             </div>
         </div>
 
