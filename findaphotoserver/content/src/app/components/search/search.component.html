@@ -35,33 +35,33 @@
 </div>
 
 
-<!--  Categories aren't ready
-    - open/collapse works in desktop Safari, but not Firefox or mobile Safari
-
-<div *ngIf="searchResults != null && searchResults.categories != null && searchResults.categories.length > 0" >
+<div *ngIf="_searchResultsProvider.searchResults != null && _searchResultsProvider.searchResults.categories != null && _searchResultsProvider.searchResults.categories.length > 0" >
     <br>
 
-    <div id="main-filter-panel-closed" class="filter-panel" *ngIf="showFilters != true" (click)="toggleFilterPanel()"  >
-        Filters &#x025BD;
+    <div id="main-filter-panel-closed" class="filter-panel" *ngIf="uiState.showFilters != true" (click)="uiState.toggleFilterPanel()"  >
+        <div class="filter-toggle" > Filters <i class="fa fa-caret-right filter-toggle-glyph"></i> </div>
     </div>
 
-    <div id="main-filter-panel-opened" class="filter-panel" *ngIf="showFilters == true" (click)="toggleFilterPanel()" >
-        Filters &#x025B3;
+    <div id="main-filter-panel-opened" class="filter-panel" *ngIf="uiState.showFilters == true"  >
+        <div class="filter-toggle" (click)="uiState.toggleFilterPanel()"> Filters <i class="fa fa-caret-down filter-toggle-glyph"></i> </div>
 
         <div id="containerLeft" class="filter-panel" >
             <div id="containerMiddle" class="filter-panel" >
                 <div id="containerRight" class="filter-panel" >
 
-                    <div *ngIf="categoryDate() != null" id="columnLeft" class="filter-panel" >
-                        <category-tree-view [caption]=DatesCaption [category]=categoryDate()></category-tree-view>
+                    <div *ngIf="_searchResultsProvider.categoryDate() != null" id="columnLeft" class="filter-panel" >
+                        <app-category-tree-view [caption]=DatesCaption [category]=_searchResultsProvider.categoryDate()>
+                        </app-category-tree-view>
                     </div>
 
-                    <div *ngIf="categoryKeywords() != null" id="columnMiddle" class="filter-panel" >
-                        <category-tree-view [caption]=KeywordsCaption [category]=categoryKeywords()></category-tree-view>
+                    <div *ngIf="_searchResultsProvider.categoryKeywords() != null" id="columnMiddle" class="filter-panel" >
+                        <app-category-tree-view [caption]=KeywordsCaption [category]=_searchResultsProvider.categoryKeywords()>
+                        </app-category-tree-view>
                     </div>
 
-                    <div *ngIf="categoryPlacenames() != null" id="columnRight" class="filter-panel" >
-                        <category-tree-view [caption]=LocationsCaption [category]=categoryPlacenames()></category-tree-view>
+                    <div *ngIf="_searchResultsProvider.categoryPlacenames() != null" id="columnRight" class="filter-panel" >
+                        <app-category-tree-view [caption]=LocationsCaption [category]=_searchResultsProvider.categoryPlacenames()>
+                        </app-category-tree-view>
                     </div>
 
                 </div>
@@ -69,7 +69,7 @@
         </div>
     </div>
 </div>
--->
+
 
 
 <div *ngIf="_searchResultsProvider.searchResults != null">
@@ -85,6 +85,12 @@
 
     <app-paging></app-paging>
 
+    <div *ngIf="selectedCategories.length > 0" class="c-tags c-tags__container" >
+        <button *ngFor="let scd of selectedCategories" type="button" class="c-button c-tag u-bg-brand" (click)="removeSelectedCategory(scd)">
+            {{scd.value}}
+            <span class="c-tag__close">×</span>
+        </button>
+    </div>
 
 <!-- Waiting for sorting & filtering to be implemented  -->
 

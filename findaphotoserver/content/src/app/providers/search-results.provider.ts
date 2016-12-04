@@ -128,7 +128,7 @@ export class SearchResultsProvider {
     }
 
     categoryDate(): SearchCategory {
-        return this.categoryByField('date');
+        return this.categoryByField('dateYear');
     }
 
     categoryKeywords(): SearchCategory {

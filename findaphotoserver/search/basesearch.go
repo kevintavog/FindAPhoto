@@ -94,7 +94,7 @@ type mappingAction func(searchHit *elastic.SearchHit, mediaHit *MediaHit)
 //-------------------------------------------------------------------------------------------------
 func invokeSearch(search *elastic.SearchService, query *elastic.Query, groupBy int, categoryOptions *CategoryOptions, drilldownOptions *DrilldownOptions, extraMapping mappingAction) (*SearchResult, error) {
 
-	//	addAggregations(search, categoryOptions)
+	addAggregations(search, categoryOptions)
 	addDrilldown(search, query, drilldownOptions)
 
 	result, err := search.Do(context.TODO())
@@ -178,13 +178,20 @@ func returnFirstMatch(search *elastic.SearchService) (*MediaHit, error) {
 
 func addAggregations(search *elastic.SearchService, categoryOptions *CategoryOptions) {
 	if categoryOptions.KeywordCount > 0 {
-		search.Aggregation("keywords", elastic.NewTermsAggregation().Field("keywords").Size(categoryOptions.KeywordCount))
+		search.Aggregation("keywords", elastic.NewTermsAggregation().Field("keywords.value").Size(categoryOptions.KeywordCount))
 	}
 
+	// Dates are in a Year, Month, Day hierarchy - years & days are limited by the requested limit, while all 12 months are returned (if they exist)
 	if categoryOptions.DateCount > 0 {
-		search.Aggregation("date", elastic.NewTermsAggregation().Field("date").Size(categoryOptions.DateCount))
+		scriptYear := elastic.NewScriptInline("doc['datetime'].date.toString('YYYY')").Lang("painless")
+		scriptMonth := elastic.NewScriptInline("doc['datetime'].date.toString('MMMM')").Lang("painless")
+		scriptDay := elastic.NewScriptInline("doc['datetime'].date.toString('dd')").Lang("painless")
+		search.Aggregation("dateYear", elastic.NewTermsAggregation().Script(scriptYear).Size(categoryOptions.DateCount).
+			SubAggregation("dateMonth", elastic.NewTermsAggregation().Script(scriptMonth).Size(12).
+				SubAggregation("dateDay", elastic.NewTermsAggregation().Script(scriptDay).Size(categoryOptions.DateCount))))
 	}
 
+	// Location name is returned as a Country, State, City, Site hierarchy
 	if categoryOptions.PlacenameCount > 0 {
 		search.Aggregation("countryName", elastic.NewTermsAggregation().Field("countryname.value").Size(categoryOptions.PlacenameCount).
 			SubAggregation("stateName", elastic.NewTermsAggregation().Field("statename.value").Size(categoryOptions.PlacenameCount).
@@ -309,7 +316,7 @@ func addDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 	}
 
 	// locations (site, city, state, country) are OR - also, OR between each type/level
-	// dates are OR
+	// dates (year, month, day) are OR - also OR between each value
 	// keywords are OR
 	// ANDed together ((locations) AND (dates) AND (keywords))
 
@@ -318,36 +325,94 @@ func addDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 
 	drilldownQuery := elastic.NewBoolQuery()
 	drilldownQuery.Must(*searchQuery)
-	var locationQuery *elastic.BoolQuery
+
+	locationQueryList := make([]*elastic.TermQuery, 0)
+	dateQueryList := make([]*elastic.ScriptQuery, 0)
 
 	for key, value := range drilldownOptions.Drilldown {
-		isLocationField := false
-		var fieldQuery *elastic.BoolQuery
-
-		switch strings.ToLower(key) {
-		// Re-use location query to have OR semantics for all location related fields
-		case "countryname", "statename", "cityname", "sitename":
-			if locationQuery == nil {
-				locationQuery = elastic.NewBoolQuery()
+		if isLocationField(key) {
+			for _, v := range value {
+				locationQueryList = append(locationQueryList, elastic.NewTermQuery(getLocationFieldName(key), fmt.Sprintf("%s", v)))
 			}
-			fieldQuery = locationQuery
-			isLocationField = true
-		default:
-			fieldQuery = elastic.NewBoolQuery()
-		}
 
-		for _, v := range value {
-			fieldQuery.Should(elastic.NewTermQuery(strings.ToLower(key), strings.ToLower(v)))
-		}
+		} else if isDateField(key) {
+			for _, v := range value {
+				script := elastic.NewScriptInline(getDateFieldQuery(key)).Lang("painless").Param("dateValue", v)
+				dateQueryList = append(dateQueryList, elastic.NewScriptQuery(script))
+			}
 
-		if !isLocationField {
+		} else {
+			fieldQuery := elastic.NewBoolQuery()
+			for _, v := range value {
+				fieldName, overridden := common.GetIndexFieldName(key)
+				fieldValue := v
+				if !overridden {
+					fieldValue = strings.ToLower(v)
+				}
+				fieldQuery.Should(elastic.NewTermQuery(fieldName, fieldValue))
+			}
 			drilldownQuery.Must(fieldQuery)
 		}
 	}
 
-	if locationQuery != nil {
+	if len(locationQueryList) > 0 {
+		locationQuery := elastic.NewBoolQuery()
+		for _, q := range locationQueryList {
+			locationQuery.Should(q)
+		}
 		drilldownQuery.Must(locationQuery)
 	}
 
+	if len(dateQueryList) > 0 {
+		dateQuery := elastic.NewBoolQuery()
+		for _, q := range dateQueryList {
+			dateQuery.Should(q)
+		}
+		drilldownQuery.Must(dateQuery)
+	}
+
+	//	src, _ := drilldownQuery.Source()
+	//	dataMap, _ := json.Marshal(src)
+	//	jsonString := string(dataMap)
+	//	fmt.Printf("drilldown: '%s'\n", jsonString)
+
 	search.Query(drilldownQuery)
+}
+
+func isLocationField(name string) bool {
+	switch strings.ToLower(name) {
+	case "countryname", "statename", "cityname", "sitename":
+		return true
+	default:
+		return false
+
+	}
+}
+
+func isDateField(name string) bool {
+	switch strings.ToLower(name) {
+	case "dateyear", "datemonth", "dateday":
+		return true
+	default:
+		return false
+
+	}
+}
+
+func getLocationFieldName(name string) string {
+	return strings.ToLower(name + ".value")
+}
+
+func getDateFieldQuery(name string) string {
+	switch strings.ToLower(name) {
+	case "dateyear":
+		return "doc['datetime'].date.toString('YYYY') == params.dateValue"
+	case "datemonth":
+		return "doc['datetime'].date.toString('MMMM') == params.dateValue"
+	case "dateday":
+		return "doc['datetime'].date.toString('dd') == params.dateValue"
+	default:
+		fmt.Errorf("Unhandled date field name: '%s'\n", name)
+		return ""
+	}
 }

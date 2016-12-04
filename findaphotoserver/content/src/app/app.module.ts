@@ -22,6 +22,7 @@ import { AlertsComponent } from './components/alerts/alerts.component';
 import { InfoComponent } from './components/info/info.component';
 import { HeaderComponent } from './components/header/header.component';
 import { PagingComponent } from './components/paging/paging.component';
+import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from './components/category-tree-view-component/category-tree-view.component';
 
 
 @NgModule({
@@ -35,7 +36,9 @@ import { PagingComponent } from './components/paging/paging.component';
         SingleItemComponent,
         HeaderComponent,
         AlertsComponent,
-        InfoComponent
+        InfoComponent,
+        CategoryTreeViewComponent,
+        CategoryDetailsTreeViewComponent
     ],
     imports: [
         BrowserModule,
