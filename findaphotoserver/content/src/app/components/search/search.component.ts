@@ -7,6 +7,7 @@ import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
 
 import { DataDisplayer } from '../../providers/data-displayer';
+import { FieldsProvider } from '../../providers/fields.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -27,13 +28,15 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             searchRequestBuilder: SearchRequestBuilder,
             private searchResultsProvider: SearchResultsProvider,
             private navigationProvider: NavigationProvider,
-            private displayer: DataDisplayer) {
-        super('/search', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+            private displayer: DataDisplayer,
+            private fieldsProvider: FieldsProvider) {
+        super('/search', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
     }
 
     ngOnInit() {
         this.uiState.showSearch = true;
         this.uiState.showResultCount = true;
+        this.fieldsProvider.initialize();
         this.navigationProvider.initialize();
         this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 's');
 

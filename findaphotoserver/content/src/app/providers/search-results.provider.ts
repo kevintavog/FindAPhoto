@@ -111,12 +111,14 @@ export class SearchResultsProvider {
 
     setEmptyRequest() {
         this.serverError = undefined;
-        this.searchResults = undefined; 
+        this.searchResults = undefined;
 
-        this.searchRequest.searchType = 's';
-        this.searchRequest.searchText = '';
-        this.searchRequest.first = 1;
-        this.searchRequest.drilldown = null;
+        if (this.searchRequest) {
+            this.searchRequest.searchType = 's';
+            this.searchRequest.searchText = '';
+            this.searchRequest.first = 1;
+            this.searchRequest.drilldown = null;
+        }
     }
 
     initializeRequest(queryProps: string, searchType: string) {

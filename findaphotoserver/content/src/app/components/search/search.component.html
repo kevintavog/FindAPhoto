@@ -38,11 +38,11 @@
 <div *ngIf="_searchResultsProvider.searchResults != null && _searchResultsProvider.searchResults.categories != null && _searchResultsProvider.searchResults.categories.length > 0" >
     <br>
 
-    <div id="main-filter-panel-closed" class="filter-panel" *ngIf="uiState.showFilters != true" (click)="uiState.toggleFilterPanel()"  >
+    <div class="filter-panel" *ngIf="uiState.showFilters != true" (click)="uiState.toggleFilterPanel()"  >
         <div class="filter-toggle" > Filters <i class="fa fa-caret-right filter-toggle-glyph"></i> </div>
     </div>
 
-    <div id="main-filter-panel-opened" class="filter-panel" *ngIf="uiState.showFilters == true"  >
+    <div class="filter-panel" *ngIf="uiState.showFilters == true"  >
         <div class="filter-toggle" (click)="uiState.toggleFilterPanel()"> Filters <i class="fa fa-caret-down filter-toggle-glyph"></i> </div>
 
         <div id="containerLeft" class="filter-panel" >
@@ -68,6 +68,35 @@
             </div>
         </div>
     </div>
+
+    <div class="fields-panel" *ngIf="uiState.showFields != true" (click)="uiState.toggleFieldsPanel()">
+        <div class="fields-toggle"> Fields <i class="fa fa-caret-right filter-toggle-glyph"></i> </div>
+    </div>
+
+    <div class="fields-panel" *ngIf="uiState.showFields == true">
+        <div class="fields-toggle" (click)="uiState.toggleFieldsPanel()"> Fields <i class="fa fa-caret-down filter-toggle-glyph"></i> </div>
+        <div style="clear:both;" *ngIf="fieldsProvider.fields">
+            <div class="field" *ngFor="let f of fieldsProvider.fields" (click)="populateFieldValues(f)">
+                {{f}}
+            </div>
+        </div>
+        <div class="fieldValuesContainer" *ngIf="fieldsProvider.nameWithValues != null" >
+            <div class="c-alert c-alert--error" *ngIf="fieldsProvider.serverError != null" >
+                Server error getting field values: {{fieldsProvider.serverError}}
+            </div>
+
+            <div *ngIf="fieldsProvider.values != null">
+                <div> Top values for '{{fieldsProvider.nameWithValues}}'</div>
+                <div class="fieldValueInfo" *ngFor="let fv of fieldsProvider.values">
+                    {{fv}}
+                </div>
+            </div>
+        </div>
+
+        <div style="clear:both;">
+    </div>
+
+
 </div>
 
 

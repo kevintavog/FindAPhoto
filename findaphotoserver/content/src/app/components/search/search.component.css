@@ -89,6 +89,40 @@ a:visited{
     vertical-align: -18%;
     margin-left: 20px;
 }
+
+.fields-panel {
+    background-color: #0c0e20;
+	margin-bottom: 10px;
+}
+.fields-toggle {
+    background-color: #0c0e20;
+    cursor: pointer;
+}
+.field {
+    background: #484848;
+    float:left;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.fieldValueInfo {
+    background: #484848;
+    float:left;
+    margin-bottom:10px;
+    margin-right:10px;
+    padding: 10px 10px 10px 10px;
+}
+.fieldValuesContainer {
+    clear:both;
+    background-color: #0c0e20;
+    padding: 10px 10px 10px 10px;
+	-webkit-flex-wrap: wrap;
+	display: flex;
+	flex-wrap: wrap;
+}
+
 #containerLeft {
 	clear:left;
 	float:left;

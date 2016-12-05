@@ -8,6 +8,7 @@ import { SearchRequestBuilder } from '../../models/search.request.builder';
 import { SearchCategoryDetail, SearchItem } from '../../models/search-results';
 import { UIState } from '../../models/ui-state';
 
+import { FieldsProvider } from '../../providers/fields.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -38,7 +39,8 @@ export abstract class BaseSearchComponent implements OnDestroy {
         protected _location: Location,
         protected _searchRequestBuilder: SearchRequestBuilder,
         protected _searchResultsProvider: SearchResultsProvider,
-        protected _navigationProvider: NavigationProvider) {
+        protected _navigationProvider: NavigationProvider,
+        protected _fieldsProvider: FieldsProvider) {
             this.uiState.showGroup = true;
             this.uiState.sortMenuDisplayText = 'Date: Newest';
 
@@ -207,6 +209,13 @@ console.log('sort by %o', sortType);
         });
 
         return drilldown;
+    }
+
+    populateFieldValues(fieldName: string) {
+        this._fieldsProvider.getValuesForFieldWithSearch(
+            fieldName,
+            this._searchResultsProvider.searchRequest.searchText,
+            this._searchResultsProvider.searchRequest.drilldown);
     }
 
     // Generate the selected categories from the drilldown. The format is 'category name':val1,val2' - each category is

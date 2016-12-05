@@ -66,8 +66,15 @@ export class SearchService {
             .catch(this.handleError);
     }
 
-    indexFieldValues(fieldName: string) {
+    indexFieldValues(fieldName: string, query: string, drilldown: string) {
         let url = '/api/index/fields/' + fieldName;
+        if (query != null && query.length > 0) {
+            url += '?q=' + query;
+        }
+        if (drilldown != null && drilldown.length > 0) {
+            url += '&drilldown=' + drilldown;
+        }
+
         return this._http.get(url)
             .map(response => response.json())
             .catch(this.handleError);

@@ -12,6 +12,7 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/search"
 )
 
 var FindAPhotoVersionNumber string
@@ -69,7 +70,7 @@ func IndexFields(c lars.Context) {
 	fc.WriteResponse(response)
 }
 
-func IndexAField(c lars.Context) {
+func IndexFieldValues(c lars.Context) {
 	fc := c.(*applicationglobals.FpContext)
 	err := fc.Ctx.ParseForm()
 	if err != nil {
@@ -77,10 +78,13 @@ func IndexAField(c lars.Context) {
 	}
 
 	fieldName := fc.Ctx.Request().Form.Get("field")
+	searchText := fc.Ctx.Request().Form.Get("q")
+	drilldownOptions := search.NewDrilldownOptions()
+	populateDrilldownOptions(fc, drilldownOptions)
 
 	values := make(map[string]interface{})
 	values["name"] = fieldName
-	values["values"] = getTopFieldValues(fieldName, 20)
+	values["values"] = getTopFieldValues(fieldName, 20, searchText, drilldownOptions)
 
 	response := make(map[string]interface{})
 	response["values"] = values
@@ -187,7 +191,7 @@ func getMappedFields() []string {
 	return allFields
 }
 
-func getTopFieldValues(fieldName string, maxCount int) []string {
+func getTopFieldValues(fieldName string, maxCount int, searchText string, drilldownOptions *search.DrilldownOptions) []string {
 	internalFieldName, _ := common.GetIndexFieldName(fieldName)
 	if _, notSupported := fieldsAggregateDisallowed[internalFieldName]; notSupported {
 		return make([]string, 0)
@@ -195,22 +199,45 @@ func getTopFieldValues(fieldName string, maxCount int) []string {
 
 	indexFieldName, _ := common.GetIndexFieldName(fieldName)
 
+	// This is gross - for reasons I don't understand, when using the match all query, the field
+	// enumeration/aggregations come back empty when combined with drilldowns.
+	// But using the wildcard works...
+	var query elastic.Query
+	if searchText == "" {
+		searchText = "*"
+	}
+	//		query = elastic.NewMatchAllQuery()
+	//	} else {
+	query = elastic.NewQueryStringQuery(searchText).
+		Field("path"). // Folder name
+		Field("monthname").
+		Field("dayname").
+		Field("keywords").
+		Field("placename") // Full reverse location lookup
+		//	}
+
 	client := common.CreateClient()
-	result, err := client.Search().
-		Pretty(true).
+	searchService := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
-		Query(elastic.NewMatchAllQuery()).
-		Aggregation("field", elastic.NewTermsAggregation().Field(indexFieldName).Size(maxCount).OrderByCountDesc()).
-		Do(context.TODO())
+		Query(query).
+		Aggregation("field", elastic.NewTermsAggregation().Field(indexFieldName).Size(maxCount))
+	search.AddDrilldown(searchService, &query, drilldownOptions)
+
+	result, err := searchService.Do(context.TODO())
 
 	if err != nil {
 		panic(&InvalidRequest{message: "Failed searching for field values", err: err})
 	}
 
+	//	for key, val := range result.Aggregations {
+	//		fmt.Printf("Aggregation: '%s' = '%s'\n", key, val)
+	//	}
+
 	values := make([]string, 0)
 	fieldValues, found := result.Aggregations.Terms("field")
 	if !found {
+		fmt.Println("Didn't find any matching values")
 		return values
 	}
 

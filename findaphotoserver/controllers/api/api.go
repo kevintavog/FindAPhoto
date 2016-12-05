@@ -42,7 +42,7 @@ func ConfigureRouting(l *lars.LARS) {
 	api.Get("/by-day", ByDay)
 
 	index := api.Group("/index")
-	index.Get("/fields/:field", IndexAField)
+	index.Get("/fields/:field", IndexFieldValues)
 	index.Get("/fields", IndexFields)
 	index.Get("/duplicates", DuplicateMedia)
 	index.Get("/", Index)

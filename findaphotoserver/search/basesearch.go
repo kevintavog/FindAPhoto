@@ -95,7 +95,7 @@ type mappingAction func(searchHit *elastic.SearchHit, mediaHit *MediaHit)
 func invokeSearch(search *elastic.SearchService, query *elastic.Query, groupBy int, categoryOptions *CategoryOptions, drilldownOptions *DrilldownOptions, extraMapping mappingAction) (*SearchResult, error) {
 
 	addAggregations(search, categoryOptions)
-	addDrilldown(search, query, drilldownOptions)
+	AddDrilldown(search, query, drilldownOptions)
 
 	result, err := search.Do(context.TODO())
 	if err != nil {
@@ -306,7 +306,7 @@ func processDetailAggregations(aggregations *elastic.Aggregations) (*string, []*
 	return nil, nil
 }
 
-func addDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, drilldownOptions *DrilldownOptions) {
+func AddDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, drilldownOptions *DrilldownOptions) {
 	if searchQuery == nil {
 		return
 	}

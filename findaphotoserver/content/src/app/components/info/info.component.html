@@ -44,23 +44,23 @@ Find A Photo {{versionNumber}}
     </div>
   </div>
 
-  <div style="clear:both;" *ngIf="fields">
+  <div style="clear:both;" *ngIf="fieldsProvider.fields">
     <br>
     <h3> <i class="fa fa-map-signs"></i> Fields that can be used when searching: </h3>
-      <div class="field" *ngFor="let f of fields" (click)="getValuesForField(f)">
+      <div class="field" *ngFor="let f of fieldsProvider.fields" (click)="fieldsProvider.getValuesForField(f)">
         {{f}}
         <br>
       </div>
   </div>
 
-  <div class="fieldValuesContainer" *ngIf="fieldNameWithValues != null" >
-    <div class="c-alert c-alert--error" *ngIf="fieldNameServerError != null" >
-      Server error getting field values: {{fieldNameServerError}}
+  <div class="fieldValuesContainer" *ngIf="fieldsProvider.nameWithValues != null" >
+    <div class="c-alert c-alert--error" *ngIf="fieldsProvider.serverError != null" >
+      Server error getting field values: {{fieldsProvider.serverError}}
     </div>
 
-    <div *ngIf="fieldValues != null">
-      <h3> <i class="fa fa-list"></i> Top values for the field '{{fieldNameWithValues}}'</h3>
-      <div class="fieldValueInfo" *ngFor="let fv of fieldValues">
+    <div *ngIf="fieldsProvider.values != null">
+      <h3> <i class="fa fa-list"></i> Top values for the field '{{fieldsProvider.nameWithValues}}'</h3>
+      <div class="fieldValueInfo" *ngFor="let fv of fieldsProvider.values">
         {{fv}}
       </div>
     </div>

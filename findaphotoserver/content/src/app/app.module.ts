@@ -16,13 +16,15 @@ import { SearchRequestBuilder } from './models/search.request.builder';
 
 import { DataDisplayer } from './providers/data-displayer';
 import { NavigationProvider } from './providers/navigation.provider';
+import { FieldsProvider } from './providers/fields.provider';
 
 import { routing } from './app.routes';
 import { AlertsComponent } from './components/alerts/alerts.component';
 import { InfoComponent } from './components/info/info.component';
 import { HeaderComponent } from './components/header/header.component';
 import { PagingComponent } from './components/paging/paging.component';
-import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from './components/category-tree-view-component/category-tree-view.component';
+import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from
+    './components/category-tree-view-component/category-tree-view.component';
 
 
 @NgModule({
@@ -48,6 +50,7 @@ import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from './c
     ],
     providers: [
         DataDisplayer,
+        FieldsProvider,
         NavigationProvider,
         SearchRequestBuilder,
         SearchResultsProvider,

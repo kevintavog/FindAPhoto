@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { DataDisplayer } from '../../providers/data-displayer';
+import { FieldsProvider } from '../../providers/fields.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchService } from '../../services/search.service';
 
@@ -30,11 +31,6 @@ export class InfoComponent implements OnInit {
 
     serverError: string;
 
-    fields: [string]
-    fieldNameWithValues: string;
-    fieldNameServerError: string;
-    fieldValues: [string];
-
     duplicateCount: number;
     imageCount: number;
     paths: [PathAndDate]
@@ -46,7 +42,11 @@ export class InfoComponent implements OnInit {
 
 
 
-    constructor(private searchService: SearchService, private displayer: DataDisplayer, protected navigationProvider: NavigationProvider) {
+    constructor(
+            private searchService: SearchService,
+            private displayer: DataDisplayer,
+            protected navigationProvider: NavigationProvider,
+            private fieldsProvider: FieldsProvider) {
       this.searchHints = [
         new SearchHints('All warnings', 'warnings:*'),
         new SearchHints('Items with a keyword of "trip"', 'keywords:trip'),
@@ -60,6 +60,7 @@ export class InfoComponent implements OnInit {
     }
 
     ngOnInit() {
+      this.fieldsProvider.initialize();
       this.serverError = null;
       this.searchService.indexStats('duplicateCount,imageCount,paths,versionNumber,videoCount,warningCount').subscribe(
             results => {
@@ -69,15 +70,6 @@ export class InfoComponent implements OnInit {
               this.versionNumber = results.versionNumber;
               this.videoCount = results.videoCount;
               this.warningCount = results.warningCount;
-
-              this.searchService.indexFields().subscribe(
-                  fieldResults => {
-                      this.fields = fieldResults.fields;
-                  },
-                  error => {
-                    this.serverError = error;
-                  }
-              );
             },
             error => {
                 this.serverError = error;
@@ -87,21 +79,5 @@ export class InfoComponent implements OnInit {
 
     hasPaths() {
       return this.paths != null && this.paths.length > 0;
-    }
-
-    getValuesForField(fieldName : string) {
-        this.fieldValues = null;
-        this.fieldNameServerError = null;
-        this.fieldNameWithValues = fieldName;
-
-        this.searchService.indexFieldValues(fieldName).subscribe(
-            results => {
-                this.fieldValues = results.values.values;
-            },
-            error => {
-              this.fieldNameServerError = error;
-            }
-        );
-
     }
 }

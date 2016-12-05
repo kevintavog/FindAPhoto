@@ -6,6 +6,7 @@ import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
 
 import { DataDisplayer } from '../../providers/data-displayer';
+import { FieldsProvider } from '../../providers/fields.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -24,8 +25,9 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         searchRequestBuilder: SearchRequestBuilder,
         searchResultsProvider: SearchResultsProvider,
         navigationProvider: NavigationProvider,
-        private displayer: DataDisplayer) {
-            super('/bylocation', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+        private displayer: DataDisplayer,
+        private fieldsProvider: FieldsProvider) {
+            super('/bylocation', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
         }
 
     ngOnInit() {
@@ -35,6 +37,7 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
 
         let queryProps = SearchResultsProvider.QueryProperties += ',locationName,locationDisplayName,distancekm';
         this._navigationProvider.initialize();
+        this.fieldsProvider.initialize();
         this._searchResultsProvider.initializeRequest(queryProps, 'l');
 
         this.internalSearch(false);

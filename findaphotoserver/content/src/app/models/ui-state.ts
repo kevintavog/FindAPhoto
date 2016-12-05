@@ -7,6 +7,8 @@ export class UIState {
     showSearch: boolean;
     showResultCount: boolean;
 
+    showFields: boolean;
+
     showGroup: boolean;
     showDistance: boolean;
     @Output() @Input() showFilters: boolean = false;
@@ -26,6 +28,14 @@ export class UIState {
             this.showFilters = true;
         } else {
             this.showFilters = false;
+        }
+    }
+
+    toggleFieldsPanel() {
+        if (this.showFields !== true) {
+            this.showFields = true;
+        } else {
+            this.showFields = false;
         }
     }
 }

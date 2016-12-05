@@ -7,6 +7,7 @@ import { SearchRequestBuilder } from '../../models/search.request.builder';
 import { ByDayResult } from '../../models/search-results';
 
 import { DataDisplayer } from '../../providers/data-displayer';
+import { FieldsProvider } from '../../providers/fields.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -30,14 +31,16 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       searchRequestBuilder: SearchRequestBuilder,
       private searchResultsProvider: SearchResultsProvider,
       private navigationProvider: NavigationProvider,
-      private displayer: DataDisplayer) {
-          super('/byday', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider);
+      private displayer: DataDisplayer,
+      private fieldsProvider: FieldsProvider) {
+          super('/byday', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
     }
 
     ngOnInit() {
         this.uiState.showSearch = false;
         this.uiState.showResultCount = true;
         this.navigationProvider.initialize();
+        this.fieldsProvider.initialize();
         this.searchResultsProvider.initializeRequest(SearchResultsProvider.QueryProperties, 'd');
 
         this.internalSearch(false);
