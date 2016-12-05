@@ -26,6 +26,10 @@ export class SearchRequestBuilder {
                 throw new Error('Unknown search type: ' + searchRequest.searchType);
         }
 
+        if (searchRequest.drilldown && searchRequest.drilldown.length > 0) {
+            properties['drilldown'] = searchRequest.drilldown;
+        }
+
         return properties;
     }
 

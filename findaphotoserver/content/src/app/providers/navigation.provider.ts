@@ -26,15 +26,22 @@ export class NavigationProvider {
     }
 
     home() {
-        this._router.navigate( ['search'] );
-    }
+        // If not on the home page and there a text search, retain the text search
+        if (this._searchResultsProvider.searchRequest.searchType === 's' && !this._router.isActive('search', false)) {
 
-    searchWithQuery(query: string) {
-        this._searchResultsProvider.searchRequest.searchType = 't';
+            let queryParams = { q: this._searchResultsProvider.searchRequest.searchText };
+            if (this._searchResultsProvider.searchRequest.drilldown && this._searchResultsProvider.searchRequest.drilldown.length > 0) {
+                queryParams['drilldown'] = this._searchResultsProvider.searchRequest.drilldown;
+            }
 
-        let navigationExtras: NavigationExtras = { queryParams: { q: query } };
-        this._router.navigate( ['search'], navigationExtras );
-        this._searchResultsProvider.search(null);
+            let navigationExtras: NavigationExtras = { queryParams: queryParams };
+            this._router.navigate( ['search'], navigationExtras );
+            this._searchResultsProvider.search(null);
+        } else {
+            let navigationExtras: NavigationExtras = { queryParams: { } };
+            this._router.navigate( ['search'], navigationExtras );
+            this._searchResultsProvider.setEmptyRequest();
+        }
     }
 
     searchToday() {

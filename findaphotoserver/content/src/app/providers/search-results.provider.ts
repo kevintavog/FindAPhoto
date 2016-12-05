@@ -109,6 +109,15 @@ export class SearchResultsProvider {
         return Observable.throw('Unknown search type: ' + this.searchRequest.searchType);
     }
 
+    setEmptyRequest() {
+        this.serverError = undefined;
+        this.searchResults = undefined; 
+
+        this.searchRequest.searchType = 's';
+        this.searchRequest.searchText = '';
+        this.searchRequest.first = 1;
+        this.searchRequest.drilldown = null;
+    }
 
     initializeRequest(queryProps: string, searchType: string) {
         this.serverError = undefined;
