@@ -27,7 +27,9 @@ export class NavigationProvider {
 
     home() {
         // If not on the home page and there a text search, retain the text search
-        if (this._searchResultsProvider.searchRequest.searchType === 's' && !this._router.isActive('search', false)) {
+        if (this._searchResultsProvider.searchRequest 
+            && this._searchResultsProvider.searchRequest.searchType === 's'
+            && !this._router.isActive('search', false)) {
 
             let queryParams = { q: this._searchResultsProvider.searchRequest.searchText };
             if (this._searchResultsProvider.searchRequest.drilldown && this._searchResultsProvider.searchRequest.drilldown.length > 0) {
