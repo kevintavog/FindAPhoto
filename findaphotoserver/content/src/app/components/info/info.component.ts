@@ -50,6 +50,7 @@ export class InfoComponent implements OnInit {
       this.searchHints = [
         new SearchHints('All warnings', 'warnings:*'),
         new SearchHints('Items with a keyword of "trip"', 'keywords:trip'),
+        new SearchHints('Everything since a date: October 4, 2016', 'date:>=20161004'),
         new SearchHints('Everything from 2016, January-December', 'date:2016*'),
         new SearchHints('Range, everything from 2015 and 2016', 'date:[2015* TO date:2016*]'),
         new SearchHints('All trips from 2015 and 2016', 'keywords:trip AND date:[2015* TO date:2016*]'),
