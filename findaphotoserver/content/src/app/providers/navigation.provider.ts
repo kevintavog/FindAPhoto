@@ -26,7 +26,7 @@ export class NavigationProvider {
     }
 
     home() {
-        // If not on the home page and there a text search, retain the text search
+        // If not on the home page and there's a text search, retain the text search
         if (this._searchResultsProvider.searchRequest 
             && this._searchResultsProvider.searchRequest.searchType === 's'
             && !this._router.isActive('search', false)) {
@@ -49,6 +49,15 @@ export class NavigationProvider {
     searchToday() {
         let navigationExtras: NavigationExtras = { queryParams: { } };
         this._router.navigate( ['byday'], navigationExtras );
+
+        // If on the byday page, refresh the search (to clear a different date or page)
+        if (this._router.isActive('byday', false)) {
+            let today = new Date();
+            this._searchResultsProvider.searchRequest.month = today.getMonth() + 1;
+            this._searchResultsProvider.searchRequest.day = today.getDate();
+            this._searchResultsProvider.searchRequest.first = 1;
+            this._searchResultsProvider.search(null);
+        }
     }
 
     searchByDay(month: number, day: number) {
