@@ -63,6 +63,7 @@ export class NavigationProvider {
     searchByDay(month: number, day: number) {
         this._searchResultsProvider.searchRequest.day = day;
         this._searchResultsProvider.searchRequest.month = month;
+        this._searchResultsProvider.searchRequest.first = 1;
         this._searchResultsProvider.searchRequest.searchType = 'd';
 
         let navigationExtras: NavigationExtras = { queryParams: { m: month, d: day } };
