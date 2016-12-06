@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 
 import { Icon, LatLngTuple, Map, Marker } from 'leaflet';
 
@@ -53,7 +54,8 @@ export class SingleItemComponent implements OnInit {
         protected _searchRequestBuilder: SearchRequestBuilder,
         protected _searchResultsProvider: SearchResultsProvider,
         protected searchService: SearchService,
-        private displayer: DataDisplayer) {
+        private displayer: DataDisplayer,
+        private titleService: Title) {
             _searchResultsProvider.searchStartingCallback = (context) => {};
             _searchResultsProvider.searchCompletedCallback = (context) => this.loadItemCompleted();
 
@@ -122,6 +124,8 @@ export class SingleItemComponent implements OnInit {
             && this._searchResultsProvider.searchResults.groups[0].items.length > 0) {
             this.itemInfo = this._searchResultsProvider.searchResults.groups[0].items[0];
 
+            this.titleService.setTitle(this.itemInfo.imageName + ' - FindAPhoto');
+
             // The map can't be initialized until the *ngIf finishes processesing the 'this.itemInfo' update
             // (because the element used for the map doesn't yet exist)
             setInterval( () => {
@@ -149,6 +153,7 @@ export class SingleItemComponent implements OnInit {
             this.loadNearby();
             this.loadSameDate();
         } else {
+            this.titleService.setTitle('FindAPhoto');
             this._searchResultsProvider.serverError = 'The item cannot be found';
         }
     }
