@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 
 
 import { BaseSearchComponent } from './base-search.component';
@@ -29,11 +30,13 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
             private searchResultsProvider: SearchResultsProvider,
             private navigationProvider: NavigationProvider,
             private displayer: DataDisplayer,
-            private fieldsProvider: FieldsProvider) {
+            private fieldsProvider: FieldsProvider,
+            private titleService: Title) {
         super('/search', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
     }
 
     ngOnInit() {
+        this.titleService.setTitle('Search - FindAPhoto');
         this.uiState.showSearch = true;
         this.uiState.showResultCount = true;
         this.fieldsProvider.initialize();
@@ -65,5 +68,6 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
     processSearchResults() {
         this.resultsSearchText = this._searchResultsProvider.searchRequest.searchText;
+        this.titleService.setTitle(this.resultsSearchText + ' - FindAPhoto');
     }
 }

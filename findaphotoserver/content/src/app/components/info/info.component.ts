@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 
 import { DataDisplayer } from '../../providers/data-displayer';
 import { FieldsProvider } from '../../providers/fields.provider';
@@ -46,7 +47,8 @@ export class InfoComponent implements OnInit {
             private searchService: SearchService,
             private displayer: DataDisplayer,
             protected navigationProvider: NavigationProvider,
-            private fieldsProvider: FieldsProvider) {
+            private fieldsProvider: FieldsProvider,
+            private titleService: Title) {
       this.searchHints = [
         new SearchHints('All warnings', 'warnings:*'),
         new SearchHints('Items with a keyword of "trip"', 'keywords:trip'),
@@ -60,6 +62,7 @@ export class InfoComponent implements OnInit {
     }
 
     ngOnInit() {
+      this.titleService.setTitle('Info - FindAPhoto');
       this.fieldsProvider.initialize();
       this.serverError = null;
       this.searchService.indexStats('duplicateCount,imageCount,paths,versionNumber,videoCount,warningCount').subscribe(

@@ -1,6 +1,7 @@
 
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 
 import { Icon, LatLngTuple, Map, Marker } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
@@ -52,13 +53,15 @@ export class MapComponent implements OnInit {
         private route: ActivatedRoute,
         private navigationProvider: NavigationProvider,
         private searchResultsProvider: SearchResultsProvider,
-        private displayer: DataDisplayer) {
+        private displayer: DataDisplayer,
+        private titleService: Title) {
 
             searchResultsProvider.searchStartingCallback = (context) => {};
             searchResultsProvider.searchCompletedCallback = (context) => this.mapSearchCompleted();
     }
 
     ngOnInit() {
+        this.titleService.setTitle('Map - FindAPhoto');
         this.navigationProvider.initialize();
         this.searchResultsProvider.initializeRequest(MapComponent.QueryProperties, 's');
         this.searchResultsProvider.searchRequest.pageCount = 100;

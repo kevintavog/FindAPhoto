@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 
 import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
@@ -26,11 +27,13 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         searchResultsProvider: SearchResultsProvider,
         navigationProvider: NavigationProvider,
         private displayer: DataDisplayer,
-        private fieldsProvider: FieldsProvider) {
+        private fieldsProvider: FieldsProvider,
+        private titleService: Title) {
             super('/bylocation', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
         }
 
     ngOnInit() {
+        this.titleService.setTitle('Nearby - FindAPhoto');
         this.uiState.showSearch = false;
         this.uiState.showDistance = true;
         this.uiState.showGroup = false;

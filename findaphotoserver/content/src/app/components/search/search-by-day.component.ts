@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 
 import { BaseSearchComponent } from './base-search.component';
 import { SearchRequestBuilder } from '../../models/search.request.builder';
@@ -32,7 +33,8 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
       private searchResultsProvider: SearchResultsProvider,
       private navigationProvider: NavigationProvider,
       private displayer: DataDisplayer,
-      private fieldsProvider: FieldsProvider) {
+      private fieldsProvider: FieldsProvider,
+      private titleService: Title) {
           super('/byday', router, route, location, searchRequestBuilder, searchResultsProvider, navigationProvider, fieldsProvider);
     }
 
@@ -61,6 +63,9 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
         this.typeLeftButtonText = this.byDayString(this._searchResultsProvider.searchResults.previousAvailableByDay);
         this.typeRightButtonClass = 'fa fa-arrow-right';
         this.typeRightButtonText = this.byDayString(this._searchResultsProvider.searchResults.nextAvailableByDay);
+
+        this.titleService.setTitle(SearchByDayComponent.monthNames[
+            this.activeDate.getMonth()] + ' ' + this.activeDate.getDate() + ' - FindAPhoto');
     }
 
     byDayString(byday: ByDayResult) {
