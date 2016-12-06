@@ -14,6 +14,8 @@ export class FieldsProvider {
     }
 
     initialize() {
+        this.nameWithValues = null;
+        this.values = null;
         if (this.initialized) { return; }
 
         this.searchService.indexFields().subscribe(

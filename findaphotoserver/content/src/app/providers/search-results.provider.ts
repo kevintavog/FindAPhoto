@@ -33,7 +33,6 @@ export class SearchResultsProvider {
     search(context: Map<string, any>) {
         this.searchResults = undefined;
         this.serverError = undefined;
-
         if (this.searchStartingCallback) {
             this.searchStartingCallback(context);
         }

@@ -40,16 +40,15 @@ export class NavigationProvider {
             this._router.navigate( ['search'], navigationExtras );
             this._searchResultsProvider.search(null);
         } else {
+            this._searchResultsProvider.setEmptyRequest();
             let navigationExtras: NavigationExtras = { queryParams: { } };
             this._router.navigate( ['search'], navigationExtras );
-            this._searchResultsProvider.setEmptyRequest();
         }
     }
 
     searchToday() {
         let navigationExtras: NavigationExtras = { queryParams: { } };
         this._router.navigate( ['byday'], navigationExtras );
-        this._searchResultsProvider.search(null);
     }
 
     searchByDay(month: number, day: number) {
