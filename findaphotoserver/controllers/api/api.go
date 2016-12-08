@@ -106,13 +106,17 @@ func float64FromQuery(ctx *lars.Ctx, name string) float64 {
 func intFromQuery(ctx *lars.Ctx, name string, defaultValue int) int {
 	s := ctx.Request().Form.Get(name)
 	if s != "" {
-		v, err := strconv.Atoi(s)
-		if err != nil {
-			panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not an int: %s", name, s)})
-		}
-		return v
+		return intFromString(name, s)
 	}
 	return defaultValue
+}
+
+func intFromString(name string, contents string) int {
+	v, err := strconv.Atoi(contents)
+	if err != nil {
+		panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not an int: %s", name, contents)})
+	}
+	return v
 }
 
 func boolFromQuery(ctx *lars.Ctx, name string, defaultValue bool) bool {

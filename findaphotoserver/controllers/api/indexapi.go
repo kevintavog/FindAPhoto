@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -77,19 +78,28 @@ func IndexFieldValues(c lars.Context) {
 		panic(&InvalidRequest{message: "parseFormError", err: err})
 	}
 
-	fieldName := fc.Ctx.Request().Form.Get("field")
-	searchText := fc.Ctx.Request().Form.Get("q")
-	drilldownOptions := search.NewDrilldownOptions()
-	populateDrilldownOptions(fc, drilldownOptions)
+	fc.AppContext.FieldLogger.Time("fieldValues", func() {
+		fieldName := fc.Ctx.Request().Form.Get("field")
+		searchText := fc.Ctx.Request().Form.Get("q")
+		month := fc.Ctx.Request().Form.Get("month")
+		day := fc.Ctx.Request().Form.Get("day")
 
-	values := make(map[string]interface{})
-	values["name"] = fieldName
-	values["values"] = getTopFieldValues(fieldName, 20, searchText, drilldownOptions)
+		fc.AppContext.FieldLogger.Add("field", fieldName)
 
-	response := make(map[string]interface{})
-	response["values"] = values
+		drilldownOptions := search.NewDrilldownOptions()
+		populateDrilldownOptions(fc, drilldownOptions)
 
-	fc.WriteResponse(response)
+		values := make(map[string]interface{})
+		values["name"] = fieldName
+		values["values"] = getTopFieldValues(fieldName, 20, searchText, month, day, drilldownOptions)
+
+		response := make(map[string]interface{})
+		response["values"] = values
+
+		fc.AppContext.FieldLogger.Add("count", strconv.Itoa(len(values)))
+
+		fc.WriteResponse(response)
+	})
 }
 
 func getValue(name string, client *elastic.Client) interface{} {
@@ -191,30 +201,42 @@ func getMappedFields() []string {
 	return allFields
 }
 
-func getTopFieldValues(fieldName string, maxCount int, searchText string, drilldownOptions *search.DrilldownOptions) []string {
+func getTopFieldValues(fieldName string, maxCount int, searchText string, monthString string, dayString string, drilldownOptions *search.DrilldownOptions) []string {
+
+	var query elastic.Query
+	if len(monthString) > 0 || len(dayString) > 0 {
+		if len(searchText) > 0 {
+			panic(&InvalidRequest{message: "Either 'q' OR 'month' & 'day' should be specified, not both"})
+		}
+
+		month := intFromString("month", monthString)
+		day := intFromString("day", dayString)
+
+		query = elastic.NewTermQuery("dayofyear", common.DayOfYear(month, day))
+	} else {
+		// This is gross - for reasons I don't understand, when using the match all query, the field
+		// enumeration/aggregations come back empty when combined with drilldowns.
+		// But using the wildcard works...
+		if searchText == "" {
+			searchText = "*"
+		}
+		//		query = elastic.NewMatchAllQuery()
+		//	} else {
+		query = elastic.NewQueryStringQuery(searchText).
+			Field("path"). // Folder name
+			Field("monthname").
+			Field("dayname").
+			Field("keywords").
+			Field("placename") // Full reverse location lookup
+		//	}
+	}
+
 	internalFieldName, _ := common.GetIndexFieldName(fieldName)
 	if _, notSupported := fieldsAggregateDisallowed[internalFieldName]; notSupported {
 		return make([]string, 0)
 	}
 
 	indexFieldName, _ := common.GetIndexFieldName(fieldName)
-
-	// This is gross - for reasons I don't understand, when using the match all query, the field
-	// enumeration/aggregations come back empty when combined with drilldowns.
-	// But using the wildcard works...
-	var query elastic.Query
-	if searchText == "" {
-		searchText = "*"
-	}
-	//		query = elastic.NewMatchAllQuery()
-	//	} else {
-	query = elastic.NewQueryStringQuery(searchText).
-		Field("path"). // Folder name
-		Field("monthname").
-		Field("dayname").
-		Field("keywords").
-		Field("placename") // Full reverse location lookup
-		//	}
 
 	client := common.CreateClient()
 	searchService := client.Search().
@@ -229,10 +251,6 @@ func getTopFieldValues(fieldName string, maxCount int, searchText string, drilld
 	if err != nil {
 		panic(&InvalidRequest{message: "Failed searching for field values", err: err})
 	}
-
-	//	for key, val := range result.Aggregations {
-	//		fmt.Printf("Aggregation: '%s' = '%s'\n", key, val)
-	//	}
 
 	values := make([]string, 0)
 	fieldValues, found := result.Aggregations.Terms("field")

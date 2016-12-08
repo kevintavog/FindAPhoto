@@ -212,10 +212,18 @@ console.log('sort by %o', sortType);
     }
 
     populateFieldValues(fieldName: string) {
-        this._fieldsProvider.getValuesForFieldWithSearch(
-            fieldName,
-            this._searchResultsProvider.searchRequest.searchText,
-            this._searchResultsProvider.searchRequest.drilldown);
+        if (this._searchResultsProvider.searchRequest.searchType === 'd') {
+            this._fieldsProvider.getValuesForFieldByDay(
+                fieldName,
+                this._searchResultsProvider.searchRequest.month,
+                this._searchResultsProvider.searchRequest.day,
+                this._searchResultsProvider.searchRequest.drilldown);
+        } else {
+            this._fieldsProvider.getValuesForFieldWithSearch(
+                fieldName,
+                this._searchResultsProvider.searchRequest.searchText,
+                this._searchResultsProvider.searchRequest.drilldown);
+        }
     }
 
     // Generate the selected categories from the drilldown. The format is 'category name':val1,val2' - each category is

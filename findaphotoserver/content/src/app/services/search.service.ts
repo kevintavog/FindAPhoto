@@ -80,6 +80,17 @@ export class SearchService {
             .catch(this.handleError);
     }
 
+    indexFieldValuesByDay(fieldName: string, month: number, day: number, drilldown: string) {
+        let url = '/api/index/fields/' + fieldName + '?month=' + month + '&day=' + day;
+        if (drilldown != null && drilldown.length > 0) {
+            url += '&drilldown=' + drilldown;
+        }
+
+        return this._http.get(url)
+            .map(response => response.json())
+            .catch(this.handleError);
+    }
+
     private handleError(response: Response) {
         if (response.type === ResponseType.Error) {
             return Observable.throw('Server not accessible');

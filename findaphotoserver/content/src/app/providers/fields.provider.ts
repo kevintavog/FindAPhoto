@@ -58,4 +58,19 @@ export class FieldsProvider {
             }
         );
     }
+
+    getValuesForFieldByDay(fieldName: string, month: number, day: number, drilldown: string) {
+        this.values = null;
+        this.serverError = null;
+        this.nameWithValues = fieldName;
+
+        this.searchService.indexFieldValuesByDay(fieldName, month, day, drilldown).subscribe(
+            results => {
+                this.values = results.values.values;
+            },
+            error => {
+              this.serverError = error;
+            }
+        );
+    }
 }

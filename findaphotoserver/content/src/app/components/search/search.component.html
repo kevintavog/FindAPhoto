@@ -86,9 +86,14 @@
             </div>
 
             <div *ngIf="fieldsProvider.values != null">
-                <div> Top values for '{{fieldsProvider.nameWithValues}}'</div>
-                <div class="fieldValueInfo" *ngFor="let fv of fieldsProvider.values">
-                    {{fv}}
+                <div *ngIf="fieldsProvider.values.length == 0">
+                    <div> No values for '{{fieldsProvider.nameWithValues}}'</div>
+                </div>
+                <div *ngIf="fieldsProvider.values.length > 0">
+                    <div> Top values for '{{fieldsProvider.nameWithValues}}'</div>
+                    <div class="fieldValueInfo" *ngFor="let fv of fieldsProvider.values">
+                        {{fv}}
+                    </div>
                 </div>
             </div>
         </div>
