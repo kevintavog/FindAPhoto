@@ -43,7 +43,7 @@ export interface SearchCategory {
     details: SearchCategoryDetail[];
 }
 
-export interface SearchCategoryDetail {
+export class SearchCategoryDetail {
     count: number;
     value: string;
     field: string;
@@ -51,6 +51,7 @@ export interface SearchCategoryDetail {
 
     // Fields added by the client side
     displayValue: string;
+    displayPath: string;
     selected: boolean;
     isOpen: boolean;
 }

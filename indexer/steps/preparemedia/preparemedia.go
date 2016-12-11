@@ -190,6 +190,7 @@ func populateDateTime(media *common.Media, candidate *common.CandidateFile) {
 			candidate.AddWarning(fmt.Sprintf(
 				"Failed parsing CreateDate '%s': %s (in %s)", candidate.Exif.Quicktime.CreateDate, err.Error(), candidate.FullPath))
 		}
+		dateTime = dateTime.In(time.Local)
 	}
 
 	if dateTime.IsZero() && candidate.Exif.Quicktime.ContentCreateDate != "" {

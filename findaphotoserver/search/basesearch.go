@@ -24,6 +24,10 @@ type DrilldownOptions struct {
 	Drilldown map[string][]string
 }
 
+type DrilldownValues struct {
+	Values []string
+}
+
 type SearchResult struct {
 	TotalMatches int64
 	Groups       []*SearchGroup
@@ -326,30 +330,65 @@ func AddDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 	drilldownQuery := elastic.NewBoolQuery()
 	drilldownQuery.Must(*searchQuery)
 
-	locationQueryList := make([]*elastic.TermQuery, 0)
-	dateQueryList := make([]*elastic.ScriptQuery, 0)
+	locationQueryList := make([]interface{}, 0)
+	dateQueryList := make([]interface{}, 0)
 
 	for key, value := range drilldownOptions.Drilldown {
-		if isLocationField(key) {
-			for _, v := range value {
-				locationQueryList = append(locationQueryList, elastic.NewTermQuery(getLocationFieldName(key), fmt.Sprintf("%s", v)))
+		fieldName := key
+
+		keyGroup := strings.Split(key, "~")
+		isHierarchical := len(keyGroup) > 1
+		if isHierarchical {
+			fieldName = keyGroup[0]
+		}
+
+		if isLocationField(fieldName) {
+			if isHierarchical {
+				for _, valueSet := range value {
+					valueGroup := strings.Split(valueSet, "~")
+					q := elastic.NewBoolQuery()
+					for index, _ := range keyGroup {
+						fieldQuery := elastic.NewTermQuery(getLocationFieldName(keyGroup[index]), fmt.Sprintf("%s", valueGroup[index]))
+						q.Must(fieldQuery)
+					}
+
+					locationQueryList = append(locationQueryList, q)
+				}
+			} else {
+				for _, v := range value {
+					locationQueryList = append(locationQueryList, elastic.NewTermQuery(getLocationFieldName(fieldName), fmt.Sprintf("%s", v)))
+				}
 			}
 
-		} else if isDateField(key) {
-			for _, v := range value {
-				script := elastic.NewScriptInline(getDateFieldQuery(key)).Lang("painless").Param("dateValue", v)
-				dateQueryList = append(dateQueryList, elastic.NewScriptQuery(script))
-			}
+		} else if isDateField(fieldName) {
+			if isHierarchical {
+				// For each set, add a date query for each key/value AND'ed together
+				for _, valueSet := range value {
+					valueGroup := strings.Split(valueSet, "~")
+					q := elastic.NewBoolQuery()
+					for index, _ := range keyGroup {
+						script := elastic.NewScriptInline(getDateFieldQuery(keyGroup[index])).Lang("painless").Param("dateValue", valueGroup[index])
+						q.Must(elastic.NewScriptQuery(script))
+					}
 
+					dateQueryList = append(dateQueryList, q)
+				}
+			} else {
+				// If a date field, probably 'dateYear', is specified, it can be one of a few - OR them together
+				for _, v := range value {
+					script := elastic.NewScriptInline(getDateFieldQuery(fieldName)).Lang("painless").Param("dateValue", v)
+					dateQueryList = append(dateQueryList, elastic.NewScriptQuery(script))
+				}
+			}
 		} else {
 			fieldQuery := elastic.NewBoolQuery()
 			for _, v := range value {
-				fieldName, overridden := common.GetIndexFieldName(key)
-				fieldValue := v
+				indexFieldName, overridden := common.GetIndexFieldName(fieldName)
+				indexFieldValue := v
 				if !overridden {
-					fieldValue = strings.ToLower(v)
+					indexFieldValue = strings.ToLower(v)
 				}
-				fieldQuery.Should(elastic.NewTermQuery(fieldName, fieldValue))
+				fieldQuery.Should(elastic.NewTermQuery(indexFieldName, indexFieldValue))
 			}
 			drilldownQuery.Must(fieldQuery)
 		}
@@ -358,7 +397,11 @@ func AddDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 	if len(locationQueryList) > 0 {
 		locationQuery := elastic.NewBoolQuery()
 		for _, q := range locationQueryList {
-			locationQuery.Should(q)
+			if termQuery, ok := q.(*elastic.TermQuery); ok {
+				locationQuery.Should(termQuery)
+			} else {
+				locationQuery.Should(q.(*elastic.BoolQuery))
+			}
 		}
 		drilldownQuery.Must(locationQuery)
 	}
@@ -366,13 +409,17 @@ func AddDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 	if len(dateQueryList) > 0 {
 		dateQuery := elastic.NewBoolQuery()
 		for _, q := range dateQueryList {
-			dateQuery.Should(q)
+			if scriptQuery, ok := q.(*elastic.ScriptQuery); ok {
+				dateQuery.Should(scriptQuery)
+			} else {
+				dateQuery.Should(q.(*elastic.BoolQuery))
+			}
 		}
 		drilldownQuery.Must(dateQuery)
 	}
 
 	//	src, _ := drilldownQuery.Source()
-	//	dataMap, _ := json.Marshal(src)
+	//	dataMap, _ := json.MarshalIndent(src, "", "    ")
 	//	jsonString := string(dataMap)
 	//	fmt.Printf("drilldown: '%s'\n", jsonString)
 

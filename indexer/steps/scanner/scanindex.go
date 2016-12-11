@@ -50,7 +50,6 @@ func RemoveFiles() {
 
 				if _, err = os.Stat(fullPath); os.IsNotExist(err) {
 					removeDocument = true
-					log.Info("File doesn't exist: %s", fullPath)
 				}
 			}
 

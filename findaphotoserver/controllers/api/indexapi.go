@@ -78,7 +78,7 @@ func IndexFieldValues(c lars.Context) {
 		panic(&InvalidRequest{message: "parseFormError", err: err})
 	}
 
-	fc.AppContext.FieldLogger.Time("fieldValues", func() {
+	fc.AppContext.FieldLogger.Time("", func() {
 		fieldName := fc.Ctx.Request().Form.Get("field")
 		searchText := fc.Ctx.Request().Form.Get("q")
 		month := fc.Ctx.Request().Form.Get("month")
@@ -89,14 +89,16 @@ func IndexFieldValues(c lars.Context) {
 		drilldownOptions := search.NewDrilldownOptions()
 		populateDrilldownOptions(fc, drilldownOptions)
 
+		fieldValues := getTopFieldValues(fieldName, 20, searchText, month, day, drilldownOptions)
+
 		values := make(map[string]interface{})
 		values["name"] = fieldName
-		values["values"] = getTopFieldValues(fieldName, 20, searchText, month, day, drilldownOptions)
+		values["values"] = fieldValues
 
 		response := make(map[string]interface{})
 		response["values"] = values
 
-		fc.AppContext.FieldLogger.Add("count", strconv.Itoa(len(values)))
+		fc.AppContext.FieldLogger.Add("count", strconv.Itoa(len(fieldValues)))
 
 		fc.WriteResponse(response)
 	})

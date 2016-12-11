@@ -314,6 +314,9 @@ func populateDrilldownOptions(fc *applicationglobals.FpContext, drilldownOptions
 		panic(&InvalidRequest{message: "parseFormError", err: err})
 	}
 
+	// drilldown=dateYear~dateMonth:2003~May_dateYear~dateMonth:2004~June
+
+	// drilldown=dateYear:2016+dateMonth:December_dateYear:2016+dateMonth:November_cityname:Seattle,Berlin
 	// Drilldown is provided as 'field1:val1-1,val1-2_field2:val2-1' - each field/value set is seperated by '_',
 	// the field & values are separated by ':' and the values are separated by ','
 	// Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"

@@ -119,7 +119,7 @@
 
     <div *ngIf="selectedCategories.length > 0" class="c-tags c-tags__container" >
         <button *ngFor="let scd of selectedCategories" type="button" class="c-button c-tag u-bg-brand" (click)="removeSelectedCategory(scd)">
-            {{scd.value}}
+            {{scd.displayPath}}
             <span class="c-tag__close">×</span>
         </button>
     </div>

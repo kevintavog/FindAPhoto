@@ -47,7 +47,7 @@ export abstract class BaseSearchComponent implements OnDestroy {
             _searchResultsProvider.searchStartingCallback = (context) => this.searchStartingCallback(context);
             _searchResultsProvider.searchCompletedCallback = (context) => this.searchCompletedCallback(context);
 
-            _navigationProvider.updateSearchCallback = () => this.internalSearch(true);
+            _navigationProvider.updateSearchCallback = () => { console.log('via updateSearchCallBack'); this.internalSearch(true) };
     }
 
     ngOnDestroy() {
@@ -74,7 +74,7 @@ export abstract class BaseSearchComponent implements OnDestroy {
         if (this._searchResultsProvider.currentPage > 1) {
             params['p'] = this._searchResultsProvider.currentPage;
         }
-
+// console.log('updating URL')
         let navigationExtras: NavigationExtras = { queryParams: params };
         this._router.navigate( [this._pageRoute], navigationExtras);
     }
@@ -88,6 +88,24 @@ export abstract class BaseSearchComponent implements OnDestroy {
     sortBy(sortType: string, sortDisplayName: string) {
 console.log('sort by %o', sortType);
         this.uiState.sortMenuDisplayText = sortDisplayName;
+    }
+
+    internalSearch(updateUrl: boolean) {
+        let result = this.generateDrilldown();
+
+console.log('internalSearch(%s)', updateUrl)
+
+        if (this.drilldownFromUrl) {
+            this._searchResultsProvider.searchRequest.drilldown = this.drilldownFromUrl;
+        } else {
+            this._searchResultsProvider.searchRequest.drilldown = result.drilldown;
+        }
+
+        let context = new Map<string, any>();
+        context['updateUrl'] = updateUrl;
+        context['selectedCategories'] = result.categories;
+
+        this._searchResultsProvider.search(context);
     }
 
     searchStartingCallback(context: Map<string, any>) {
@@ -104,111 +122,18 @@ console.log('sort by %o', sortType);
         if (!context) { return; }
 
         let selectedCategories: Map<string, string[]> = context['selectedCategories'];
-        selectedCategories.forEach((value, key) => {
-            this.selectSavedCategories(key.split('/'), value);
-        });
 
         // On a refresh with drilldown, we need to select the proper categories
         if (this.drilldownFromUrl) {
-            this.selectCategoriesFromDrilldown(this.drilldownFromUrl);
+            selectedCategories = this.drilldownToCategories(this.drilldownFromUrl);
             this.drilldownFromUrl = null;
         }
 
-        if (context['updateUrl']) { this.updateUrl(); }
-    }
-
-    internalSearch(updateUrl: boolean) {
-        let result = this.generateDrilldown();
-
-        if (this.drilldownFromUrl) {
-            this._searchResultsProvider.searchRequest.drilldown = this.drilldownFromUrl;
-        } else {
-            this._searchResultsProvider.searchRequest.drilldown = result.drilldown;
-        }
-
-        let context = new Map<string, any>();
-        context['updateUrl'] = updateUrl;
-        context['selectedCategories'] = result.categories;
-
-        this._searchResultsProvider.search(context);
-    }
-
-    removeSelectedCategory(scd: SearchCategoryDetail) {
-        scd.selected = false;
-        this.internalSearch(true);
-    }
-
-    selectSavedCategories(categoryPath: string[], valueArray: string[]) {
-        if (this._searchResultsProvider.searchResults === undefined 
-            || this._searchResultsProvider.searchResults.categories === undefined) {
-            return;
-        }
-
-        for (let category of this._searchResultsProvider.searchResults.categories) {
-            if (category.field === categoryPath[0] && category.details !== undefined) {
-                this.selectSavedCategoryChildren(category.details, categoryPath.slice(1), valueArray);
-            }
-        }
-    }
-
-    selectSavedCategoryChildren(details: SearchCategoryDetail[], childPath: string[], valueArray: string[]) {
-        if (childPath.length === 0) {
-            for (let d of details) {
-                if (valueArray.indexOf(d.value) >= 0) {
-                    d.selected = true;
-                    this.selectedCategories.push(d);
-                }
-            }
-        } else {
-            for (let d of details) {
-                if (childPath[0] === d.field) {
-                    this.selectSavedCategoryChildren(d.details, childPath.slice(1), valueArray);
-                }
-            }
-        }
-    }
-
-    saveSelectedCategories(field: string, details: SearchCategoryDetail[], selectedCategories: Map<string, string[]>) {
-        for (let scd of details) {
-            if (scd.selected) {
-                if (selectedCategories.has(field)) {
-                    selectedCategories.get(field).push(scd.value);
-                } else {
-                    selectedCategories.set(field, [scd.value]);
-                }
-            }
-
-            if (scd.details !== undefined) {
-                this.saveSelectedCategories(field + '/' + scd.field, scd.details, selectedCategories);
-            }
-        }
-    }
-
-    // Generate the drilldown from selected categories. The format is 'category name':val1,val2' - each category is
-    // separated by '_'. For heirarchecal categories, the 'category name' is the selected value
-    //      Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
-    generateDrilldown() {
-        let selectedCategories = new Map<string, string[]>();
-        if (this._searchResultsProvider.searchResults != null && this._searchResultsProvider.searchResults.categories != null) {
-            for (let cat of this._searchResultsProvider.searchResults.categories) {
-               this.saveSelectedCategories(cat.field, cat.details, selectedCategories);
-            }
-        }
-        return { drilldown: this.generateDrilldownWithCategories(selectedCategories), categories: selectedCategories };
-    }
-
-    generateDrilldownWithCategories(selectedCategories: Map<string, string[]>): string {
-        let drilldown = '';
         selectedCategories.forEach((value, key) => {
-            let categories = key.split('/');
-            if (drilldown.length > 0) {
-                drilldown += '_';
-            }
-
-            drilldown += categories[categories.length - 1] + ':' + value.join(',');
+            this.selectSavedCategories(key.split('~'), value);
         });
 
-        return drilldown;
+        if (context['updateUrl']) { this.updateUrl(); }
     }
 
     populateFieldValues(fieldName: string) {
@@ -226,60 +151,157 @@ console.log('sort by %o', sortType);
         }
     }
 
-    // Generate the selected categories from the drilldown. The format is 'category name':val1,val2' - each category is
-    // separated by '_'. For heirarchecal categories, the 'category name' is the selected value
-    //      Example: "countryName:Canada_stateName:Washington,Ile-de-France_keywords:trip,flower"
-    selectCategoriesFromDrilldown(drilldown: string) {
-        if (!drilldown) { return; }
-        if (!this._searchResultsProvider.searchResults || !this._searchResultsProvider.searchResults.categories) {
-            console.log('There are no categories in the search results - unable to select any categories: "%s"', drilldown);
+    removeSelectedCategory(scd: SearchCategoryDetail) {
+        scd.selected = false;
+        this.internalSearch(true);
+    }
+
+    selectSavedCategories(categoryPath: string[], valueArray: string[]) {
+        if (this._searchResultsProvider.searchResults === undefined 
+            || this._searchResultsProvider.searchResults.categories === undefined) {
+            console.log('No categories in search results, cannot do anything...')
+            return;
         }
 
-        for (let categoryValue of drilldown.split('_')) {
-            let tokens = categoryValue.split(':')
-            if (tokens.length != 2) {
-                console.log('Ignoring unexpected category value: "%s", cannot parse it', categoryValue)
-            } else {
-                let categoryName = tokens[0]
-                for (let value of tokens[1].split(',')) {
-                    let valueSet = false;
-                    for (let cat of this._searchResultsProvider.searchResults.categories) {
-                        valueSet = this.selectCategoryAndValue(categoryName, value, cat.field, cat.details)
-                        if (valueSet) {
-                            break;
-                        } 
+        // valueArray item can be a path, separated by ~
+        var valuePath: string[][] = [];
+        valueArray.forEach( val => {
+            var pathArray = val.split("~");
+            valuePath.push(pathArray);
+        });
+
+        for (let category of this._searchResultsProvider.searchResults.categories) {
+            if (category.field === categoryPath[0] && category.details !== undefined) {
+                valuePath.forEach( vp => {
+                    this.selectSavedCategoryChildren(category.details, categoryPath.slice(1), vp, '');
+                });
+            }
+        }
+    }
+
+    selectSavedCategoryChildren(details: SearchCategoryDetail[], childPath: string[], valuePath: string[], displayPathPrefix: string) {
+        for (let d of details) {
+            if (valuePath[0] === d.value) {
+                d.selected = true;
+
+                if (childPath.length == 0) {
+                    d.displayPath = displayPathPrefix + valuePath[0]
+                    this.selectedCategories.push(d);
+                } else {
+                    if (childPath[0] === d.field) {
+                        this.selectSavedCategoryChildren(
+                            d.details, 
+                            childPath.slice(1), 
+                            valuePath.slice(1), 
+                            displayPathPrefix + valuePath[0] + '/');
+                        return;
                     }
 
-                    if (!valueSet) {
-                        console.log('Didn\'t find value "%s", cannot set it for the category "%s"', value, categoryName);
-                    }
+                    console.log('Unable to find child path: %s', childPath[0])
                 }
             }
         }
     }
 
-    // Recursively walk all categories/sub-categories to find a match for a category and value - select it
-    selectCategoryAndValue(categoryName: string, value: string, field: string, details: SearchCategoryDetail[]): boolean {
-        if (categoryName == field) {
-            for (let scd of details) {
-                if (value == scd.value) {
-                    scd.selected = true;
-                    this.selectedCategories.push(scd);
-                    return true;
+    saveSelectedCategories(
+            parent: SearchCategoryDetail, 
+            selectionPrefix: string, 
+            valuePrefix: string, 
+            selectedCategories: Map<string, string[]>): boolean {
+
+        if (!parent.details) { return false; }
+
+        let hasSelection = false;
+        for (let scd of parent.details) {
+            if (scd.selected) {
+                hasSelection = true;
+                let key = selectionPrefix + parent.field;
+                let value = valuePrefix + scd.value;
+
+                let isChildSelected = this.saveSelectedCategories(scd, key + '~', value + '~', selectedCategories)
+                if (!isChildSelected) {
+                    if (selectedCategories.has(key)) {
+                        selectedCategories.get(key).push(value);
+                    } else {
+                        selectedCategories.set(key, [value]);
+                    }
+                }
+
+            } else {
+                this.saveSelectedCategories(scd, '', '', selectedCategories);
+            }
+        }
+
+        return hasSelection;
+    }
+
+    // Generate the drilldown from selected categories. There are two formats, basically:
+    //  1) keywords: <category name>:val1,val2
+    //  2) heirarchecal (dates, locations): <parent name>~<child name>:<parent value>~<child value>
+    // These are separated by '_'.
+    //      Example: countryName~stateName~cityName:Canada~British Columbia~Vancouver_keywords:soccer,flower
+    generateDrilldown() {
+        let selectedCategories = new Map<string, string[]>();
+        if (this._searchResultsProvider.searchResults != null && this._searchResultsProvider.searchResults.categories != null) {
+            for (let cat of this._searchResultsProvider.searchResults.categories) {
+
+                let scd = new SearchCategoryDetail();
+                scd.selected = false;
+                scd.details = cat.details;
+                scd.field = cat.field;
+
+                this.saveSelectedCategories(scd, '', '', selectedCategories);
+            }
+        }
+
+        let url = this.categoriesToDrilldown(selectedCategories);
+        return { drilldown: url, categories: selectedCategories };
+    }
+
+    categoriesToDrilldown(selectedCategories: Map<string, string[]>): string {
+        let drilldown = '';
+        selectedCategories.forEach((value, key) => {
+            if (drilldown.length > 0) {
+                drilldown += '_';
+            }
+
+            if (key.includes('~')) {
+                drilldown += key + ':' + value;
+            } else {
+                drilldown += key + ':' + value.join(',');
+            }
+        });
+
+        return drilldown;
+    }
+
+    drilldownToCategories(drilldown: string): Map<string, string[]> {
+        let selectedCategories = new Map<string, string[]>();
+        if (!drilldown) {
+            return selectedCategories;
+        }
+        if (!this._searchResultsProvider.searchResults || !this._searchResultsProvider.searchResults.categories) {
+            console.log('There are no categories in the search results - unable to select any categories: "%s"', drilldown);
+            return selectedCategories;
+        }
+
+        for (let keyAndValue of drilldown.split('_')) {
+            let tokens = keyAndValue.split(':')
+            if (tokens.length != 2) {
+                console.log('Ignoring unexpected drilldown key/value: "%s", cannot parse it', keyAndValue)
+            } else {
+                let categoryName = tokens[0]
+                for (let value of tokens[1].split(',')) {
+                    if (selectedCategories.has(categoryName)) {
+                        selectedCategories.get(categoryName).push(value);
+                    } else {
+                        selectedCategories.set(categoryName, [value]);
+                    }
                 }
             }
         }
 
-        // Unable to find it directly in the given category - perhaps it's a sub-detail?
-        for (let scd of details) {
-            if (scd.details != null) {
-                if (this.selectCategoryAndValue(categoryName, value, scd.field, scd.details)) {
-                    return true;
-                }
-            }
-        } 
-
-        return false;
+        return selectedCategories;
     }
 
     logCategoryDetails(details: SearchCategoryDetail[], prefix: string) {
