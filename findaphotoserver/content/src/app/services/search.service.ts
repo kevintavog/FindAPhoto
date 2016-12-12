@@ -68,11 +68,15 @@ export class SearchService {
 
     indexFieldValues(fieldName: string, query: string, drilldown: string) {
         let url = '/api/index/fields/' + fieldName;
+
+        let addQuestion = true;
         if (query != null && query.length > 0) {
             url += '?q=' + query;
+            addQuestion = false;
         }
         if (drilldown != null && drilldown.length > 0) {
-            url += '&drilldown=' + drilldown;
+            url += addQuestion ? '?' : '&';
+            url += 'drilldown=' + drilldown;
         }
 
         return this._http.get(url)

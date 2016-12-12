@@ -68,6 +68,10 @@ export class SearchComponent extends BaseSearchComponent implements OnInit {
 
     processSearchResults() {
         this.resultsSearchText = this._searchResultsProvider.searchRequest.searchText;
-        this.titleService.setTitle(this.resultsSearchText + ' - FindAPhoto');
+        if (this.resultsSearchText.length > 0) {
+            this.titleService.setTitle(this.resultsSearchText + ' - FindAPhoto');
+        } else {
+            this.titleService.setTitle(this.resultsSearchText + 'Search all - FindAPhoto');
+        }
     }
 }
