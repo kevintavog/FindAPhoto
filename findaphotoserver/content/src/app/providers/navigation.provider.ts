@@ -7,7 +7,6 @@ import { SearchResultsProvider } from '../providers/search-results.provider';
 
 @Injectable()
 export class NavigationProvider {
-    locationError: string;
     updateSearchCallback: () => void;
 
 
@@ -18,7 +17,6 @@ export class NavigationProvider {
     ) {}
 
     initialize() {
-        this.locationError = undefined;
     }
 
     info() {
@@ -72,29 +70,7 @@ export class NavigationProvider {
     }
 
     searchNearby() {
-        this.locationError = undefined;
-
-        if (window.navigator.geolocation) {
-            let timer = setTimeout( () => this.locationError = 'Unable to get location: timeout', 5000);
-
-            window.navigator.geolocation.getCurrentPosition(
-                (position: Position) => {
-
-                    let navigationExtras: NavigationExtras = {
-                        queryParams: { lat: position.coords.latitude, lon: position.coords.longitude }
-                    };
-
-                    this._router.navigate( ['bylocation'], navigationExtras);
-                },
-                (error: PositionError) => {
-                    this.locationError = 'Unable to get location: ' + error.message + ' (' + error.code + ')';
-                },
-                { timeout: 5000 });
-
-            clearTimeout(timer);
-        } else {
-            this.locationError = 'Unable to get window.navigator.geolocation';
-        }
+        this._router.navigate( ['bylocation']);
     }
 
     searchMap() {

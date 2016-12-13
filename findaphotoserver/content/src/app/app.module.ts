@@ -15,8 +15,9 @@ import { SearchService } from './services/search.service';
 import { SearchRequestBuilder } from './models/search.request.builder';
 
 import { DataDisplayer } from './providers/data-displayer';
-import { NavigationProvider } from './providers/navigation.provider';
 import { FieldsProvider } from './providers/fields.provider';
+import { LocationProvider } from './providers/location.provider';
+import { NavigationProvider } from './providers/navigation.provider';
 
 import { routing } from './app.routes';
 import { AlertsComponent } from './components/alerts/alerts.component';
@@ -51,6 +52,7 @@ import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from
     providers: [
         DataDisplayer,
         FieldsProvider,
+        LocationProvider,
         NavigationProvider,
         SearchRequestBuilder,
         SearchResultsProvider,

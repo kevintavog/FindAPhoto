@@ -16,21 +16,25 @@
 
 <app-alerts></app-alerts>
 
-<div *ngIf="pageMessage != undefined">
+<div *ngIf="pageError">
+    <div class="c-alert c-alert--warning"> {{pageError}} </div>
+</div>
+
+<div *ngIf="pageMessage">
     <div class="page-message">{{pageMessage}}</div>
 </div>
 
-<div *ngIf="pageSubMessage != undefined">
+<div *ngIf="pageSubMessage">
     <div class="sub-page-message">{{pageSubMessage}}</div>
 </div>
 
 
-<div *ngIf="typeLeftButtonText != undefined || typeRightButtonText != undefined">
-    <button class="left-button c-button c-button--success" *ngIf="typeLeftButtonText != undefined" (click)="typeLeftButton()">
-        <i class="{{typeLeftButtonClass}}" *ngIf="typeLeftButtonText != undefined"></i> {{typeLeftButtonText}}
+<div *ngIf="typeLeftButtonText || typeRightButtonText">
+    <button class="left-button c-button c-button--success" *ngIf="typeLeftButtonText" (click)="typeLeftButton()">
+        <i class="{{typeLeftButtonClass}}" *ngIf="typeLeftButtonText"></i> {{typeLeftButtonText}}
     </button>
-    <button class="right-button c-button c-button--success" *ngIf="typeRightButtonText != undefined" (click)="typeRightButton()">
-        {{typeRightButtonText}} <i class="{{typeRightButtonClass}}" *ngIf="typeRightButtonText != undefined"></i>
+    <button class="right-button c-button c-button--success" *ngIf="typeRightButtonText" (click)="typeRightButton()">
+        {{typeRightButtonText}} <i class="{{typeRightButtonClass}}" *ngIf="typeRightButtonText"></i>
     </button>
 </div>
 
@@ -180,7 +184,7 @@
                         <div class="o-grid">
                           <div class="result-set-info-text-left o-grid__cell c-text" >{{item.imageName}}</div>
                           <div class="result-set-info-text-right o-grid__cell c-text">
-                              <a [routerLink]="['/bylocation']" [queryParams]="{ id:item.id, lat:item.latitude, lon:item.longitude }">
+                              <a [routerLink]="['/bylocation']" [queryParams]="{ lat:item.latitude, lon:item.longitude }">
                                   {{item.city}}
                               </a>
                           </div>

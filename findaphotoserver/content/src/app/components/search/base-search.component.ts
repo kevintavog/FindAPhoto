@@ -23,6 +23,7 @@ export abstract class BaseSearchComponent implements OnDestroy {
 
     selectedCategories: SearchCategoryDetail[] = [];
 
+    pageError: string;
     pageMessage: string;
     pageSubMessage: string;
     typeLeftButtonText: string;
