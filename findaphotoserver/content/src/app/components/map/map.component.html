@@ -7,11 +7,19 @@
         <app-alerts></app-alerts>
 
         <div >
-            <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="fitBounds()">Fit map</button>
+            <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="fitBounds()">
+                Fit map
+            </button>
+            <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="nearby()">
+                <i class="fa fa-location-arrow fa-1x"></i>
+            </button>
         </div>
 
 
-        <div *ngIf="isLoading" >
+        <div *ngIf="pageError" style="margin-left:10px;" >
+            {{pageError}}
+        </div>
+        <div *ngIf="isLoading && !pageError" >
             <div style="float:left; margin-left:10px; margin-right:10px;" >
                 Loading {{totalMatches}} items:
             </div>

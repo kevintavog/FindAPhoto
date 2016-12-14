@@ -3,12 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
-import { Icon, LatLngTuple, Map, Marker } from 'leaflet';
+import { Circle, Icon, LatLngTuple, Map, Marker } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results';
 
 import { DataDisplayer } from '../../providers/data-displayer';
+import { LocationProvider } from '../../providers/location.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -28,6 +29,7 @@ export class MapComponent implements OnInit {
     map: Map;
     cluster: MarkerClusterGroup;
     selectedMarker: Marker;
+    currentLocationCircle: Circle;
 
     currentItem: SearchItem;
 
@@ -35,8 +37,13 @@ export class MapComponent implements OnInit {
     northEastCornerLatLng: LatLngTuple;
 
     isLoading: boolean;
+    pageError: string;
     totalMatches: number;
     matchesRetrieved: number;
+    maxMatchesAllowed: number;      // Only set for a nearby search
+    fitBoundsOnFirstResults: boolean;
+
+    getCurrentLocationResponded: boolean;
 
 
     get percentageLoadedWidth() {
@@ -54,10 +61,12 @@ export class MapComponent implements OnInit {
         private navigationProvider: NavigationProvider,
         private searchResultsProvider: SearchResultsProvider,
         private displayer: DataDisplayer,
-        private titleService: Title) {
+        private titleService: Title,
+        private locationProvider: LocationProvider) {
 
             searchResultsProvider.searchStartingCallback = (context) => {};
             searchResultsProvider.searchCompletedCallback = (context) => this.mapSearchCompleted();
+            this.fitBoundsOnFirstResults = true;
     }
 
     ngOnInit() {
@@ -96,10 +105,13 @@ export class MapComponent implements OnInit {
     }
 
     startSearch() {
+        this.currentItem = null;
+        this.pageError = null;
         this.southWestCornerLatLng = [90, 180];
         this.northEastCornerLatLng = [-90, -180];
 
         this.totalMatches = this.matchesRetrieved = 0;
+        this.searchResultsProvider.searchRequest.first = 1;
         this.isLoading = true;
         this.searchResultsProvider.search(null);
     }
@@ -145,14 +157,19 @@ export class MapComponent implements OnInit {
 
 
             // Only fit bounds after the first search - otherwise, the map will jump around, which is unpleasant.
-            if (request.first === 1) {
+            if (this.fitBoundsOnFirstResults && request.first === 1) {
                 this.fitBounds();
             }
 
-            this.totalMatches = results.totalMatches;
+            if (this.maxMatchesAllowed > 0) {
+                this.totalMatches = Math.min(results.totalMatches, this.maxMatchesAllowed);
+            } else {
+                this.totalMatches = results.totalMatches;
+            }
+
             this.matchesRetrieved = request.first + results.resultCount - 1;
 
-            if (this.matchesRetrieved < this.totalMatches) {
+            if (results.resultCount > 0 && this.matchesRetrieved < this.totalMatches) {
                 this.searchResultsProvider.searchRequest.first = request.first + request.pageCount;
                 this.searchResultsProvider.search(null);
             } else {
@@ -161,12 +178,45 @@ export class MapComponent implements OnInit {
         }
     }
 
-    showItem(item: SearchItem) {
-        console.log(`showItem: ${item.imageName}`);
-    }
-
     fitBounds() {
         this.map.fitBounds([this.southWestCornerLatLng, this.northEastCornerLatLng], null);
+    }
+
+    nearby() {
+        this.cluster.clearLayers();
+        this.currentItem = null;
+        this.isLoading = true;
+        this.maxMatchesAllowed = 2000;
+        this.fitBoundsOnFirstResults = false;
+        this.pageError = 'Getting current location...';
+
+        this.locationProvider.getCurrentLocation(
+            location => {
+                this.pageError = '';
+                this.getCurrentLocationResponded = true;
+                this.searchResultsProvider.searchRequest.searchType = 'l';
+                this.searchResultsProvider.searchRequest.latitude = location.latitude;
+                this.searchResultsProvider.searchRequest.longitude = location.longitude;
+                this.searchResultsProvider.searchRequest.maxKilometers = 10.5;
+
+                if (this.currentLocationCircle) {
+                    this.currentLocationCircle.remove();
+                }
+
+                this.currentLocationCircle = L.circle([location.latitude, location.longitude], { color: '#f00', fillColor: '#f03' });
+                this.currentLocationCircle.addTo(this.map);
+                this.map.setView([location.latitude, location.longitude], 17);
+
+                this.startSearch();
+            },
+            error => {
+                if (this.getCurrentLocationResponded) {
+                    console.log('Ignoring error message after location returned: ' + error)
+                } else {
+                    this.pageError = 'Unable to get current location: ' + error;
+                    this.getCurrentLocationResponded = true;
+                }
+            });
     }
 
     selectMarker(marker: L.Marker) {
@@ -198,8 +248,6 @@ export class MapComponent implements OnInit {
             attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
                 'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
         }).addTo(this.map);
-
-        // L.control.scale({ position: 'bottomright' }).addTo(this.map);
 
         this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );
         this.map.addLayer(this.cluster);

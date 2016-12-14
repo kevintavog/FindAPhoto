@@ -99,26 +99,27 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         // Ask the server for something nearby the given location
         this.searchService.searchByLocation(
             this._searchResultsProvider.searchRequest.latitude,
-            this._searchResultsProvider.searchRequest.longitude, 
-             "distancekm,locationName,locationDisplayName", 
-             1, 
-             1, 
-             '').subscribe(
+            this._searchResultsProvider.searchRequest.longitude,
+            0,
+            'distancekm,locationName,locationDisplayName',
+            1,
+            1,
+            '').subscribe(
                 results => {
-                    let messageSet = false
+                    let messageSet = false;
                     if (results.totalMatches > 0) {
                         let item = results.groups[0].items[0]
                         if (item.distancekm <= 500) {
                             this.setLocationName(item.locationName, item.locationDetailedName)
-                            messageSet = true
+                            messageSet = true;
                         }
                     }
-            
+
                     if (!messageSet) {
                         this.setLocationNameFallbacktMessage()
                     }
                 },
-                error => { this.setLocationNameFallbacktMessage() }
+                error => { this.setLocationNameFallbacktMessage(); }
         );
     }
 

@@ -86,6 +86,7 @@ export class SearchRequestBuilder {
             byDayRandom: false,
             latitude: latitude,
             longitude: longitude,
+            maxKilometers: 0,
             drilldown: drilldown };
     }
 }

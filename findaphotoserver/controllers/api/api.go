@@ -103,6 +103,19 @@ func float64FromQuery(ctx *lars.Ctx, name string) float64 {
 	panic(&InvalidRequest{message: fmt.Sprintf("'%s' is missing from the query parameter", name)})
 }
 
+func optionalFloat64FromQuery(ctx *lars.Ctx, name string, defaultValue float64) float64 {
+	s := ctx.Request().Form.Get(name)
+	if s != "" {
+		v, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not a float: %s", name, s)})
+		}
+		return v
+	}
+
+	return defaultValue
+}
+
 func intFromQuery(ctx *lars.Ctx, name string, defaultValue int) int {
 	s := ctx.Request().Form.Get(name)
 	if s != "" {

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/go-playground/lars"
@@ -39,6 +40,12 @@ func populateNearbyOptions(fc *applicationglobals.FpContext) *search.NearbyOptio
 	// The intent of this api is to return the top few closest items - even if they're on the other side of the world
 	nearbyOptions := search.NewNearbyOptions(lat, lon, "13000km")
 	nearbyOptions.MaxCount = intFromQuery(fc.Ctx, "count", 5)
+
+	maxKilometers := optionalFloat64FromQuery(fc.Ctx, "maxKilometers", 13000)
+	if maxKilometers < 1 || maxKilometers > 20000 {
+		panic(&InvalidRequest{message: "maxKilometers must be between 1 and 20,000, inclusive"})
+	}
+	nearbyOptions.Distance = fmt.Sprintf("%fkm", maxKilometers)
 
 	nearbyOptions.Count = intFromQuery(fc.Ctx, "count", nearbyOptions.Count)
 	if nearbyOptions.Count < 1 || nearbyOptions.Count > 100 {

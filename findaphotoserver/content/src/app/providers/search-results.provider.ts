@@ -99,6 +99,7 @@ export class SearchResultsProvider {
                 return this._searchService.searchByLocation(
                     this.searchRequest.latitude,
                     this.searchRequest.longitude,
+                    this.searchRequest.maxKilometers,
                     this.searchRequest.properties,
                     this.searchRequest.first,
                     this.searchRequest.pageCount,
