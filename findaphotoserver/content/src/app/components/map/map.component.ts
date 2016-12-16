@@ -78,7 +78,7 @@ export class MapComponent implements OnInit {
 
 
         this.route.queryParams.subscribe(params => {
-            if ('q' in params || 't' in params) {
+            if ('q' in params && params['q'] !== '') {
                 this.startSearch();
             }
         });
