@@ -9,7 +9,7 @@ import { MarkerClusterGroup } from 'leaflet.markercluster';
 import { SearchItem } from '../../models/search-results';
 
 import { DataDisplayer } from '../../providers/data-displayer';
-import { LocationProvider } from '../../providers/location.provider';
+import { FPLocationAccuracy, LocationProvider } from '../../providers/location.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -43,7 +43,7 @@ export class MapComponent implements OnInit {
     maxMatchesAllowed: number;      // Only set for a nearby search
     fitBoundsOnFirstResults: boolean;
 
-    getCurrentLocationResponded: boolean;
+    locationAccuracy: FPLocationAccuracy;
 
 
     get percentageLoadedWidth() {
@@ -193,7 +193,7 @@ export class MapComponent implements OnInit {
         this.locationProvider.getCurrentLocation(
             location => {
                 this.pageError = '';
-                this.getCurrentLocationResponded = true;
+                this.locationAccuracy = location.accuracy;
                 this.searchResultsProvider.searchRequest.searchType = 'l';
                 this.searchResultsProvider.searchRequest.latitude = location.latitude;
                 this.searchResultsProvider.searchRequest.longitude = location.longitude;
@@ -203,19 +203,21 @@ export class MapComponent implements OnInit {
                     this.currentLocationCircle.remove();
                 }
 
-                this.currentLocationCircle = L.circle([location.latitude, location.longitude], { color: '#f00', fillColor: '#f03' });
+                let radius = 50;
+                let circleProperties = { color: '#0000FF', fillColor: '#00f' };
+                if (this.locationAccuracy !== FPLocationAccuracy.FromDevice) {
+                    radius = 150;
+                    circleProperties = { color: '#DC143C', fillColor: '#FF0000' };
+                }
+
+                this.currentLocationCircle = L.circle([location.latitude, location.longitude], radius, circleProperties);
                 this.currentLocationCircle.addTo(this.map);
                 this.map.setView([location.latitude, location.longitude], 17);
 
                 this.startSearch();
             },
             error => {
-                if (this.getCurrentLocationResponded) {
-                    console.log('Ignoring error message after location returned: ' + error)
-                } else {
-                    this.pageError = 'Unable to get current location: ' + error;
-                    this.getCurrentLocationResponded = true;
-                }
+                this.pageError = 'Unable to get current location: ' + error;
             });
     }
 

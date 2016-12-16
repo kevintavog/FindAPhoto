@@ -8,7 +8,7 @@ import { SearchRequestBuilder } from '../../models/search.request.builder';
 
 import { DataDisplayer } from '../../providers/data-displayer';
 import { FieldsProvider } from '../../providers/fields.provider';
-import { LocationProvider } from '../../providers/location.provider';
+import { FPLocationAccuracy, LocationProvider } from '../../providers/location.provider';
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
@@ -22,7 +22,7 @@ import { SearchService } from '../../services/search.service';
 })
 
 export class SearchByLocationComponent extends BaseSearchComponent implements OnInit {
-    getCurrentLocationResponded: boolean;
+    locationAccuracy: FPLocationAccuracy;
 
 
     constructor(
@@ -51,8 +51,8 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
         this.fieldsProvider.initialize();
         this._searchResultsProvider.initializeRequest(queryProps, 'l');
 
-        if (this._searchResultsProvider.searchRequest.latitude == 0.00 
-                && this._searchResultsProvider.searchRequest.longitude == 0.00) {
+        if (this._searchResultsProvider.searchRequest.latitude === 0.00
+                && this._searchResultsProvider.searchRequest.longitude === 0.00) {
             this.currentLocation();
         } else {
             this.internalSearch(false);
@@ -60,25 +60,19 @@ export class SearchByLocationComponent extends BaseSearchComponent implements On
     }
 
     currentLocation() {
-        this.getCurrentLocationResponded = false;
         this.pageSubMessage = 'Getting current location...';
 
         this.locationProvider.getCurrentLocation(
             location => {
                 this.pageSubMessage = '';
-                this.getCurrentLocationResponded = true;
+                this.locationAccuracy = location.accuracy;
                 this._searchResultsProvider.searchRequest.latitude = location.latitude;
                 this._searchResultsProvider.searchRequest.longitude = location.longitude;
                 this.internalSearch(false);
             },
             error => {
-                if (this.getCurrentLocationResponded) {
-                    console.log('Ignoring error message after location returned: ' + error)
-                } else {
-                    this.pageSubMessage = null;
-                    this.pageError = 'Unable to get current location: ' + error;
-                    this.getCurrentLocationResponded = true;
-                }
+                this.pageSubMessage = null;
+                this.pageError = 'Unable to get current location: ' + error;
             });
     }
 
