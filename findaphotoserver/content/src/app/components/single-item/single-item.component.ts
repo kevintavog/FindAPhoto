@@ -80,7 +80,7 @@ export class SingleItemComponent implements OnInit {
     }
 
     hasLocation() {
-        return this.itemInfo.longitude !== undefined && this.itemInfo.latitude !== undefined;
+        return this.itemInfo.longitude && this.itemInfo.latitude;
     }
 
     firstItem() {
@@ -128,8 +128,9 @@ export class SingleItemComponent implements OnInit {
 
             // The map can't be initialized until the *ngIf finishes processesing the 'this.itemInfo' update
             // (because the element used for the map doesn't yet exist)
-            setInterval( () => {
-                if (this.hasLocation) {
+            let timer = setInterval( () => {
+                clearTimeout(timer);
+                if (this.hasLocation()) {
                     this.initializeMap();
 
                     let location:LatLngTuple = [this.itemInfo.latitude, this.itemInfo.longitude];

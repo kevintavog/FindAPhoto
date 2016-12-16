@@ -53,7 +53,7 @@
                             <i class="fa fa-folder"></i> {{itemInfo.path}}
                         </div>
                         <div class="result-set-info-text-left o-grid__cell c-text">
-                            <a [routerLink]="['/bylocation']" [queryParams]="{ lat:itemInfo.latitude, lon:itemInfo.longitude }">
+                            <a *ngIf="hasLocation()" [routerLink]="['/bylocation']" [queryParams]="{ lat:itemInfo.latitude, lon:itemInfo.longitude }">
                                 <i class="fa fa-map-marker"></i> {{itemInfo.locationName}}
                             </a>
                         </div>
@@ -66,7 +66,7 @@
                             </a>
                         </div>
                         <div class="result-set-info-text-left o-grid__cell c-text">
-                            <a href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
+                            <a *ngIf="hasLocation()" href="http://maps.google.com/maps?q={{itemInfo.latitude}},{{itemInfo.longitude}}">
                                 <i class="fa fa-map"></i> {{displayer.latDms(itemInfo)}}, {{displayer.lonDms(itemInfo)}}
                             </a>
                         </div>
