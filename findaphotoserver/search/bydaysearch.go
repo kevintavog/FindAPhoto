@@ -55,8 +55,19 @@ func (bdo *ByDayOptions) Search() (*SearchResult, error) {
 
 	result, err := invokeSearch(search, nil, grouping, bdo.CategoryOptions, bdo.DrilldownOptions, nil)
 	if err == nil {
-		result.PreviousAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Lt(dayOfYear), false)
-		result.NextAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Gt(dayOfYear), true)
+		if dayOfYear == 1 {
+			// Latest day of the year with matches
+			result.PreviousAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Gt(dayOfYear), false)
+		} else {
+			result.PreviousAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Lt(dayOfYear), false)
+		}
+
+		if dayOfYear == 366 {
+			// The first day of the year with matches
+			result.NextAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Lt(dayOfYear), true)
+		} else {
+			result.NextAvailableByDay = getAvailableDay(client, elastic.NewRangeQuery("dayofyear").Gt(dayOfYear), true)
+		}
 	}
 
 	return result, err

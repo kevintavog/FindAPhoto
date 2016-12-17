@@ -6,17 +6,17 @@ import (
 
 const (
 	janStart = 1
-	febStart = 32
-	marStart = 61
-	aprStart = 92
-	mayStart = 122
-	junStart = 153
-	julStart = 183
-	augStart = 214
-	sepStart = 245
-	octStart = 275
-	novStart = 306
-	decStart = 336
+	febStart = janStart + 31
+	marStart = febStart + 29
+	aprStart = marStart + 31
+	mayStart = aprStart + 30
+	junStart = mayStart + 31
+	julStart = junStart + 30
+	augStart = julStart + 31
+	sepStart = augStart + 31
+	octStart = sepStart + 30
+	novStart = octStart + 31
+	decStart = novStart + 30
 )
 
 var monthStarts = [...]int{janStart, febStart, marStart, aprStart, mayStart, junStart, julStart, augStart, sepStart, octStart, novStart, decStart}
