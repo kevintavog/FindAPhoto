@@ -94,7 +94,7 @@ console.log('sort by %o', sortType);
     internalSearch(updateUrl: boolean) {
         let result = this.generateDrilldown();
 
-console.log('internalSearch(%s)', updateUrl)
+// console.log('internalSearch(%s)', updateUrl)
 
         if (this.drilldownFromUrl) {
             this._searchResultsProvider.searchRequest.drilldown = this.drilldownFromUrl;

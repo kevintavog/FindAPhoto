@@ -92,7 +92,7 @@ export class DataDisplayer {
             ref = refValues[1];
             dms.degrees *= -1;
         }
-        return dms.degrees + '° ' + dms.minutes + '\' ' + dms.seconds.toFixed(2) + '\" ' + refValues[1];
+        return dms.degrees + '° ' + dms.minutes + '\' ' + dms.seconds.toFixed(2) + '\" ' + ref;
     }
 
     degreesToDms(degrees: number): DegreesMinutesSeconds {
