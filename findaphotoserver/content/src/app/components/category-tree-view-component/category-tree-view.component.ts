@@ -51,7 +51,6 @@ export class CategoryDetailsTreeViewComponent {
 
     onSelectionChange(scd: SearchCategoryDetail) {
         let beingSelected = !scd.selected
-        console.log('onSelectionChange for %s (parent: %o), %o', scd.value, this.parentDetail, beingSelected);
         if (beingSelected) {
             this.selectParents(this.parentComponent, this.parentDetail);
         } else {
