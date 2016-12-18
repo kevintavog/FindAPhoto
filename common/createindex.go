@@ -137,6 +137,9 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 					  }
 					},
 					"exposuretime" : {
+					  "type" : "float"
+					},
+					"exposuretimestring" : {
 					  "type" : "text",
 			          "fields": {
 			            "value": { 
@@ -209,6 +212,22 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 					  }
 					},
 					"cameramodel" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"originalcameramake" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
+					},
+					"originalcameramodel" : {
 					  "type" : "text",
 			          "fields": {
 			            "value": { 

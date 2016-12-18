@@ -201,6 +201,12 @@ func filteredItems(items []*search.MediaHit, propertiesFilter []string) interfac
 
 func property(name string, mh *search.MediaHit) interface{} {
 	switch strings.ToLower(name) {
+	case "aperture":
+		return mh.Media.ApertureValue
+	case "cameramake":
+		return mh.Media.CameraMake
+	case "cameramodel":
+		return mh.Media.CameraModel
 	case "city":
 		return mh.Media.LocationCityName
 	case "createddate":
@@ -210,8 +216,24 @@ func property(name string, mh *search.MediaHit) interface{} {
 			return mh.DistanceKm
 		}
 		return nil
+	case "durationseconds":
+		return mh.Media.DurationSeconds
+	case "exposeureprogram":
+		return mh.Media.ExposureProgram
+	case "exposuretime":
+		return mh.Media.ExposureTime
+	case "flash":
+		return mh.Media.Flash
+	case "fnumber":
+		return mh.Media.FNumber
+	case "focallength":
+		return mh.Media.FocalLength
+	case "height":
+		return mh.Media.Height
 	case "id":
 		return mh.Media.Path
+	case "iso":
+		return mh.Media.Iso
 	case "imagename":
 		return mh.Media.Filename
 	case "keywords":
@@ -221,6 +243,10 @@ func property(name string, mh *search.MediaHit) interface{} {
 			return nil
 		}
 		return mh.Media.Location.Latitude
+	case "lensinfo":
+		return mh.Media.LensInfo
+	case "lensmodel":
+		return mh.Media.LensModel
 	case "locationdisplayname":
 		if mh.Media.Location == nil {
 			return nil
@@ -252,6 +278,8 @@ func property(name string, mh *search.MediaHit) interface{} {
 		return files.ToThumbUrl(mh.Media.Path)
 	case "warnings":
 		return mh.Media.Warnings
+	case "width":
+		return mh.Media.Width
 	}
 
 	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})

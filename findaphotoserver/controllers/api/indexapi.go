@@ -27,6 +27,7 @@ var fieldsAggregateToStringFormat = map[string]string{
 	"cachedlocationdistancemeters": "%1.1f",
 	"dayofyear":                    "%1.f",
 	"durationseconds":              "%1.3f",
+	"exposuretime":                 "%1.3f",
 	"lengthinbytes":                "%1.f",
 	"height":                       "%1.f",
 	"width":                        "%1.f",
@@ -34,6 +35,12 @@ var fieldsAggregateToStringFormat = map[string]string{
 
 var fieldsAggregateDisallowed = map[string]bool{
 	"location": true,
+}
+
+var fieldsNotExposed = map[string]bool{
+	"location":            true,
+	"originalcameramake":  true,
+	"originalcameramodel": true,
 }
 
 func Index(c lars.Context) {
@@ -196,7 +203,9 @@ func getMappedFields() []string {
 	mediaType := mappings[common.MediaTypeName].(map[string]interface{})
 	properties := mediaType["properties"].(map[string]interface{})
 	for k, _ := range properties {
-		allFields = append(allFields, k)
+		if _, ignored := fieldsNotExposed[k]; !ignored {
+			allFields = append(allFields, k)
+		}
 	}
 
 	sort.Strings(allFields)

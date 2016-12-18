@@ -25,6 +25,12 @@ a:visited{
     background-color:#202020;
 }
 
+.camera-and-media-info {
+    margin-left: 10px;
+}
+.camera-and-media-info-item {
+    display: inline;
+}
 @media (max-width: 1024px){
     .info-container {
         max-width:64em;

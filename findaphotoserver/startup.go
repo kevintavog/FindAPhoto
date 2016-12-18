@@ -17,7 +17,7 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 )
 
-func run(devolopmentMode bool) {
+func run(devolopmentMode bool, indexOverride string) {
 	listenPort := 2000
 	easyExit := false
 	log.Info("FindAPhoto %s", versionString())
@@ -39,6 +39,11 @@ func run(devolopmentMode bool) {
 		if !common.IsExecWorking(common.IndexerPath, "-v") {
 			log.Fatal("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
 		}
+	}
+
+	if len(indexOverride) > 0 {
+		common.MediaIndexName = indexOverride
+		fmt.Printf("*** Using index %s ***\n", common.MediaIndexName)
 	}
 
 	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)

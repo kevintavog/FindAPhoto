@@ -14,10 +14,11 @@ func main() {
 	common.ConfigureLogging(common.LogDirectory, "findaphotoserver")
 
 	app := cli.App("findaphotoserver", "The FindAPhoto server")
-	app.Spec = "[-d]"
+	app.Spec = "[-d] [-i]"
 	developmentMode := app.BoolOpt("d", false, "Development mode (hit <enter> to exit, listen on a different port, use a different index)")
+	indexOverride := app.StringOpt("i", "", "The index to use")
 
-	app.Action = func() { run(*developmentMode) }
+	app.Action = func() { run(*developmentMode, *indexOverride) }
 
 	app.Run(os.Args)
 }

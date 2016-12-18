@@ -42,18 +42,21 @@ type Media struct {
 	DurationSeconds float32 `json:"durationseconds,omitempty"`
 
 	// EXIF info
-	ApertureValue   string `json:"aperture,omitempty"`
-	ExposureProgram string `json:"exposureprogram,omitempty"`
-	ExposureTime    string `json:"exposuretime,omitempty"`
-	Flash           string `json:"flash,omitempty"`
-	FNumber         string `json:"fnumber,omitempty"`
-	FocalLength     string `json:"focallength,omitempty"`
-	Iso             string `json:"iso,omitempty"`
-	WhiteBalance    string `json:"whitebalance,omitempty"`
-	LensInfo        string `json:"lensinfo,omitempty"`
-	LensModel       string `json:"lensmodel,omitempty"`
-	CameraMake      string `json:"cameramake,omitempty"`
-	CameraModel     string `json:"cameramodel,omitempty"`
+	ApertureValue       string  `json:"aperture,omitempty"`
+	ExposureProgram     string  `json:"exposureprogram,omitempty"`
+	ExposureTime        float32 `json:"exposuretime,omitempty"`
+	ExposureTimeString  string  `json:"exposuretimestring,omitempty"`
+	Flash               string  `json:"flash,omitempty"`
+	FNumber             string  `json:"fnumber,omitempty"`
+	FocalLength         string  `json:"focallength,omitempty"`
+	Iso                 string  `json:"iso,omitempty"`
+	WhiteBalance        string  `json:"whitebalance,omitempty"`
+	LensInfo            string  `json:"lensinfo,omitempty"`
+	LensModel           string  `json:"lensmodel,omitempty"`
+	CameraMake          string  `json:"cameramake,omitempty"`
+	CameraModel         string  `json:"cameramodel,omitempty"`
+	OriginalCameraMake  string  `json:"originalcameramake,omitempty"`
+	OriginalCameraModel string  `json:"originalcameramodel,omitempty"`
 
 	// For arrays - see here for mappings & searching: http://stackoverflow.com/questions/26258292/querystring-search-on-array-elements-in-elastic-search
 	Keywords []string `json:"keywords,omitempty"`
@@ -146,6 +149,8 @@ type ExifOutputQuicktime struct {
 
 type ExifOutputXmp struct {
 	Subject interface{} // Some are []string - others are string. Exiftool seems to be the source
+	Make    string
+	Model   string
 }
 
 type ExifOutputComposite struct {

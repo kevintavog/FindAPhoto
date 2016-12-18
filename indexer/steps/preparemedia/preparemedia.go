@@ -72,8 +72,6 @@ func populate(candidate *common.CandidateFile) *common.Media {
 		WhiteBalance:    candidate.Exif.EXIF.WhiteBalance,
 		LensInfo:        candidate.Exif.EXIF.LensInfo,
 		LensModel:       candidate.Exif.EXIF.LensModel,
-		CameraMake:      candidate.Exif.EXIF.Make,
-		CameraModel:     candidate.Exif.EXIF.Model,
 	}
 
 	populateIso(media, candidate)
@@ -82,6 +80,7 @@ func populate(candidate *common.CandidateFile) *common.Media {
 	populateDateTime(media, candidate)
 	populateLocation(media, candidate)
 	populateDimensions(media, candidate)
+	populateCameraMakeAndModel(media, candidate)
 
 	media.Warnings = candidate.Warnings
 
@@ -98,12 +97,30 @@ func populateDimensions(media *common.Media, candidate *common.CandidateFile) {
 	}
 
 	if candidate.Exif.Quicktime.Duration != "" {
-		// 10.15 s
-		tokens := strings.Split(candidate.Exif.Quicktime.Duration, " ")
-		if len(tokens) >= 1 {
-			v, err := strconv.ParseFloat(tokens[0], 32)
+		// '10.15 s' OR '0:00:35'
+		tokens := strings.Split(candidate.Exif.Quicktime.Duration, ":")
+		if len(tokens) == 3 {
+			hours, err := strconv.Atoi(tokens[0])
 			if err == nil {
-				media.DurationSeconds = float32(v)
+				minutes, err := strconv.Atoi(tokens[1])
+				if err == nil {
+					seconds, err := strconv.Atoi(tokens[2])
+					if err == nil {
+						media.DurationSeconds = float32(hours*60*60 + minutes*60 + seconds)
+					}
+				}
+			}
+
+			if err != nil {
+				fmt.Printf("TEMP: Unable to parse %s (%v)\n", candidate.Exif.Quicktime.Duration, tokens)
+			}
+		} else {
+			tokens = strings.Split(candidate.Exif.Quicktime.Duration, " ")
+			if len(tokens) >= 1 {
+				v, err := strconv.ParseFloat(tokens[0], 32)
+				if err == nil {
+					media.DurationSeconds = float32(v)
+				}
 			}
 		}
 	}
@@ -167,15 +184,48 @@ func populateIso(media *common.Media, candidate *common.CandidateFile) {
 }
 
 func populateExposureTime(media *common.Media, candidate *common.CandidateFile) {
+	valueSet := false
 	switch etType := candidate.Exif.EXIF.ExposureTime.(type) {
 	default:
 		candidate.AddWarning(fmt.Sprintf("Unexpected ExposureTime type: %T", etType))
 	case float64:
-		media.ExposureTime = strconv.FormatFloat(candidate.Exif.EXIF.ExposureTime.(float64), 'f', -1, 64)
+		media.ExposureTimeString = strconv.FormatFloat(candidate.Exif.EXIF.ExposureTime.(float64), 'f', -1, 64)
+		valueSet = true
 	case string:
-		media.ExposureTime = candidate.Exif.EXIF.ExposureTime.(string)
+		media.ExposureTimeString = candidate.Exif.EXIF.ExposureTime.(string)
+		valueSet = true
 	case nil:
 		// Nothing to do, no value present (videos, for instance)
+		media.ExposureTimeString = ""
+	}
+
+	if valueSet {
+		// The value is expected to be either:
+		// 		1/640 (n/m) OR
+		//		5 (n)
+		// Convert to seconds
+		converted := false
+		tokens := strings.Split(media.ExposureTimeString, "/")
+		if len(tokens) == 1 {
+			v, err := strconv.ParseFloat(tokens[0], 32)
+			if err == nil {
+				media.ExposureTime = float32(v)
+				converted = true
+			}
+		} else if len(tokens) == 2 {
+			numerator, err := strconv.ParseFloat(tokens[0], 32)
+			if err == nil {
+				denominator, err := strconv.ParseFloat(tokens[1], 32)
+				if err == nil && denominator != 0 {
+					media.ExposureTime = float32(numerator / denominator)
+					converted = true
+				}
+			}
+		}
+
+		if !converted {
+			candidate.AddWarning(fmt.Sprintf("Unable to convert ExposureTimeString to decimal: %s", media.ExposureTimeString))
+		}
 	}
 }
 

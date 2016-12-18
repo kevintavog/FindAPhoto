@@ -24,6 +24,9 @@ export class SingleItemComponent implements OnInit {
         ',latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings';
     private static NearbyProperties: string = 'id,thumbUrl,latitude,longitude,distancekm';
     private static SameDateProperties: string = 'id,thumbUrl,createdDate,city';
+    private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';
+    private static ImageProperties: string = 'aperture,durationseconds,exposeureprogram,exposuretime,flash,fnumber,focallength' +
+        ',height,iso,width';
 
     itemInfo: SearchItem;
     itemIndex: number;
@@ -72,7 +75,9 @@ export class SingleItemComponent implements OnInit {
         this.itemInfo = undefined;
         this.nearbySearchResultsProvider.initializeRequest('', 'l');
         this.bydaySearchResultsProvider.initializeRequest('', 'd');
-        this._searchResultsProvider.initializeRequest(SingleItemComponent.QueryProperties, 's');
+        this._searchResultsProvider.initializeRequest(
+            SingleItemComponent.QueryProperties + ',' + SingleItemComponent.CameraProperties + ',' + SingleItemComponent.ImageProperties,
+            's');
 
         this._route.queryParams.subscribe(params => {
             this.loadItem();

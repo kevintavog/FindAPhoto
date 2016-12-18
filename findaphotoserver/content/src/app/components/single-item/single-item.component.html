@@ -106,6 +106,16 @@
         </div>
     </div>
 
+    <div *ngIf="itemInfo" class="camera-and-media-info" >
+        {{itemInfo.cameramake}} {{itemInfo.cameramodel}}
+        <div *ngIf="itemInfo.lensinfo" class="camera-and-media-info-item">, {{itemInfo.lensinfo}}</div> <br>
+        <div *ngIf="itemInfo.fnumber && itemInfo.fnumber != 0" class="camera-and-media-info-item">ƒ/{{itemInfo.fnumber}}, </div>
+        <div *ngIf="itemInfo.exposuretime" class="camera-and-media-info-item">{{itemInfo.exposuretime}} s, </div>
+        <div *ngIf="itemInfo.focallength" class="camera-and-media-info-item">{{itemInfo.focallength}}, </div>
+        <div *ngIf="itemInfo.iso" class="camera-and-media-info-item">ISO {{itemInfo.iso}} </div>
+        <div *ngIf="itemInfo.durationseconds" class="camera-and-media-info-item">Video duration: {{itemInfo.durationseconds}} seconds</div>
+    </div>
+
     <br *ngIf="nearbyResults != null || sameDateResults != null">
 
     <div style="text-align:center">
