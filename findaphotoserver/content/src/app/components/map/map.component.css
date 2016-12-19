@@ -43,3 +43,7 @@
   padding-left: 3px;
   line-height: 1.3;
 }
+
+.info-close-button {
+  pointer-events: auto;  
+}

@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
-import { Circle, Icon, LatLngTuple, Map, Marker } from 'leaflet';
+import { Circle, Handler, Icon, LatLngTuple, LocationEvent, Map, Marker } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results';
@@ -26,7 +26,12 @@ export class MapComponent implements OnInit {
     markerIcon: Icon;
     selectedMarkerIcon: Icon;
 
+
+    choosingLocation: boolean;
+    choosingLocationMarker: Marker;
+
     map: Map;
+    defaultDoubleClickZoom: Handler;
     cluster: MarkerClusterGroup;
     selectedMarker: Marker;
     currentLocationCircle: Circle;
@@ -102,6 +107,13 @@ export class MapComponent implements OnInit {
             popupAnchor: [1, -34],
             shadowSize:  [41, 41]
         });
+
+        this.choosingLocationMarker = L.marker(
+            this.map.getCenter(),
+            {
+                icon: this.markerIcon
+            }
+        );
     }
 
     startSearch() {
@@ -178,6 +190,39 @@ export class MapComponent implements OnInit {
         }
     }
 
+    chooseLocation() {
+        this.closeImage();
+        this.cluster.clearLayers();
+        this.choosingLocation = true;
+        this.map.doubleClickZoom.disable();
+        this.pageError = 'Double click/tap to choose a location';
+
+        this.choosingLocationMarker.setLatLng(this.map.getCenter());
+        this.choosingLocationMarker.addTo(this.map);
+
+        this.map.on('dblclick', (le: LocationEvent) => {
+            this.map.panTo(le.latlng);
+            this.choosingLocationMarker.setLatLng(le.latlng);
+        });
+
+        this.map.on('moveend', () => {
+            this.choosingLocationMarker.setLatLng(this.map.getCenter());
+        });
+    }
+
+    endChooseLocation() {
+        this.map.off('dblclick');
+        this.choosingLocationMarker.removeFrom(this.map);
+
+        this.map.doubleClickZoom.enable();
+        this.choosingLocation = false;
+        this.pageError = '';
+
+        this.locationAccuracy = FPLocationAccuracy.FromDevice;
+        let center = this.map.getCenter();
+        this.searchNear(center.lat, center.lng);
+    }
+
     fitBounds() {
         this.map.fitBounds([this.southWestCornerLatLng, this.northEastCornerLatLng], null);
     }
@@ -186,39 +231,46 @@ export class MapComponent implements OnInit {
         this.cluster.clearLayers();
         this.currentItem = null;
         this.isLoading = true;
-        this.maxMatchesAllowed = 2000;
-        this.fitBoundsOnFirstResults = false;
         this.pageError = 'Getting current location...';
 
         this.locationProvider.getCurrentLocation(
             location => {
-                this.pageError = '';
                 this.locationAccuracy = location.accuracy;
-                this.searchResultsProvider.searchRequest.searchType = 'l';
-                this.searchResultsProvider.searchRequest.latitude = location.latitude;
-                this.searchResultsProvider.searchRequest.longitude = location.longitude;
-                this.searchResultsProvider.searchRequest.maxKilometers = 10.5;
-
-                if (this.currentLocationCircle) {
-                    this.currentLocationCircle.remove();
-                }
-
-                let radius = 50;
-                let circleProperties = { color: '#0000FF', fillColor: '#00f' };
-                if (this.locationAccuracy !== FPLocationAccuracy.FromDevice) {
-                    radius = 150;
-                    circleProperties = { color: '#DC143C', fillColor: '#FF0000' };
-                }
-
-                this.currentLocationCircle = L.circle([location.latitude, location.longitude], radius, circleProperties);
-                this.currentLocationCircle.addTo(this.map);
+                this.searchNear(location.latitude, location.longitude);
                 this.map.setView([location.latitude, location.longitude], 17);
-
-                this.startSearch();
             },
             error => {
                 this.pageError = 'Unable to get current location: ' + error;
             });
+    }
+
+    searchNear(latitude: number, longitude: number) {
+        this.isLoading = true;
+        this.maxMatchesAllowed = 2000;
+        this.fitBoundsOnFirstResults = false;
+        this.pageError = '';
+
+        this.searchResultsProvider.searchRequest.searchType = 'l';
+        this.searchResultsProvider.searchRequest.latitude = latitude;
+        this.searchResultsProvider.searchRequest.longitude = longitude;
+        this.searchResultsProvider.searchRequest.maxKilometers = 10.5;
+
+        if (this.currentLocationCircle) {
+            this.currentLocationCircle.remove();
+        }
+
+        let radius = 50;
+        let circleProperties = { color: '#0000FF', fillColor: '#00f' };
+        if (this.locationAccuracy !== FPLocationAccuracy.FromDevice) {
+            radius = 150;
+            circleProperties = { color: '#DC143C', fillColor: '#FF0000' };
+        }
+
+        this.currentLocationCircle = L.circle([latitude, longitude], radius, circleProperties);
+        this.currentLocationCircle.addTo(this.map);
+
+        this.startSearch();
+
     }
 
     selectMarker(marker: L.Marker) {
@@ -233,6 +285,14 @@ export class MapComponent implements OnInit {
         }
     }
 
+    closeImage() {
+        if (this.selectedMarker) {
+            this.selectedMarker.setIcon(this.markerIcon);
+            this.selectedMarker = null;
+        }
+        this.currentItem = null;
+    }
+
     initializeMap() {
         if (this.map) { return; }
 
@@ -242,6 +302,8 @@ export class MapComponent implements OnInit {
             minZoom: 3,
             zoomControl: false
         });
+
+        this.defaultDoubleClickZoom = this.map.doubleClickZoom;
 
         L.control.zoom({ position: 'topright' }).addTo(this.map);
 

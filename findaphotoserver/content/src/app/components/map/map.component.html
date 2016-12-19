@@ -13,13 +13,19 @@
             <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="nearby()">
                 <i class="fa fa-location-arrow fa-1x"></i>
             </button>
+            <button *ngIf="!choosingLocation" class="c-button c-button--rounded c-button--ghost-info u-small" (click)="chooseLocation()">
+                Choose <i class="fa fa-location-arrow fa-1x"></i>
+            </button>
+            <button *ngIf="choosingLocation" class="c-button c-button--rounded c-button--ghost-success u-small" (click)="endChooseLocation()">
+                End choose
+            </button>
         </div>
 
 
         <div *ngIf="pageError" style="margin-left:10px;" >
             {{pageError}}
         </div>
-        <div *ngIf="isLoading && !pageError" >
+        <div *ngIf="isLoading && !pageError && !choosingLocation" >
             <div style="float:left; margin-left:10px; margin-right:10px;" >
                 Loading {{totalMatches}} items:
             </div>
@@ -27,7 +33,7 @@
                 <div class="c-progress__bar c-progress__bar--info c-progress--rounded" [style.width]="percentageLoadedWidth"></div>
             </div>
         </div>
-        <div *ngIf="!isLoading" style="margin-left:10px;" >
+        <div *ngIf="!isLoading && !choosingLocation" style="margin-left:10px;" >
             {{totalMatches}} total matches
         </div>
     </header>
@@ -40,6 +46,7 @@
         <div *ngIf="currentItem" class="info-container" >
             <img class="info-image" src="{{currentItem.thumbUrl}}" />
             <div class="info-text-container">
+                <button class="c-button c-button--close info-close-button" (click)="closeImage()" >×</button>
                 <div class="c-paragraph info-text"> <i class="fa fa-file"></i> {{currentItem.imageName}} </div>
                 <div class="c-paragraph info-text"> <i class="fa fa-calendar"></i> {{displayer.getItemLocaleDateAndTime(currentItem)}} </div>
                 <div class="c-paragraph info-text">
