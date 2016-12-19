@@ -196,6 +196,9 @@ export class MapComponent implements OnInit {
         this.choosingLocation = true;
         this.map.doubleClickZoom.disable();
         this.pageError = 'Double click/tap to choose a location';
+        if (this.currentLocationCircle) {
+            this.currentLocationCircle.remove();
+        }
 
         this.choosingLocationMarker.setLatLng(this.map.getCenter());
         this.choosingLocationMarker.addTo(this.map);
