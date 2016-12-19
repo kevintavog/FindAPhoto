@@ -36,7 +36,9 @@ export class SearchService {
             .catch(this.handleError);
     }
 
-    searchByLocation(lat: number, lon: number, maxKilometers: number, properties: string, first: number, pageCount: number, drilldown: string) {
+    searchByLocation(lat: number, lon: number,
+            maxKilometers: number, properties: string, 
+            first: number, pageCount: number, drilldown: string) {
         let url = '/api/nearby?lat=' + lat + '&lon=' + lon + '&first=' + first + '&count=' + pageCount + '&properties='
             + properties + '&categories=keywords,date';
 

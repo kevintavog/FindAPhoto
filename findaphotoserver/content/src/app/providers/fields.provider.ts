@@ -29,6 +29,12 @@ export class FieldsProvider {
         );
     }
 
+    refreshFieldValues(searchText: string, drilldown: string) {
+        if (this.nameWithValues) {
+            this.getValuesForFieldWithSearch(this.nameWithValues, searchText, drilldown);
+        }
+    }
+
     getValuesForField(fieldName: string) {
         this.values = null;
         this.serverError = null;

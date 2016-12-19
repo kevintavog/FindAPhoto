@@ -119,6 +119,9 @@ console.log('sort by %o', sortType);
 
     searchCompletedCallback(context: Map<string, any>) {
         this.processSearchResults();
+        this._fieldsProvider.refreshFieldValues(
+            this._searchResultsProvider.searchRequest.searchText,
+            this._searchResultsProvider.searchRequest.drilldown);
 
         if (!context) { return; }
 
