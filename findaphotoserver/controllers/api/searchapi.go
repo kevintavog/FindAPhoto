@@ -17,9 +17,7 @@ func Search(c lars.Context) {
 
 	fc.AppContext.FieldLogger.Time("search", func() {
 		searchResult, err := searchOptions.Search()
-		if err != nil {
-			panic(&InternalError{message: "SearchFailed", err: err})
-		}
+		propogateError(err, "SearchFailed")
 
 		fc.AppContext.FieldLogger.Add("totalMatches", strconv.FormatInt(searchResult.TotalMatches, 10))
 		fc.AppContext.FieldLogger.Add("itemCount", strconv.Itoa(searchResult.ResultCount))

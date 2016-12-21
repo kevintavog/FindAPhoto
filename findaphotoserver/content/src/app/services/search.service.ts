@@ -107,6 +107,10 @@ export class SearchService {
             return Observable.throw('Server not accessible');
         }
 
+        if (response.status >= 500) {
+            return Observable.throw('Server error: ' + response.status + '; ' + response.text());
+        }
+
         let error = response.json();
         if (!error) {
             return Observable.throw('The server returned: ' + response.text());
