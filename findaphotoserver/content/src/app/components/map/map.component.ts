@@ -310,7 +310,7 @@ export class MapComponent implements OnInit {
 
         L.control.zoom({ position: 'topright' }).addTo(this.map);
 
-        L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> ' +
                 'contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>'
