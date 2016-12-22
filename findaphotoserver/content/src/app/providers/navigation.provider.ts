@@ -25,7 +25,7 @@ export class NavigationProvider {
 
     home() {
         // If not on the home page and there's a text search, retain the text search
-        if (this._searchResultsProvider.searchRequest 
+        if (this._searchResultsProvider.searchRequest
             && this._searchResultsProvider.searchRequest.searchType === 's'
             && !this._router.isActive('search', false)) {
 
@@ -70,7 +70,26 @@ export class NavigationProvider {
     }
 
     searchNearby() {
-        this._router.navigate( ['bylocation']);
+        // If on another page, but with a location search, retain that search.
+        if (this._searchResultsProvider.searchRequest
+            && this._searchResultsProvider.searchRequest.searchType === 'l'
+            && !this._router.isActive('bylocation', false)) {
+
+            let queryParams = {
+                lat: this._searchResultsProvider.searchRequest.latitude,
+                lon: this._searchResultsProvider.searchRequest.longitude,
+                t: 'l'};
+
+            if (this._searchResultsProvider.searchRequest.drilldown && this._searchResultsProvider.searchRequest.drilldown.length > 0) {
+                queryParams['drilldown'] = this._searchResultsProvider.searchRequest.drilldown;
+            }
+
+            let navigationExtras: NavigationExtras = { queryParams: queryParams };
+            this._router.navigate( ['bylocation'], navigationExtras );
+            this._searchResultsProvider.search(null);
+        } else {
+            this._router.navigate( ['bylocation']);
+        }
     }
 
     searchMap() {
