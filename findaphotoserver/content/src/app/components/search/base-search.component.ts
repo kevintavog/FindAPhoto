@@ -48,7 +48,7 @@ export abstract class BaseSearchComponent implements OnDestroy {
             _searchResultsProvider.searchStartingCallback = (context) => this.searchStartingCallback(context);
             _searchResultsProvider.searchCompletedCallback = (context) => this.searchCompletedCallback(context);
 
-            _navigationProvider.updateSearchCallback = () => { console.log('via updateSearchCallBack'); this.internalSearch(true) };
+            _navigationProvider.updateSearchCallback = () => { this.internalSearch(true); };
     }
 
     ngOnDestroy() {

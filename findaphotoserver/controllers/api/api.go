@@ -291,6 +291,11 @@ func property(name string, mh *search.MediaHit) interface{} {
 			return nil
 		}
 		return mh.Media.LocationHierarchicalName
+	case "locationplacename":
+		if mh.Media.Location == nil {
+			return nil
+		}
+		return mh.Media.LocationPlaceName
 	case "longitude":
 		if mh.Media.Location == nil {
 			return nil

@@ -21,7 +21,7 @@ import { SearchService } from '../../services/search.service';
 
 export class SingleItemComponent implements OnInit {
     private static QueryProperties: string = 'id,slideUrl,imageName,createdDate,keywords,city,thumbUrl' +
-        ',latitude,longitude,locationName,mimeType,mediaType,path,mediaUrl,warnings';
+        ',latitude,longitude,locationDisplayName,locationName,mimeType,mediaType,path,mediaUrl,warnings';
     private static NearbyProperties: string = 'id,thumbUrl,latitude,longitude,distancekm';
     private static SameDateProperties: string = 'id,thumbUrl,createdDate,city';
     private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';

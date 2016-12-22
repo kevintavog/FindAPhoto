@@ -31,6 +31,9 @@ a:visited{
 .camera-and-media-info-item {
     display: inline;
 }
+.full-location-name {
+    margin-left: 10px;
+}
 @media (max-width: 1024px){
     .info-container {
         max-width:64em;

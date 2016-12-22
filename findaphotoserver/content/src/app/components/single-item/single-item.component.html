@@ -25,7 +25,7 @@
     </div>
     <p>
 
-    <div style="">
+    <div >
         <div *ngIf="itemInfo.mediaType == 'image'" >
             <a href="{{itemInfo.mediaUrl}}">
                 <img class="o-image centered-image" src="{{itemInfo.slideUrl}}" />
@@ -89,6 +89,7 @@
         </div>
     </div>
 
+    <div *ngIf="itemInfo.locationDisplayName" class="full-location-name"><br> Full location name: {{itemInfo.locationDisplayName}}</div>
 
     <div class="o-container o-container--xsmall">
         <div class="c-pagination">
