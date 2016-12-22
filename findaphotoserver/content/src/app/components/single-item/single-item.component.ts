@@ -25,7 +25,7 @@ export class SingleItemComponent implements OnInit {
     private static NearbyProperties: string = 'id,thumbUrl,latitude,longitude,distancekm';
     private static SameDateProperties: string = 'id,thumbUrl,createdDate,city';
     private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';
-    private static ImageProperties: string = 'aperture,durationseconds,exposeureprogram,exposuretime,flash,fnumber,focallength' +
+    private static ImageProperties: string = 'aperture,durationseconds,exposeureprogram,exposuretimestring,flash,fnumber,focallength' +
         ',height,iso,width';
 
     itemInfo: SearchItem;
