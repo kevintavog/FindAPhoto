@@ -5,7 +5,6 @@ import (
 )
 
 var fieldsOverride = map[string]string{
-	"aperture":            "aperture.value",
 	"cameramake":          "cameramake.value",
 	"cameramodel":         "cameramodel.value",
 	"cityname":            "cityname.value",
@@ -17,10 +16,7 @@ var fieldsOverride = map[string]string{
 	"exposuretimestring":  "exposuretimestring.value",
 	"filename":            "filename.value",
 	"flash":               "flash.value",
-	"fnumber":             "fnumber.value",
-	"focallength":         "focallength.value",
 	"hierarchicalname":    "hierarchicalname.value",
-	"iso":                 "iso.value",
 	"keywords":            "keywords.value",
 	"lensinfo":            "lensinfo.value",
 	"lensmodel":           "lensmodel.value",

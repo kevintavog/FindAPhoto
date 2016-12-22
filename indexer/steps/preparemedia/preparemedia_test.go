@@ -150,6 +150,17 @@ func TestVideoDuration(t *testing.T) {
 	}
 }
 
+func TestFocalLength(t *testing.T) {
+	media := &common.Media{}
+	candidate := &common.CandidateFile{}
+
+	candidate.Exif.EXIF.FocalLength = "23.7 mm"
+	populateFocalLength(media, candidate)
+	if media.FocalLengthMm != 23.7 {
+		t.Fatalf("FocalLength failed: %f", media.FocalLengthMm)
+	}
+}
+
 func floatEquals(a, b float64) bool {
 	if (a-b) < EPSILON && (b-a) < EPSILON {
 		return true

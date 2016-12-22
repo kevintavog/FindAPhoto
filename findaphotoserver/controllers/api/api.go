@@ -254,12 +254,14 @@ func property(name string, mh *search.MediaHit) interface{} {
 		return mh.Media.ExposureProgram
 	case "exposuretime":
 		return mh.Media.ExposureTime
+	case "exposuretimestring":
+		return mh.Media.ExposureTimeString
 	case "flash":
 		return mh.Media.Flash
 	case "fnumber":
 		return mh.Media.FNumber
 	case "focallength":
-		return mh.Media.FocalLength
+		return mh.Media.FocalLengthMm
 	case "height":
 		return mh.Media.Height
 	case "id":

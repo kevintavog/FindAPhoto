@@ -121,12 +121,7 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 					},
 					
 					"aperture" : {
-					  "type" : "text",
-			          "fields": {
-			            "value": { 
-			              "type":  "keyword"
-			            }
-					  }
+					  "type" : "float"
 					},
 					"exposureprogram" : {
 					  "type" : "text",
@@ -156,28 +151,13 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 					  }
 					},
 					"fnumber" : {
-					  "type" : "text",
-			          "fields": {
-			            "value": { 
-			              "type":  "keyword"
-			            }
-					  }
+					  "type" : "float"
 					},
-					"focallength" : {
-					  "type" : "text",
-			          "fields": {
-			            "value": { 
-			              "type":  "keyword"
-			            }
-					  }
+					"focallengthmm" : {
+					  "type" : "float"
 					},
 					"iso" : {
-					  "type" : "text",
-			          "fields": {
-			            "value": { 
-			              "type":  "keyword"
-			            }
-					  }
+					  "type" : "integer"
 					},
 					"whitebalance" : {
 					  "type" : "text",

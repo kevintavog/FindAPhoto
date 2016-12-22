@@ -24,10 +24,14 @@ type PathAndDate struct {
 }
 
 var fieldsAggregateToStringFormat = map[string]string{
+	"aperture":                     "%1.1f",
 	"cachedlocationdistancemeters": "%1.1f",
 	"dayofyear":                    "%1.f",
 	"durationseconds":              "%1.3f",
 	"exposuretime":                 "%1.3f",
+	"fnumber":                      "%1.1f",
+	"focallengthmm":                "%1.1f",
+	"iso":                          "%1.f",
 	"lengthinbytes":                "%1.f",
 	"height":                       "%1.f",
 	"width":                        "%1.f",

@@ -64,17 +64,17 @@ func populate(candidate *common.CandidateFile) *common.Media {
 
 		MimeType: candidate.Exif.File.MIMEType,
 
-		ApertureValue:   strconv.FormatFloat(float64(candidate.Exif.EXIF.ApertureValue), 'f', -1, 32),
+		ApertureValue:   float32(candidate.Exif.EXIF.ApertureValue),
 		ExposureProgram: candidate.Exif.EXIF.ExposureProgram,
 		Flash:           candidate.Exif.EXIF.Flash,
-		FNumber:         strconv.FormatFloat(float64(candidate.Exif.EXIF.FNumber), 'f', -1, 32),
-		FocalLength:     candidate.Exif.EXIF.FocalLength,
+		FNumber:         float32(candidate.Exif.EXIF.FNumber),
 		WhiteBalance:    candidate.Exif.EXIF.WhiteBalance,
 		LensInfo:        candidate.Exif.EXIF.LensInfo,
 		LensModel:       candidate.Exif.EXIF.LensModel,
 	}
 
 	populateIso(media, candidate)
+	populateFocalLength(media, candidate)
 	populateExposureTime(media, candidate)
 	populateKeywords(media, candidate)
 	populateDateTime(media, candidate)
@@ -85,6 +85,30 @@ func populate(candidate *common.CandidateFile) *common.Media {
 	media.Warnings = candidate.Warnings
 
 	return media
+}
+
+func populateFocalLength(media *common.Media, candidate *common.CandidateFile) {
+	if len(candidate.Exif.EXIF.FocalLength) < 1 {
+		return
+	}
+
+	// Focal length is a string "23.7 mm" - we convert it to a float
+	tokens := strings.Split(candidate.Exif.EXIF.FocalLength, " ")
+	if len(tokens) == 2 {
+		if tokens[1] != "mm" {
+			candidate.AddWarning(fmt.Sprintf("Unexpected format for FocalLength (%s)", candidate.Exif.EXIF.FocalLength))
+		} else {
+			v, err := strconv.ParseFloat(tokens[0], 32)
+			if err == nil {
+				media.FocalLengthMm = float32(v)
+			} else {
+				candidate.AddWarning(fmt.Sprintf("Failed converting FocalLength (%s) to a float (%s)", candidate.Exif.EXIF.FocalLength, tokens[0]))
+			}
+		}
+	} else {
+		candidate.AddWarning(fmt.Sprintf("Unexpected format for FocalLength (%s)", candidate.Exif.EXIF.FocalLength))
+	}
+
 }
 
 func populateDimensions(media *common.Media, candidate *common.CandidateFile) {
@@ -171,13 +195,17 @@ func populateIso(media *common.Media, candidate *common.CandidateFile) {
 	default:
 		candidate.AddWarning(fmt.Sprintf("Unexpected ISO type: %T (%q)", isoType, candidate.Exif.EXIF.ISO))
 	case int:
-		media.Iso = strconv.FormatInt(int64(candidate.Exif.EXIF.ISO.(int)), 10)
+		media.Iso = candidate.Exif.EXIF.ISO.(int)
 	case float64:
-		media.Iso = strconv.FormatFloat(candidate.Exif.EXIF.ISO.(float64), 'f', -1, 64)
+		media.Iso = int(candidate.Exif.EXIF.ISO.(float64))
 	case string:
 		s := candidate.Exif.EXIF.ISO.(string)
 		re := regexp.MustCompile("[0-9]+")
-		media.Iso = re.FindString(s)
+		var err error
+		media.Iso, err = strconv.Atoi(re.FindString(s))
+		if err != nil {
+			candidate.AddWarning(fmt.Sprintf("ISO string (%s) failed to convert to an int: %s", candidate.Exif.EXIF.ISO, err))
+		}
 	case nil:
 		// Nothing to do, no value present
 	}

@@ -42,14 +42,14 @@ type Media struct {
 	DurationSeconds float32 `json:"durationseconds,omitempty"`
 
 	// EXIF info
-	ApertureValue       string  `json:"aperture,omitempty"`
+	ApertureValue       float32 `json:"aperture,omitempty"`
 	ExposureProgram     string  `json:"exposureprogram,omitempty"`
 	ExposureTime        float32 `json:"exposuretime,omitempty"`
 	ExposureTimeString  string  `json:"exposuretimestring,omitempty"`
 	Flash               string  `json:"flash,omitempty"`
-	FNumber             string  `json:"fnumber,omitempty"`
-	FocalLength         string  `json:"focallength,omitempty"`
-	Iso                 string  `json:"iso,omitempty"`
+	FNumber             float32 `json:"fnumber,omitempty"`
+	FocalLengthMm       float32 `json:"focallengthmm,omitempty"`
+	Iso                 int     `json:"iso,omitempty"`
 	WhiteBalance        string  `json:"whitebalance,omitempty"`
 	LensInfo            string  `json:"lensinfo,omitempty"`
 	LensModel           string  `json:"lensmodel,omitempty"`
