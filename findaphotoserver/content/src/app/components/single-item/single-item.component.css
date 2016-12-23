@@ -34,6 +34,35 @@ a:visited{
 .full-location-name {
     margin-left: 10px;
 }
+
+.media-source-header {
+    margin-left: 10px;
+    color: white;
+    background-color: #34495E;
+}
+.media-source {
+    color: white;
+}
+.media-source-table-header {
+    color: yellow;
+    background-color:#14395E;
+}
+.media-source-message {
+    display: inline;
+    font-size: 1.9em;
+}
+.media-source-row:nth-child(odd) {
+    background: #14395E;
+}
+.media-source-name {
+    margin-left: 5px;
+    display: inline;
+}
+.media-source-value {
+    margin-right: 5px;
+    display: inline;
+}
+
 @media (max-width: 1024px){
     .info-container {
         max-width:64em;

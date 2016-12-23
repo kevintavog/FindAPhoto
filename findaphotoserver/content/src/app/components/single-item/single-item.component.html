@@ -117,6 +117,34 @@
         <div *ngIf="itemInfo.durationseconds" class="camera-and-media-info-item">Video duration: {{itemInfo.durationseconds}} seconds</div>
     </div>
 
+    <br>
+    <div class="c-text media-source-header" *ngIf="!showMediaSource" >
+        <div (click)="toggleMediaSource()"> 
+            <i class="fa fa-cogs fa-2x"></i> 
+            <div class="media-source-message"> Full document source </div>
+            <i class="fa fa-caret-right filter-toggle-glyph fa-2x"> </i>
+        </div>
+    </div>
+
+    <div class="c-text media-source-header" *ngIf="showMediaSource" >
+        <div (click)="toggleMediaSource()"> 
+            <i class="fa fa-cogs fa-2x"></i> 
+            <div class="media-source-message"> Full document source </div>
+            <i class="fa fa-caret-down filter-toggle-glyph fa-2x"></i>
+        </div>
+
+        <div class="o-container o-container--large">
+            <div class="o-grid c-text media-source-table-header" >
+                <div class="o-grid__cell--width-20 media-source-name"> Field name </div>
+                <div class="o-grid__cell media-source-value">Value</div>
+            </div>
+            <div class="o-grid c-text media-source media-source-row" *ngFor="let nv of mediaSource">
+                <div class="o-grid__cell--width-20 media-source-name"> {{nv.name}} </div>
+                <div class="o-grid__cell media-source-value ">{{nv.value}}</div>
+            </div>
+        </div>
+    </div>
+
     <br *ngIf="nearbyResults != null || sameDateResults != null">
 
     <div style="text-align:center">

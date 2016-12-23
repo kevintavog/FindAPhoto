@@ -12,6 +12,15 @@ import { DataDisplayer } from '../../providers/data-displayer';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 import { SearchService } from '../../services/search.service';
 
+class SourceNameValue {
+    readonly name: string;
+    readonly value: string;
+
+    constructor(name: string, value: string) {
+        this.name = name;
+        this.value = value;
+    }
+}
 
 @Component({
     selector: 'app-single-item',
@@ -27,6 +36,9 @@ export class SingleItemComponent implements OnInit {
     private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';
     private static ImageProperties: string = 'aperture,durationseconds,exposeureprogram,exposuretimestring,flash,fnumber,focallength' +
         ',height,iso,width';
+
+    showMediaSource: boolean = false;
+    mediaSource: SourceNameValue[];
 
     itemInfo: SearchItem;
     itemIndex: number;
@@ -84,6 +96,14 @@ export class SingleItemComponent implements OnInit {
          });
     }
 
+    toggleMediaSource() {
+        if (this.showMediaSource !== true) {
+            this.showMediaSource = true;
+        } else {
+            this.showMediaSource = false;
+        }
+    }
+
     hasLocation() {
         return this.itemInfo.longitude && this.itemInfo.latitude;
     }
@@ -119,6 +139,7 @@ export class SingleItemComponent implements OnInit {
     loadItem() {
         this.nearbyResults = undefined;
         this.sameDateResults = undefined;
+        this.mediaSource = undefined;
         this.itemIndex = this._searchResultsProvider.searchRequest.first;
         this.searchPage = Math.round(1 + (this._searchResultsProvider.searchRequest.first / SearchResultsProvider.ItemsPerPage));
         this._searchResultsProvider.search(null);
@@ -158,10 +179,50 @@ export class SingleItemComponent implements OnInit {
 
             this.loadNearby();
             this.loadSameDate();
+            this.loadMediaSource();
         } else {
             this.titleService.setTitle('FindAPhoto');
             this._searchResultsProvider.serverError = 'The item cannot be found';
         }
+    }
+
+    loadMediaSource() {
+        this.searchService.mediaSource(encodeURI(this.itemInfo.path)).subscribe(
+            result => {
+                this.mediaSource = this.objectToSourceNameValues(result, '');
+            },
+            error => {
+                console.log('loadMediaSource failed: %o', error);
+            }
+        );
+    }
+
+    objectToSourceNameValues(obj: Object, prefix: string): SourceNameValue[] {
+        let values = Array<SourceNameValue>();
+
+        for (let key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                let val = obj[key];
+                let name = prefix + key;
+                let snv: SourceNameValue;
+
+                if (typeof val === 'string' || typeof val === 'number') {
+                    snv = new SourceNameValue(name, String(val));
+                } else {
+                    if (val instanceof Array) {
+                        snv = new SourceNameValue(name, val.join(','));
+                    } else {
+                        values.push(...this.objectToSourceNameValues(val, name + '.'));
+                    }
+                }
+
+                if (snv) {
+                    values.push(snv);
+                }
+            }
+        }
+
+        return values;
     }
 
     loadNearby() {

@@ -102,6 +102,13 @@ export class SearchService {
             .catch(this.handleError);
     }
 
+    mediaSource(id: string) {
+        let url = '/api/media/' + id;
+        return this._http.get(url)
+            .map(response => response.json())
+            .catch(this.handleError);
+    }
+
     private handleError(response: Response) {
         if (response.type === ResponseType.Error) {
             return Observable.throw('Server not accessible');

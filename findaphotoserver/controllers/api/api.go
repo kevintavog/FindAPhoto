@@ -40,6 +40,7 @@ func ConfigureRouting(l *lars.LARS) {
 	api.Get("/search", Search)
 	api.Get("/nearby", Nearby)
 	api.Get("/by-day", ByDay)
+	api.Get("/media/:id", MediaById)
 
 	index := api.Group("/index")
 	index.Get("/fields/:field", IndexFieldValues)
