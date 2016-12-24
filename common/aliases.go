@@ -20,10 +20,10 @@ const maxAliasCount = 100
 const AliasTypeName = "alias"
 
 type AliasDocument struct {
-	Path            string    `json:"path"`
+	Path            string    `json:"aliaspath"`
 	Alias           string    `json:"alias"`
 	DateAdded       time.Time `json:"datetimeadded"`
-	DateLastIndexed time.Time `json:datetimelastindexed`
+	DateLastIndexed time.Time `json:"datetimelastindexed"`
 }
 
 var aliasAndPath []AliasDocument
@@ -198,7 +198,7 @@ func loadAliases(client *elastic.Client) error {
 				log.Fatal("Unable to parse alias: %s", err.Error())
 			}
 
-			log.Info("Alias '%s' maps to '%s'", alias.Alias, alias.Path)
+			log.Info("Alias '%s' maps to '%s', last indexed: %s", alias.Alias, alias.Path, alias.DateLastIndexed)
 			aliasList = append(aliasList, *alias)
 		}
 	}

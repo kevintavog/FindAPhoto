@@ -18,6 +18,39 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 	        "number_of_replicas": 0
 		},
 		"mappings": {
+			"alias" : {
+				"_all": {
+					"enabled": false
+			    },
+				"properties" : {
+				  "datelastindexed" : {
+				    "type" : "date"
+				  },
+				  "alias" : {
+				    "type" : "text",
+				    "fields" : {
+				      "keyword" : {
+				        "type" : "keyword",
+				        "ignore_above" : 256
+				      }
+				    }
+				  },
+				  "aliaspath" : {
+				    "type" : "text",
+				    "fields" : {
+				      "keyword" : {
+				        "type" : "keyword",
+				        "ignore_above" : 256
+				      }
+				    }
+				  },
+				  "datetimeadded" : {
+				    "type" : "date"
+				  }
+				}
+			},
+
+
 			"media": {
 				"_all": {
 					"enabled": false

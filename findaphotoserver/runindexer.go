@@ -7,6 +7,8 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
+
+	"gopkg.in/olivere/elastic.v5"
 )
 
 func runIndexer(devMode bool) {
@@ -38,6 +40,16 @@ func runIndexer(devMode bool) {
 			log.Warn("No paths to index")
 		}
 	}
+
+	// Re-load the aliases - at least update the last indexed timestamp
+	client, err := elastic.NewSimpleClient(
+		elastic.SetURL(common.ElasticSearchServer),
+		elastic.SetSniff(false))
+
+	if err != nil {
+		log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
+	}
+	common.InitializeAliases(client)
 }
 
 func timeAndRunIndexer(args []string, path string) {
