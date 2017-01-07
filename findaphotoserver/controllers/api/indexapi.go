@@ -118,6 +118,9 @@ func IndexFieldValues(c lars.Context) {
 func getValue(name string, client *elastic.Client) interface{} {
 	switch strings.ToLower(name) {
 
+	case "dependencyinfo":
+		return getDependencyInfo(client)
+
 	case "duplicatecount":
 		return getDuplicateCount(client)
 
@@ -155,7 +158,7 @@ func getAliasedPaths() []PathAndDate {
 	return allPaths
 }
 
-func getCountsSearch(client *elastic.Client, query string) int64 {
+func getCountsSearch(client *elastic.Client, query string) string {
 	search := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
@@ -166,20 +169,53 @@ func getCountsSearch(client *elastic.Client, query string) int64 {
 
 	result, err := search.Do(context.TODO())
 	if err != nil {
+		return ""
 		panic(&InvalidRequest{message: fmt.Sprintf("Failed searching for count (%s)", query), err: err})
 	}
-	return result.TotalHits()
+	return fmt.Sprintf("%d", result.TotalHits())
 }
 
-func getDuplicateCount(client *elastic.Client) int64 {
+func getDuplicateCount(client *elastic.Client) string {
 	count, err := client.Count().
 		Index(common.MediaIndexName).
 		Type(common.DuplicateTypeName).
 		Do(context.TODO())
 	if err != nil {
-		panic(&InvalidRequest{message: "Failed searching for duplicate count", err: err})
+		return ""
 	}
-	return count
+	return fmt.Sprintf("%d", count)
+}
+
+func getDependencyInfo(client *elastic.Client) map[string]interface{} {
+	dependencies := make(map[string]interface{})
+
+	dependencies["elasticSearch"] = getElasticSearchDependencyInfo(client)
+
+	return dependencies
+}
+
+func getElasticSearchDependencyInfo(client *elastic.Client) map[string]interface{} {
+	info := make(map[string]interface{})
+
+	info["index"] = common.MediaIndexName
+
+	pingResult, httpStatusCode, err := elastic.NewPingService(client).Do(context.TODO())
+	info["httpStatusCode"] = httpStatusCode
+	if err != nil {
+		info["error"] = err.Error()
+	} else {
+		info["version"] = pingResult.Version.Number
+
+		healthResult, err := elastic.NewClusterHealthService(client).Index(common.MediaIndexName).Do(context.TODO())
+		if err != nil {
+			info["indexStatus"] = "error"
+			info["indexError"] = err.Error()
+		} else {
+			info["indexStatus"] = healthResult.Status
+		}
+	}
+
+	return info
 }
 
 func getStatsPropertiesFilter(propertiesFilter string) []string {
@@ -242,23 +278,24 @@ func getTopFieldValues(fieldName string, maxCount int, searchText string, monthS
 			Field("monthname").
 			Field("dayname").
 			Field("keywords").
-			Field("placename") // Full reverse location lookup
+			Field("placename"). // Full reverse location lookup
+			Field("tags")
 		//	}
 	}
 
 	internalFieldName, _ := common.GetIndexFieldName(fieldName)
 	if _, notSupported := fieldsAggregateDisallowed[internalFieldName]; notSupported {
+		fmt.Printf("Unsupported field '%s' ('%s')\n", internalFieldName, fieldName)
 		return make([]string, 0)
 	}
-
-	indexFieldName, _ := common.GetIndexFieldName(fieldName)
 
 	client := common.CreateClient()
 	searchService := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
+		Size(0).
 		Query(query).
-		Aggregation("field", elastic.NewTermsAggregation().Field(indexFieldName).Size(maxCount))
+		Aggregation("field", elastic.NewTermsAggregation().Field(internalFieldName).Size(maxCount))
 	search.AddDrilldown(searchService, &query, drilldownOptions)
 
 	result, err := searchService.Do(context.TODO())
@@ -275,7 +312,6 @@ func getTopFieldValues(fieldName string, maxCount int, searchText string, monthS
 	}
 
 	for _, bucket := range fieldValues.Buckets {
-
 		// datetime needs to be converted to a Date
 		if internalFieldName == "datetime" {
 			msec := int64(bucket.Key.(float64))

@@ -288,8 +288,15 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 			              "type":  "keyword"
 			            }
 					  }
+					},
+					"tags" : {
+					  "type" : "text",
+			          "fields": {
+			            "value": { 
+			              "type":  "keyword"
+			            }
+					  }
 					}
-
 				}
 			}
 		}

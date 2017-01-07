@@ -35,9 +35,15 @@ export class InfoComponent implements OnInit {
     duplicateCount: number;
     imageCount: number;
     paths: [PathAndDate]
+    totalItemCount: number;
     versionNumber: string;
     videoCount: number;
     warningCount: number;
+
+    elasticSearchError: string;
+    elasticSearchVersion: string;
+    elasticSearchIndexStatus: string;
+    elasticSearchIndexName: string;
 
     searchHints: SearchHints[]
 
@@ -65,14 +71,20 @@ export class InfoComponent implements OnInit {
       this.titleService.setTitle('Info - FindAPhoto');
       this.fieldsProvider.initialize();
       this.serverError = null;
-      this.searchService.indexStats('duplicateCount,imageCount,paths,versionNumber,videoCount,warningCount').subscribe(
+      this.searchService.indexStats('dependencyInfo,duplicateCount,imageCount,paths,versionNumber,videoCount,warningCount').subscribe(
             results => {
               this.duplicateCount = results.duplicateCount;
-              this.imageCount = results.imageCount;
+              this.imageCount = +results.imageCount;
               this.paths = results.paths;
               this.versionNumber = results.versionNumber;
-              this.videoCount = results.videoCount;
+              this.videoCount = +results.videoCount;
               this.warningCount = results.warningCount;
+              this.totalItemCount = this.imageCount + this.videoCount;
+
+              this.elasticSearchError = results.dependencyInfo.elasticSearch.error;
+              this.elasticSearchVersion = results.dependencyInfo.elasticSearch.version;
+              this.elasticSearchIndexName = results.dependencyInfo.elasticSearch.index;
+              this.elasticSearchIndexStatus = results.dependencyInfo.elasticSearch.indexStatus;
             },
             error => {
                 this.serverError = error;

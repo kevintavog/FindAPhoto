@@ -28,6 +28,7 @@ var fieldsOverride = map[string]string{
 	"placename":           "placename.value",
 	"sitename":            "sitename.value",
 	"statename":           "statename.value",
+	"tags":                "tags.value",
 	"warnings":            "warnings.value",
 	"whitebalance":        "whitebalance.value",
 }

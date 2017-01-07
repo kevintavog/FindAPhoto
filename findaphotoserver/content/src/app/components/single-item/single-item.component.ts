@@ -30,7 +30,7 @@ class SourceNameValue {
 
 export class SingleItemComponent implements OnInit {
     private static QueryProperties: string = 'id,slideUrl,imageName,createdDate,keywords,city,thumbUrl' +
-        ',latitude,longitude,locationDisplayName,locationName,mimeType,mediaType,path,mediaUrl,warnings';
+        ',latitude,longitude,locationDisplayName,locationName,mimeType,mediaType,path,mediaUrl,tags,warnings';
     private static NearbyProperties: string = 'id,thumbUrl,latitude,longitude,distancekm';
     private static SameDateProperties: string = 'id,thumbUrl,createdDate,city';
     private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';
@@ -210,7 +210,7 @@ export class SingleItemComponent implements OnInit {
                     snv = new SourceNameValue(name, String(val));
                 } else {
                     if (val instanceof Array) {
-                        snv = new SourceNameValue(name, val.join(','));
+                        snv = new SourceNameValue(name, val.join(', '));
                     } else {
                         values.push(...this.objectToSourceNameValues(val, name + '.'));
                     }

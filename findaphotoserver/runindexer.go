@@ -18,7 +18,8 @@ func runIndexer(devMode bool) {
 		"-s", configuration.Current.ElasticSearchUrl,
 		"-o", configuration.Current.OpenMapUrl,
 		"-k", configuration.Current.OpenMapKey,
-		"-c", configuration.Current.OpenMapUrl}
+		"-c", configuration.Current.OpenMapUrl,
+		"-r", configuration.Current.RedisUrl}
 
 	if devMode {
 		args = append(args, "-i")

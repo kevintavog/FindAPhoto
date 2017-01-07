@@ -78,6 +78,13 @@
                     </div>
                 </div>
             </div>
+
+            <div *ngIf="itemInfo.locationDisplayName" class="full-location-name">
+                <i class="fa fa-map-pin"></i> Location name: {{itemInfo.locationDisplayName}}
+            </div>
+            <div *ngIf="itemInfo.tags"class="full-location-name" >
+                <i class="fa fa-server"></i> Automatic tags: {{itemInfo.tags.sort().join(', ')}}
+            </div>
         </div>
     </div>
 
@@ -88,8 +95,6 @@
             <div class="c-card__content c-alert c-alert--warning" *ngFor="let warning of itemInfo.warnings">{{warning}}</div>
         </div>
     </div>
-
-    <div *ngIf="itemInfo.locationDisplayName" class="full-location-name"><br> Full location name: {{itemInfo.locationDisplayName}}</div>
 
     <div class="o-container o-container--xsmall">
         <div class="c-pagination">

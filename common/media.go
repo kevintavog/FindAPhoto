@@ -61,6 +61,9 @@ type Media struct {
 	// For arrays - see here for mappings & searching: http://stackoverflow.com/questions/26258292/querystring-search-on-array-elements-in-elastic-search
 	Keywords []string `json:"keywords,omitempty"`
 
+	// Auto-classified
+	Tags *[]string `json:"tags,omitempty"`
+
 	// Location
 	Location *GeoPoint `json:"location,omitempty"`
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/indexer/helpers"
+	"github.com/kevintavog/findaphoto/indexer/steps"
 
 	"github.com/ian-kent/go-log/log"
 	"golang.org/x/net/context"
@@ -77,6 +78,13 @@ func dequeue() {
 
 		if IndexedFiles%1000 == 0 {
 			log.Info("Indexed [%d] for %s", IndexedFiles, media.Path)
+		}
+
+		fullPath, err := common.FullPathForAliasedPath(media.Path)
+		if err != nil {
+			log.Error("Failed getting full path from alias: %s: (%s)", media.Path, err)
+		} else {
+			classifymedia.Enqueue(fullPath, media.Path, nil)
 		}
 	}
 }

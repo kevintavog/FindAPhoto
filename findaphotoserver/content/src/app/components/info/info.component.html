@@ -1,26 +1,31 @@
 <app-header></app-header>
-<div *ngIf="serverError != undefined">
+<div *ngIf="serverError">
     <br>
     <div class="c-alert c-alert--error">
         {{serverError}}
+    </div>
+</div>
+<div *ngIf="elasticSearchError">
+    <br>
+    <div class="c-alert c-alert--error">
+        ElasticSearch error: {{elasticSearchError}}
     </div>
 </div>
 
 <h1>
 Find A Photo {{versionNumber}}
 </h1>
+<h3 *ngIf="!elasticSearchError">
+  ElasticSearch version {{elasticSearchVersion}}; status is {{elasticSearchIndexStatus}} for '{{elasticSearchIndexName}}''
+</h3>
 
-<div *ngIf="!hasPaths()">
-  No paths have been configured, there is nothing to index.
-</div>
-
-<div *ngIf="hasPaths()">
+<div *ngIf="hasPaths() || imageCount+videoCount > 0">
   <h3>
     <i class="fa fa-picture-o"></i> {{imageCount}} photos
     <br>
     <i class="fa fa-film"></i> {{videoCount}} videos
     <br>
-    <i class="fa fa-files-o"></i> {{imageCount + videoCount}} items
+    <i class="fa fa-files-o"></i> {{totalItemCount}} items
     <br>
     <div *ngIf="duplicateCount > 0"><i class="fa fa-clone"></i> {{duplicateCount}} duplicate items were ignored</div>
     <div *ngIf="duplicateCount == 0"><i class="fa fa-clone"></i> There are NO duplicate items</div>
@@ -34,6 +39,7 @@ Find A Photo {{versionNumber}}
   <div style="clear:both;" *ngIf="paths">
     <br>
     <h3> <i class="fa fa-folder"></i> Indexed paths: </h3>
+
     <div class="path" *ngFor="let p of paths">
       <div *ngIf="p.lastIndexed != null">
         {{p.path}} -- last indexed: {{displayer.dateToLocaleDateAndTime(p.lastIndexed)}}
@@ -41,6 +47,12 @@ Find A Photo {{versionNumber}}
       <div *ngIf="p.lastIndexed == null">
         {{p.path}} -- has never been indexed
       </div>
+    </div>
+    <div class="path" *ngIf="paths.length == 0 && totalItemCount > 0">
+      No paths have completed indexing
+    </div>
+    <div class="path" *ngIf="paths.length == 0 && totalItemCount == 0">
+      No paths have been added.
     </div>
   </div>
 

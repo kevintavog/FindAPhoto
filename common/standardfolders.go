@@ -19,6 +19,7 @@ var FfmpegPath string
 var VipsThumbnailPath string
 var ExecutingDirectory string
 var IndexerPath string
+var MediaClassifierPath string
 
 func InitDirectories(appName string) {
 	if HomeDirectory == "" {
@@ -29,6 +30,7 @@ func InitDirectories(appName string) {
 
 		ExecutingDirectory = exeDir
 		IndexerPath = ExecutingDirectory + "/indexer"
+		MediaClassifierPath = ExecutingDirectory + "/media-classifier"
 
 		if runtime.GOOS == "darwin" {
 			HomeDirectory = os.Getenv("HOME")

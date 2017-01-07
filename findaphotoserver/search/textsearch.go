@@ -41,7 +41,8 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 			Field("monthname").
 			Field("dayname").
 			Field("keywords").
-			Field("placename") // Full reverse location lookup
+			Field("placename"). // Full reverse location lookup
+			Field("tags")
 	}
 
 	search.Query(query)

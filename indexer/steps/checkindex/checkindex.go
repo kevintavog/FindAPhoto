@@ -10,6 +10,7 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/indexer/helpers"
+	"github.com/kevintavog/findaphoto/indexer/steps"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/getexif"
@@ -118,6 +119,7 @@ func dequeue() {
 					generatethumbnail.Enqueue(candidateFile.FullPath, candidateFile.AliasedPath, media.MimeType)
 				} else {
 					checkthumbnail.Enqueue(candidateFile.FullPath, candidateFile.AliasedPath, media.MimeType)
+					classifymedia.Enqueue(candidateFile.FullPath, candidateFile.AliasedPath, media.Tags)
 				}
 			}
 		}

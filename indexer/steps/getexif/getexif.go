@@ -62,44 +62,47 @@ func Wait() {
 func Enqueue(candidate *common.CandidateFile) {
 	directory := path.Dir(candidate.FullPath)
 
-	var inQueue bool
-	var exifForDirectory *ExifForDirectory
-
-	// Lock only to check if this has been queued & added to allDirectories
-	{
-		allLock.Lock()
-		defer allLock.Unlock()
-
-		if exifForDirectory, inQueue = allDirectories[directory]; !inQueue {
-			exifForDirectory = &ExifForDirectory{
-				Directory: directory,
-				Files:     list.New(),
-				dequeued:  false,
-			}
-
-			allDirectories[directory] = exifForDirectory
-		}
-	}
+	exifForDirectory, inQueue := getExifForDirectory(directory)
 
 	// Add this file to the exif for the directory
-	{
-		exifForDirectory.lock.Lock()
-		defer exifForDirectory.lock.Unlock()
 
-		if !exifForDirectory.dequeued {
-			exifForDirectory.Files.PushBack(candidate)
-		} else {
-			ex, err := exifForFile(exifForDirectory, path.Base(candidate.FullPath))
-			if err != nil {
-				candidate.Exif = *ex
-			}
-			preparemedia.Enqueue(candidate)
+	exifForDirectory.lock.Lock()
+	defer exifForDirectory.lock.Unlock()
+
+	if !exifForDirectory.dequeued {
+		exifForDirectory.Files.PushBack(candidate)
+	} else {
+		ex, err := exifForFile(exifForDirectory, path.Base(candidate.FullPath))
+		if err != nil {
+			candidate.Exif = *ex
 		}
+		preparemedia.Enqueue(candidate)
 	}
 
 	if !inQueue {
 		queue <- exifForDirectory
 	}
+}
+
+func getExifForDirectory(directory string) (*ExifForDirectory, bool) {
+
+	// Lock only to check if this has been queued & added to allDirectories
+	allLock.Lock()
+	defer allLock.Unlock()
+
+	var inQueue bool
+	var exifForDirectory *ExifForDirectory
+	if exifForDirectory, inQueue = allDirectories[directory]; !inQueue {
+		exifForDirectory = &ExifForDirectory{
+			Directory: directory,
+			Files:     list.New(),
+			dequeued:  false,
+		}
+
+		allDirectories[directory] = exifForDirectory
+	}
+
+	return exifForDirectory, inQueue
 }
 
 func dequeue() {

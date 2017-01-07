@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/kevintavog/findaphoto/indexer/steps"
 
 	"github.com/ian-kent/go-log/log"
 	"golang.org/x/net/context"
@@ -75,6 +76,13 @@ func IsDuplicate(client *elastic.Client, signature string, aliasedPath string, m
 		media := returnFirstMatch(signatureExistsResult)
 		if media != nil {
 			AddDuplicateToIndex(client, aliasedPath, media.Path)
+
+			fullPath, err := common.FullPathForAliasedPath(media.Path)
+			if err != nil {
+				log.Error("Failed getting full path from alias: %s: (%s)", media.Path, err)
+			} else {
+				classifymedia.Enqueue(fullPath, media.Path, media.Tags)
+			}
 		} else {
 			log.Error("Unable to get original path from duplicate search result")
 		}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/indexer/helpers"
+	"github.com/kevintavog/findaphoto/indexer/steps"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkindex"
 	"github.com/kevintavog/findaphoto/indexer/steps/checkthumbnail"
 	"github.com/kevintavog/findaphoto/indexer/steps/generatethumbnail"
@@ -17,6 +18,7 @@ import (
 	"github.com/kevintavog/findaphoto/indexer/steps/resolveplacename"
 	"github.com/kevintavog/findaphoto/indexer/steps/scanner"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/ian-kent/go-log/log"
 	"github.com/jawher/mow.cli"
 	"golang.org/x/net/context"
@@ -36,10 +38,11 @@ func main() {
 	generatethumbnail.VipsExists = common.IsExecWorking(common.VipsThumbnailPath, "--vips-version")
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -o -k [-i] [-c] [--reindex] [-v]"
+	app.Spec = "-p -s -o -k -r [-i] [-c] [--reindex] [-v]"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
+	redisServer := app.StringOpt("r", "", "The URL for the Redis server")
 	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
 	cachedLocationsServer := app.StringOpt("c", "", "The URL for the cached location server (optional)")
 	forceIndex := app.BoolOpt("reindex", false, "Force everything to be re-indexed; current index not deleted. (optional)")
@@ -48,6 +51,7 @@ func main() {
 	app.Action = func() {
 
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
+		common.RedisServer = *redisServer
 
 		log.Info("%s: FindAPhoto scanning %s, and indexing to %s/%s; using %d/%d CPU's",
 			time.Now().Format("2006-01-02"),
@@ -62,6 +66,12 @@ func main() {
 		if checkindex.ForceIndex {
 			log.Warn("Re-indexing all documents")
 		}
+
+		c, err := redis.DialURL(*redisServer)
+		if err != nil {
+			log.Fatalf("Unable to connect to Redis server: %s", err)
+		}
+		defer c.Close()
 
 		common.ElasticSearchServer = *server
 		resolveplacename.OpenStreetMapUrl = *openStreetMapServer
@@ -80,6 +90,7 @@ func main() {
 
 		scanStartTime := time.Now()
 		helpers.InitializeDuplicates()
+		classifymedia.Start()
 		scanner.Scan(*scanPath, alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)

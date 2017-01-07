@@ -39,6 +39,7 @@ func Scan(scanPath, alias string) {
 
 	go func() {
 		scan(scanPath, alias, scanPath)
+		log.Debug("scan completed")
 		checkindex.Done()
 	}()
 

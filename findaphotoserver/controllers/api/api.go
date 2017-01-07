@@ -314,6 +314,8 @@ func property(name string, mh *search.MediaHit) interface{} {
 		return mh.Media.Signature
 	case "slideurl":
 		return files.ToSlideUrl(mh.Media.Path)
+	case "tags":
+		return mh.Media.Tags
 	case "thumburl":
 		return files.ToThumbUrl(mh.Media.Path)
 	case "warnings":

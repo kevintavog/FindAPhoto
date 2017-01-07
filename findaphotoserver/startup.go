@@ -20,8 +20,8 @@ import (
 func run(devolopmentMode bool, indexOverride string) {
 	listenPort := 2000
 	easyExit := false
-	log.Info("FindAPhoto %s", versionString())
 	api.FindAPhotoVersionNumber = versionString()
+	log.Info("FindAPhoto %s", api.FindAPhotoVersionNumber)
 
 	if !common.IsExecWorking(common.ExifToolPath, "-ver") {
 		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)
@@ -38,6 +38,9 @@ func run(devolopmentMode bool, indexOverride string) {
 	} else {
 		if !common.IsExecWorking(common.IndexerPath, "-v") {
 			log.Fatal("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
+		}
+		if !common.IsExecWorking(common.MediaClassifierPath, "-v") {
+			log.Fatal("The FindAPhoto Media Classifier isn't usable (path is '%s')", common.MediaClassifierPath)
 		}
 	}
 
@@ -81,6 +84,12 @@ func run(devolopmentMode bool, indexOverride string) {
 	api.ConfigureRouting(l)
 	files.ConfigureRouting(l)
 
+	mediaClassifierFunc := func() {
+		if !devolopmentMode {
+			runMediaClassifier(devolopmentMode)
+		}
+	}
+
 	delayThenIndexFunc := func() {
 		if !devolopmentMode {
 			time.Sleep(1 * time.Second)
@@ -89,6 +98,7 @@ func run(devolopmentMode bool, indexOverride string) {
 	}
 
 	startServerFunc := func() {
+		go mediaClassifierFunc()
 		go delayThenIndexFunc()
 
 		err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), l.Serve())
