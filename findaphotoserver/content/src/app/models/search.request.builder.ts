@@ -2,9 +2,33 @@ import { Injectable } from '@angular/core';
 import { Params } from '@angular/router';
 
 import { SearchRequest } from './search-request';
+// import { DataDisplayer } from '../providers/data-displayer';
+import { DataDisplayer } from '../providers/data-displayer';
 
 @Injectable()
 export class SearchRequestBuilder {
+    public static monthNames: string[] = [
+        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+
+    constructor(private displayer: DataDisplayer) {}
+
+    toReadableString(searchRequest: SearchRequest) {
+        switch (searchRequest.searchType) {
+            case 's':
+                return 'for \'' + searchRequest.searchText + '\'';
+            case 'd':
+                let activeDate = new Date(
+                    2016,
+                    searchRequest.month - 1,
+                    searchRequest.day, 0, 0, 0, 0);
+                return 'on ' + SearchRequestBuilder.monthNames[activeDate.getMonth()] + ' ' + searchRequest.day;
+            case 'l':
+                return 'Nearby ' + this.displayer.latitudeDms(searchRequest.latitude) 
+                    + ', ' + this.displayer.longitudeDms(searchRequest.longitude);
+            default:
+                return 'Unknown search type: ' + searchRequest.searchType;
+        }
+    }
 
     toLinkParametersObject(searchRequest: SearchRequest) {
         let properties = {};

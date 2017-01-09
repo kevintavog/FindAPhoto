@@ -1,12 +1,13 @@
 
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
 import { Circle, Handler, Icon, LatLngTuple, LocationEvent, Map, Marker } from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results';
+import { SearchRequestBuilder } from '../../models/search.request.builder';
 
 import { DataDisplayer } from '../../providers/data-displayer';
 import { FPLocationAccuracy, LocationProvider } from '../../providers/location.provider';
@@ -22,6 +23,11 @@ import { SearchResultsProvider } from '../../providers/search-results.provider';
 
 export class MapComponent implements OnInit {
     public static QueryProperties: string = 'createdDate,id,imageName,latitude,longitude,locationDisplayName,thumbUrl';
+
+    readableSearchString: string;
+
+    searchBarVisible: boolean;
+    resultsSearchText: string;  // The last search text
 
     markerIcon: Icon;
     selectedMarkerIcon: Icon;
@@ -62,9 +68,11 @@ export class MapComponent implements OnInit {
 
 
     constructor(
+        private router: Router,
         private route: ActivatedRoute,
         private navigationProvider: NavigationProvider,
         private searchResultsProvider: SearchResultsProvider,
+        private searchRequestBuilder: SearchRequestBuilder,
         private displayer: DataDisplayer,
         private titleService: Title,
         private locationProvider: LocationProvider) {
@@ -84,7 +92,7 @@ export class MapComponent implements OnInit {
 
         this.route.queryParams.subscribe(params => {
             if (('q' in params && params['q'] !== '') || ('t' in params && params['t'] !== 's')) {
-                this.startSearch();
+                this.startSearch(false);
             }
         });
 
@@ -116,7 +124,41 @@ export class MapComponent implements OnInit {
         );
     }
 
-    startSearch() {
+    startSearch(updateUrl: boolean) {
+        if (updateUrl) {
+            let params = this.searchRequestBuilder.toLinkParametersObject(this.searchResultsProvider.searchRequest);
+            let navigationExtras: NavigationExtras = { queryParams: params };
+
+            let startingUrlTree = this.router.parseUrl(this.router.url);
+            let sameParams = true;
+            for (let key in navigationExtras.queryParams) {
+                if (navigationExtras.queryParams.hasOwnProperty(key)) {
+                    let val = String(navigationExtras.queryParams[key]);
+                    if (val !== startingUrlTree.queryParams[key]) {
+                        sameParams = false;
+                        break;
+                    }
+                }
+            }
+
+            // If the params are the same, navigating won't change anything, so fall through to the search invocation
+            if (!sameParams) {
+                this.router.navigate( ['map'], navigationExtras);
+                return;
+            }
+        }
+
+        // ? If 'searchBarVisible' is set outside of this timer, the page is refreshed.
+        // I'm currently blaming this on something funny with the way I'm using the variable
+        // and the way Angular2 handles it. Will re-test once I update Angular
+        let timer = setInterval( () => {
+            clearTimeout(timer);
+            this.searchBarVisible = false;
+        });
+
+        this.closeImage();
+        this.cluster.clearLayers();
+
         this.currentItem = null;
         this.pageError = null;
         this.southWestCornerLatLng = [90, 180];
@@ -125,12 +167,15 @@ export class MapComponent implements OnInit {
         this.totalMatches = this.matchesRetrieved = 0;
         this.searchResultsProvider.searchRequest.first = 1;
         this.isLoading = true;
+        this.readableSearchString = ' -- ' + this.searchRequestBuilder.toReadableString(this.searchResultsProvider.searchRequest);
+
         this.searchResultsProvider.search(null);
     }
 
     mapSearchCompleted() {
         if (this.searchResultsProvider.searchResults) {
             let markers = new Array<Marker>();
+
             for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
                     if (item.latitude && item.longitude) {
@@ -163,10 +208,8 @@ export class MapComponent implements OnInit {
 
             this.cluster.addLayer(L.layerGroup(markers));
 
-
             let results = this.searchResultsProvider.searchResults;
             let request = this.searchResultsProvider.searchRequest;
-
 
             // Only fit bounds after the first search - otherwise, the map will jump around, which is unpleasant.
             if (this.fitBoundsOnFirstResults && request.first === 1) {
@@ -226,6 +269,15 @@ export class MapComponent implements OnInit {
         this.searchNear(center.lat, center.lng);
     }
 
+    toggleSearchBar() {
+        this.searchBarVisible = !this.searchBarVisible;
+    }
+
+    searchWithText() {
+        this.searchResultsProvider.searchRequest.searchType = 's';
+        this.startSearch(true);
+    }
+
     fitBounds() {
         this.map.fitBounds([this.southWestCornerLatLng, this.northEastCornerLatLng], null);
     }
@@ -272,7 +324,7 @@ export class MapComponent implements OnInit {
         this.currentLocationCircle = L.circle([latitude, longitude], radius, circleProperties);
         this.currentLocationCircle.addTo(this.map);
 
-        this.startSearch();
+        this.startSearch(true);
 
     }
 

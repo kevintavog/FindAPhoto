@@ -19,9 +19,6 @@ import { SearchResultsProvider } from '../../providers/search-results.provider';
 })
 
 export class SearchByDayComponent extends BaseSearchComponent implements OnInit {
-    private static monthNames: string[] = [
-        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
-
     activeDate: Date;
 
 
@@ -56,7 +53,7 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
 
         // DOES NOT honor locale...
         this.pageMessage = 'Pictures from '
-            + SearchByDayComponent.monthNames[this.activeDate.getMonth()]
+            + SearchRequestBuilder.monthNames[this.activeDate.getMonth()]
             + '  ' + this.activeDate.getDate();
 
         this.typeLeftButtonClass = 'fa fa-arrow-left';
@@ -64,7 +61,7 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
         this.typeRightButtonClass = 'fa fa-arrow-right';
         this.typeRightButtonText = this.byDayString(this._searchResultsProvider.searchResults.nextAvailableByDay);
 
-        this.titleService.setTitle(SearchByDayComponent.monthNames[
+        this.titleService.setTitle(SearchRequestBuilder.monthNames[
             this.activeDate.getMonth()] + ' ' + this.activeDate.getDate() + ' - FindAPhoto');
     }
 
@@ -72,7 +69,7 @@ export class SearchByDayComponent extends BaseSearchComponent implements OnInit 
         if (byday === undefined) {
             return null;
         }
-        return SearchByDayComponent.monthNames[byday.month - 1] + ' ' + byday.day;
+        return SearchRequestBuilder.monthNames[byday.month - 1] + ' ' + byday.day;
     }
 
     typeLeftButton() {

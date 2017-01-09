@@ -7,6 +7,12 @@
         <app-alerts></app-alerts>
 
         <div >
+            <button *ngIf="searchBarVisible" class="c-button c-button--rounded c-button--ghost-success u-small" (click)="toggleSearchBar()">
+                <i class="fa fa-search fa-1x"></i>
+            </button>
+            <button *ngIf="!searchBarVisible" class="c-button c-button--rounded c-button--ghost-info u-small" (click)="toggleSearchBar()">
+                <i class="fa fa-search fa-1x"></i>
+            </button>
             <button class="c-button c-button--rounded c-button--ghost-info u-small" (click)="fitBounds()">
                 Fit map
             </button>
@@ -33,8 +39,25 @@
                 <div class="c-progress__bar c-progress__bar--info c-progress--rounded" [style.width]="percentageLoadedWidth"></div>
             </div>
         </div>
-        <div *ngIf="!isLoading && !choosingLocation" style="margin-left:10px;" >
-            {{totalMatches}} total matches
+        <div *ngIf="!searchBarVisible && !isLoading && !choosingLocation" style="margin-left:10px;" >
+            <div *ngIf="searchResultsProvider.searchResults">
+                {{totalMatches}} total matches {{readableSearchString}}
+            </div>
+            <div *ngIf="!searchResultsProvider.searchResults">
+                <br>
+            </div>
+        </div>
+        <div *ngIf="searchBarVisible">
+            <form>
+                <div class="o-container o-container--large" >
+                    <div class="c-input-group">
+                        <div class="o-field">
+                            <input class="c-field" type="text" autofocus [(ngModel)]="searchResultsProvider.searchRequest.searchText" [ngModelOptions]="{standalone: true}" >
+                        </div>
+                        <button class="c-button c-button--info" type="submit" (click)="searchWithText()" >Search</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </header>
 
