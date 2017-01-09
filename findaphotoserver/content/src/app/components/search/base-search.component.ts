@@ -18,6 +18,7 @@ export abstract class BaseSearchComponent implements OnDestroy {
     public DatesCaption: string = 'Dates:';
     public KeywordsCaption: string = 'Keywords:';
     public LocationsCaption: string = 'Locations:';
+    public TagsCaption: string = 'Tags:';
 
     uiState = new UIState();
 

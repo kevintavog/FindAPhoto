@@ -16,6 +16,7 @@ import (
 type CategoryOptions struct {
 	PlacenameCount int
 	KeywordCount   int
+	TagCount       int
 	DateCount      int
 	YearCount      int
 }
@@ -78,6 +79,7 @@ func NewCategoryOptions() *CategoryOptions {
 	return &CategoryOptions{
 		PlacenameCount: 0,
 		KeywordCount:   0,
+		TagCount:       0,
 		DateCount:      0,
 		YearCount:      0,
 	}
@@ -183,6 +185,10 @@ func returnFirstMatch(search *elastic.SearchService) (*MediaHit, error) {
 func addAggregations(search *elastic.SearchService, categoryOptions *CategoryOptions) {
 	if categoryOptions.KeywordCount > 0 {
 		search.Aggregation("keywords", elastic.NewTermsAggregation().Field("keywords.value").Size(categoryOptions.KeywordCount))
+	}
+
+	if categoryOptions.TagCount > 0 {
+		search.Aggregation("tags", elastic.NewTermsAggregation().Field("tags.value").Size(categoryOptions.TagCount))
 	}
 
 	// Dates are in a Year, Month, Day hierarchy - years & days are limited by the requested limit, while all 12 months are returned (if they exist)
@@ -322,7 +328,8 @@ func AddDrilldown(search *elastic.SearchService, searchQuery *elastic.Query, dri
 	// locations (site, city, state, country) are OR - also, OR between each type/level
 	// dates (year, month, day) are OR - also OR between each value
 	// keywords are OR
-	// ANDed together ((locations) AND (dates) AND (keywords))
+	// tags are OR
+	// each set is ANDed together ((locations) AND (dates) AND (keywords) AND (tags))
 
 	// countryName:Canada;stateName:Washington,Ile-de-France;keywords:trip,flower
 	// (countryName=Canada OR stateName=Washington OR stateName=Ile-de-France) AND (keywords=trip OR keywords=flower)

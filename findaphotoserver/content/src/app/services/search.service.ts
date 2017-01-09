@@ -11,7 +11,7 @@ export class SearchService {
 
     searchByText(searchText: string, properties: string, first: number, pageCount: number, drilldown: string) {
         let url = '/api/search?q=' + searchText + '&first=' + first + '&count=' + pageCount + '&properties='
-            + properties + '&categories=keywords,placename,date';
+            + properties + '&categories=keywords,tags,placename,date';
         if (drilldown !== undefined && drilldown.length > 0) {
            url += '&drilldown=' + drilldown;
         }
@@ -23,7 +23,7 @@ export class SearchService {
 
     searchByDay(month: number, day: number, properties: string, first: number, pageCount: number, random: boolean, drilldown: string) {
         let url = '/api/by-day?month=' + month + '&day=' + day + '&first=' + first + '&count=' + pageCount + '&properties='
-            + properties + '&categories=keywords,placename,year';
+            + properties + '&categories=keywords,tags,placename,year';
         if (drilldown !== undefined && drilldown.length > 0) {
             url += '&drilldown=' + drilldown;
         }
@@ -40,7 +40,7 @@ export class SearchService {
             maxKilometers: number, properties: string, 
             first: number, pageCount: number, drilldown: string) {
         let url = '/api/nearby?lat=' + lat + '&lon=' + lon + '&first=' + first + '&count=' + pageCount + '&properties='
-            + properties + '&categories=keywords,date';
+            + properties + '&categories=keywords,tags,date';
 
         if (drilldown && drilldown.length > 0) {
             url += '&drilldown=' + drilldown;

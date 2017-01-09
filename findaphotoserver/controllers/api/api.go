@@ -342,6 +342,8 @@ func populateCategoryOptions(fc *applicationglobals.FpContext, categoryOptions *
 			switch strings.ToLower(c) {
 			case "keywords":
 				categoryOptions.KeywordCount = 10
+			case "tags":
+				categoryOptions.TagCount = 10
 			case "placename":
 				categoryOptions.PlacenameCount = 10
 			case "date":

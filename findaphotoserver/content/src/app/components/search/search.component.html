@@ -48,25 +48,32 @@
     <div class="filter-panel" *ngIf="uiState.showFilters == true"  >
         <div class="filter-toggle" (click)="uiState.toggleFilterPanel()"> Filters <i class="fa fa-caret-down filter-toggle-glyph"></i> </div>
 
-        <div id="containerLeft" class="filter-panel" >
-            <div id="containerMiddle" class="filter-panel" >
-                <div id="containerRight" class="filter-panel" >
+        <div id="container4" class="filter-panel" >
+            <div id="container3" class="filter-panel" >
+                <div id="container2" class="filter-panel" >
+                    <div id="container1" class="filter-panel" >
 
-                    <div *ngIf="_searchResultsProvider.categoryDate() != null" id="columnLeft" class="filter-panel" >
-                        <app-category-tree-view [caption]=DatesCaption [category]=_searchResultsProvider.categoryDate()>
-                        </app-category-tree-view>
+                        <div *ngIf="_searchResultsProvider.categoryDate() != null" id="column1" class="filter-panel" >
+                            <app-category-tree-view [caption]=DatesCaption [category]=_searchResultsProvider.categoryDate()>
+                            </app-category-tree-view>
+                        </div>
+
+                        <div *ngIf="_searchResultsProvider.categoryKeywords() != null" id="column2" class="filter-panel" >
+                            <app-category-tree-view [caption]=KeywordsCaption [category]=_searchResultsProvider.categoryKeywords()>
+                            </app-category-tree-view>
+                        </div>
+
+                        <div *ngIf="_searchResultsProvider.categoryTags() != null" id="column3" class="filter-panel" >
+                            <app-category-tree-view [caption]=TagsCaption [category]=_searchResultsProvider.categoryTags()>
+                            </app-category-tree-view>
+                        </div>
+
+                        <div *ngIf="_searchResultsProvider.categoryPlacenames() != null" id="column4" class="filter-panel" >
+                            <app-category-tree-view [caption]=LocationsCaption [category]=_searchResultsProvider.categoryPlacenames()>
+                            </app-category-tree-view>
+                        </div>
+
                     </div>
-
-                    <div *ngIf="_searchResultsProvider.categoryKeywords() != null" id="columnMiddle" class="filter-panel" >
-                        <app-category-tree-view [caption]=KeywordsCaption [category]=_searchResultsProvider.categoryKeywords()>
-                        </app-category-tree-view>
-                    </div>
-
-                    <div *ngIf="_searchResultsProvider.categoryPlacenames() != null" id="columnRight" class="filter-panel" >
-                        <app-category-tree-view [caption]=LocationsCaption [category]=_searchResultsProvider.categoryPlacenames()>
-                        </app-category-tree-view>
-                    </div>
-
                 </div>
             </div>
         </div>

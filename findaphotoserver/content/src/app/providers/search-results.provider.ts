@@ -146,6 +146,10 @@ export class SearchResultsProvider {
         return this.categoryByField('keywords');
     }
 
+    categoryTags(): SearchCategory {
+        return this.categoryByField('tags');
+    }
+
     categoryPlacenames(): SearchCategory {
         return this.categoryByField('countryName');
     }
