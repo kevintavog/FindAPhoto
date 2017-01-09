@@ -32,6 +32,11 @@ export class SearchRequestBuilder {
 
     toLinkParametersObject(searchRequest: SearchRequest) {
         let properties = {};
+
+        if (searchRequest == null) {
+            return properties;
+        }
+
         properties['t'] = searchRequest.searchType;
         switch (searchRequest.searchType) {
             case 's':
