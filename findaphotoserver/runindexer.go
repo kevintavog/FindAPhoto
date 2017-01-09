@@ -4,6 +4,8 @@ import (
 	"os/exec"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/ian-kent/go-log/log"
 	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
@@ -49,6 +51,10 @@ func runIndexer(devMode bool) {
 
 	if err != nil {
 		log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
+	}
+	_, err = client.Refresh(common.MediaIndexName).Do(context.TODO())
+	if err != nil {
+		log.Error("Failed refreshing '%s': %s", common.MediaIndexName, err)
 	}
 	common.InitializeAliases(client)
 }
