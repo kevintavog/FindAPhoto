@@ -49,7 +49,7 @@ func checkClarifai() error {
 func classifyV2(mediaFile string) (string, error) {
 
 	if strings.ToLower(path.Ext(mediaFile)) == ".mp4" {
-		log.Info("Skipping video: %s", mediaFile)
+		log.Info("Skipping classifying video: %s", mediaFile)
 		return "", nil
 	}
 
@@ -69,6 +69,7 @@ func classifyV2(mediaFile string) (string, error) {
 		defer os.Remove(generatedFilename)
 	}
 
+	log.Info("Classifying %s", mediaFile)
 	client := clarifaiv2.NewClient(ClientId, ClientSecret)
 	response, err := client.Predict(filename)
 	if err != nil {

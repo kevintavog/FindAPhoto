@@ -108,7 +108,6 @@ func addOrGet(c redis.Conn, fullPath string) (string, error) {
 		return existingValue, nil
 	}
 
-	log.Info("Classifying %s", fullPath)
 	json, err := classifyV2(fullPath)
 	if err != nil {
 		log.Error("Classification error: %s (%s)\n", err, json)
