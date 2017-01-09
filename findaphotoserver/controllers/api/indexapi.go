@@ -199,7 +199,7 @@ func getElasticSearchDependencyInfo(client *elastic.Client) map[string]interface
 
 	info["index"] = common.MediaIndexName
 
-	pingResult, httpStatusCode, err := elastic.NewPingService(client).Do(context.TODO())
+	pingResult, httpStatusCode, err := client.Ping(common.ElasticSearchServer).Do(context.TODO())
 	info["httpStatusCode"] = httpStatusCode
 	if err != nil {
 		info["error"] = err.Error()

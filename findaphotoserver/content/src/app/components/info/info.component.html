@@ -16,7 +16,7 @@
 Find A Photo {{versionNumber}}
 </h1>
 <h3 *ngIf="!elasticSearchError">
-  ElasticSearch version {{elasticSearchVersion}}; status is {{elasticSearchIndexStatus}} for '{{elasticSearchIndexName}}''
+  ElasticSearch version {{elasticSearchVersion}} is {{elasticSearchIndexStatus}} for '{{elasticSearchIndexName}}''
 </h3>
 
 <div *ngIf="hasPaths() || imageCount+videoCount > 0">

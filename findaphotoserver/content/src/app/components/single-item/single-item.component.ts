@@ -29,8 +29,8 @@ class SourceNameValue {
 })
 
 export class SingleItemComponent implements OnInit {
-    private static QueryProperties: string = 'id,slideUrl,imageName,createdDate,keywords,city,thumbUrl' +
-        ',latitude,longitude,locationDisplayName,locationName,mimeType,mediaType,path,mediaUrl,tags,warnings';
+    private static QueryProperties: string = 'createdDate,city,id,imageName,keywords,latitude,longitude' +
+        ',locationDisplayName,locationName,mediaType,mediaUrl,mimeType,path,slideUrl,tags,thumbUrl,warnings';
     private static NearbyProperties: string = 'id,thumbUrl,latitude,longitude,distancekm';
     private static SameDateProperties: string = 'id,thumbUrl,createdDate,city';
     private static CameraProperties: string = 'cameramake,cameramodel,lensinfo,lensmodel';
