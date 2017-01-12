@@ -15,13 +15,13 @@ import { SearchCategory, SearchCategoryDetail } from '../../models/search-result
   template: `
     <ul class="c-tree details-tree-ul" >
         <li *ngFor="let scd of details" [ngClass]="getClassName(scd)" >
-                <input type="checkbox" value="{{scd.value}}" [(ngModel)]="scd.selected" (change)="onSelectionChange(scd)" >
+                <input *ngIf="disableCheckbox!=true" type="checkbox" value="{{scd.value}}" [(ngModel)]="scd.selected" (change)="onSelectionChange(scd)" >
                     <div class="details-tree-text" (click)="toggleOpen(scd)">
                         {{ getDisplayValue(scd) }} ({{scd.count}})
                     </div>
 
             <app-category-details-tree-view *ngIf="scd.isOpen == true" 
-                [details]=scd.details [field]=scd.field [parentComponent]=this [parentDetail]=scd >
+                [details]=scd.details [field]=scd.field [parentComponent]=this [parentDetail]=scd [disableCheckbox]=disableCheckbox >
             </app-category-details-tree-view>
         </li>
     </ul>
@@ -31,6 +31,7 @@ import { SearchCategory, SearchCategoryDetail } from '../../models/search-result
 export class CategoryDetailsTreeViewComponent {
     @Input() field: string;
     @Input() details: SearchCategoryDetail[];
+    @Input() disableCheckbox: boolean;
     @Input() parentComponent: CategoryDetailsTreeViewComponent;
     @Input() parentDetail: SearchCategoryDetail;
 
@@ -91,12 +92,13 @@ export class CategoryDetailsTreeViewComponent {
   selector: 'app-category-tree-view',
   template: `
     <div>{{caption}}
-        <app-category-details-tree-view [details]=category.details [field]=category.field ></app-category-details-tree-view>
+        <app-category-details-tree-view [details]=category.details [field]=category.field [disableCheckbox]=disableCheckbox ></app-category-details-tree-view>
     </div>
   `,
 })
 
 export class CategoryTreeViewComponent {
-    @Input() caption: any
-    @Input() category: any
+    @Input() caption: any;
+    @Input() category: any;
+    @Input() disableCheckbox: boolean;
 }

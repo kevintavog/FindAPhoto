@@ -16,16 +16,18 @@ import { SearchRequestBuilder } from './models/search.request.builder';
 
 import { DataDisplayer } from './providers/data-displayer';
 import { FieldsProvider } from './providers/fields.provider';
+import { FieldValueProvider } from './providers/field-values.provider';
 import { LocationProvider } from './providers/location.provider';
 import { NavigationProvider } from './providers/navigation.provider';
 
 import { routing } from './app.routes';
 import { AlertsComponent } from './components/alerts/alerts.component';
+import { FieldValuesComponent } from './components/field-values/field-values.component';
 import { InfoComponent } from './components/info/info.component';
 import { HeaderComponent } from './components/header/header.component';
 import { PagingComponent } from './components/paging/paging.component';
-import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from
-    './components/category-tree-view-component/category-tree-view.component';
+import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from './components/category-tree-view/category-tree-view.component';
+import { FieldCountPanelComponent } from './components/field-count-panel/field-count-panel.component';
 
 
 @NgModule({
@@ -41,7 +43,9 @@ import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from
         AlertsComponent,
         InfoComponent,
         CategoryTreeViewComponent,
-        CategoryDetailsTreeViewComponent
+        CategoryDetailsTreeViewComponent,
+        FieldValuesComponent,
+        FieldCountPanelComponent
     ],
     imports: [
         BrowserModule,
@@ -52,6 +56,7 @@ import { CategoryTreeViewComponent, CategoryDetailsTreeViewComponent } from
     providers: [
         DataDisplayer,
         FieldsProvider,
+        FieldValueProvider,
         LocationProvider,
         NavigationProvider,
         SearchRequestBuilder,

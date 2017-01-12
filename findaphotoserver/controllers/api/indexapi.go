@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -70,18 +69,6 @@ func Index(c lars.Context) {
 	})
 }
 
-func IndexFields(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-
-	response := make(map[string]interface{})
-	response["fields"] = getMappedFields()
-	fc.WriteResponse(response)
-}
-
 func IndexFieldValues(c lars.Context) {
 	fc := c.(*applicationglobals.FpContext)
 	err := fc.Ctx.ParseForm()
@@ -90,26 +77,28 @@ func IndexFieldValues(c lars.Context) {
 	}
 
 	fc.AppContext.FieldLogger.Time("", func() {
-		fieldName := fc.Ctx.Request().Form.Get("field")
+		fieldNames := make([]string, 0)
+		field := fc.Ctx.Request().Form.Get("fields")
+		if len(field) < 1 {
+			panic(&InvalidRequest{message: "'fields' query parameter missing"})
+		} else {
+			fieldNames = strings.Split(field, ",")
+		}
+
 		searchText := fc.Ctx.Request().Form.Get("q")
 		month := fc.Ctx.Request().Form.Get("month")
 		day := fc.Ctx.Request().Form.Get("day")
+		maxCount := intFromQuery(fc.Ctx, "max", 20)
 
-		fc.AppContext.FieldLogger.Add("field", fieldName)
+		fc.AppContext.FieldLogger.Add("fields", strings.Join(fieldNames, ","))
 
 		drilldownOptions := search.NewDrilldownOptions()
 		populateDrilldownOptions(fc, drilldownOptions)
 
-		fieldValues := getTopFieldValues(fieldName, 20, searchText, month, day, drilldownOptions)
-
-		values := make(map[string]interface{})
-		values["name"] = fieldName
-		values["values"] = fieldValues
+		fieldsAndValues := getTopFieldValues(fieldNames, maxCount, searchText, month, day, drilldownOptions)
 
 		response := make(map[string]interface{})
-		response["values"] = values
-
-		fc.AppContext.FieldLogger.Add("count", strconv.Itoa(len(fieldValues)))
+		response["fields"] = fieldsAndValues
 
 		fc.WriteResponse(response)
 	})
@@ -123,6 +112,9 @@ func getValue(name string, client *elastic.Client) interface{} {
 
 	case "duplicatecount":
 		return getDuplicateCount(client)
+
+	case "fields":
+		return getMappedFields()
 
 	case "imagecount":
 		return getCountsSearch(client, "mimetype:image*")
@@ -252,7 +244,8 @@ func getMappedFields() []string {
 	return allFields
 }
 
-func getTopFieldValues(fieldName string, maxCount int, searchText string, monthString string, dayString string, drilldownOptions *search.DrilldownOptions) []string {
+func getTopFieldValues(fieldNames []string, maxCount int, searchText string, monthString string,
+	dayString string, drilldownOptions *search.DrilldownOptions) []interface{} {
 
 	var query elastic.Query
 	if len(monthString) > 0 || len(dayString) > 0 {
@@ -283,19 +276,25 @@ func getTopFieldValues(fieldName string, maxCount int, searchText string, monthS
 		//	}
 	}
 
-	internalFieldName, _ := common.GetIndexFieldName(fieldName)
-	if _, notSupported := fieldsAggregateDisallowed[internalFieldName]; notSupported {
-		fmt.Printf("Unsupported field '%s' ('%s')\n", internalFieldName, fieldName)
-		return make([]string, 0)
-	}
+	fieldInfo := make([]interface{}, 0)
 
 	client := common.CreateClient()
 	searchService := client.Search().
 		Index(common.MediaIndexName).
 		Type(common.MediaTypeName).
 		Size(0).
-		Query(query).
-		Aggregation("field", elastic.NewTermsAggregation().Field(internalFieldName).Size(maxCount))
+		Query(query)
+
+	for _, name := range fieldNames {
+		internalName, _ := common.GetIndexFieldName(name)
+		if _, notSupported := fieldsAggregateDisallowed[internalName]; notSupported {
+			fmt.Printf("Unsupported field '%s' ('%s')\n", internalName, name)
+			return fieldInfo
+		}
+
+		searchService.Aggregation(name, elastic.NewTermsAggregation().Field(internalName).Size(maxCount))
+	}
+
 	search.AddDrilldown(searchService, &query, drilldownOptions)
 
 	result, err := searchService.Do(context.TODO())
@@ -304,27 +303,38 @@ func getTopFieldValues(fieldName string, maxCount int, searchText string, monthS
 		panic(&InvalidRequest{message: "Failed searching for field values", err: err})
 	}
 
-	values := make([]string, 0)
-	fieldValues, found := result.Aggregations.Terms("field")
-	if !found {
-		fmt.Println("Didn't find any matching values")
-		return values
-	}
+	for _, name := range fieldNames {
+		values := make([]interface{}, 0)
+		fieldValues, found := result.Aggregations.Terms(name)
+		if !found {
+			continue
+		}
 
-	for _, bucket := range fieldValues.Buckets {
-		// datetime needs to be converted to a Date
-		if internalFieldName == "datetime" {
-			msec := int64(bucket.Key.(float64))
-			values = append(values, fmt.Sprintf("%s", time.Unix(msec/1000, 0)))
-		} else {
-			format, isSet := fieldsAggregateToStringFormat[internalFieldName]
-			if !isSet {
-				format = "%s"
+		for _, bucket := range fieldValues.Buckets {
+			// datetime needs to be converted to a Date
+			internalName, _ := common.GetIndexFieldName(name)
+			value := ""
+			if internalName == "datetime" {
+				msec := int64(bucket.Key.(float64))
+				value = fmt.Sprintf("%s", time.Unix(msec/1000, 0))
+			} else {
+				format, isSet := fieldsAggregateToStringFormat[internalName]
+				if !isSet {
+					format = "%s"
+				}
+
+				value = fmt.Sprintf(format, bucket.Key)
 			}
 
-			values = append(values, fmt.Sprintf(format, bucket.Key))
+			values = append(values, map[string]interface{}{"value": value, "count": bucket.DocCount})
 		}
+
+		fv := make(map[string]interface{})
+		fv["name"] = name
+		fv["values"] = values
+
+		fieldInfo = append(fieldInfo, fv)
 	}
 
-	return values
+	return fieldInfo
 }

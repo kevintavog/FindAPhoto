@@ -129,20 +129,8 @@ export class MapComponent implements OnInit {
             let params = this.searchRequestBuilder.toLinkParametersObject(this.searchResultsProvider.searchRequest);
             let navigationExtras: NavigationExtras = { queryParams: params };
 
-            let startingUrlTree = this.router.parseUrl(this.router.url);
-            let sameParams = true;
-            for (let key in navigationExtras.queryParams) {
-                if (navigationExtras.queryParams.hasOwnProperty(key)) {
-                    let val = String(navigationExtras.queryParams[key]);
-                    if (val !== startingUrlTree.queryParams[key]) {
-                        sameParams = false;
-                        break;
-                    }
-                }
-            }
-
             // If the params are the same, navigating won't change anything, so fall through to the search invocation
-            if (!sameParams) {
+            if (!this.navigationProvider.hasSameQueryParams(params)) {
                 this.router.navigate( ['map'], navigationExtras);
                 return;
             }

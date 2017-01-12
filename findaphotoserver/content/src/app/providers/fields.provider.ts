@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
+
+import { FieldValue } from '../models/search-results';
 import { SearchService } from '../services/search.service';
 
 @Injectable()
 export class FieldsProvider {
     initialized: boolean = false;
-    fields: [string]
+    fields: [string];
 
     serverError: string;
     nameWithValues: string;
-    values: [string];
+    values: string[];
 
     constructor(private searchService: SearchService) {
     }
@@ -40,12 +42,19 @@ export class FieldsProvider {
         this.serverError = null;
         this.nameWithValues = fieldName;
 
-        this.searchService.indexFieldValues(fieldName, null, null).subscribe(
+        this.searchService.indexFieldValues([fieldName], null, null, null).subscribe(
             results => {
-                this.values = results.values.values;
+                for (let fv of <[FieldValue]>results['fields']) {
+                    if (fv.name === fieldName) {
+                        this.values = fv.values.map( (fc) => {
+                            return fc.value;
+                        });
+                        break;
+                    }
+                }
             },
             error => {
-              this.serverError = error;
+                this.serverError = error;
             }
         );
     }
@@ -55,12 +64,19 @@ export class FieldsProvider {
         this.serverError = null;
         this.nameWithValues = fieldName;
 
-        this.searchService.indexFieldValues(fieldName, searchText, drilldown).subscribe(
-            results => {
-                this.values = results.values.values;
+        this.searchService.indexFieldValues([fieldName], searchText, drilldown, null).subscribe(
+            results => {;
+                for (let fv of <[FieldValue]>results['fields']) {
+                    if (fv.name === fieldName) {
+                        this.values = fv.values.map( (fc) => {
+                            return fc.value;
+                        });
+                        break;
+                    }
+                }
             },
             error => {
-              this.serverError = error;
+                this.serverError = error;
             }
         );
     }
@@ -70,12 +86,19 @@ export class FieldsProvider {
         this.serverError = null;
         this.nameWithValues = fieldName;
 
-        this.searchService.indexFieldValuesByDay(fieldName, month, day, drilldown).subscribe(
+        this.searchService.indexFieldValuesByDay([fieldName], month, day, drilldown, null).subscribe(
             results => {
-                this.values = results.values.values;
+                for (let fv of <[FieldValue]>results['fields']) {
+                    if (fv.name === fieldName) {
+                        this.values = fv.values.map( (fc) => {
+                            return fc.value;
+                        });
+                        break;
+                    }
+                }
             },
             error => {
-              this.serverError = error;
+                this.serverError = error;
             }
         );
     }

@@ -1,0 +1,10 @@
+h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+}
+.field-panel {
+    clear: both;
+    margin-left: 1em;
+    margin-bottom: 0.2em;
+}

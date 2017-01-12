@@ -67,23 +67,24 @@ export class SearchService {
     }
 
     indexFields() {
-        let url = '/api/index/fields';
+        let url = '/api/index?properties=fields';
         return this._http.get(url)
             .map(response => response.json())
             .catch(this.handleError);
     }
 
-    indexFieldValues(fieldName: string, query: string, drilldown: string) {
-        let url = '/api/index/fields/' + fieldName;
+    indexFieldValues(fieldName: [string], query: string, drilldown: string, maxCount: number) {
+        let url = '/api/index/fieldvalues?fields=' + fieldName.join(',');
 
-        let addQuestion = true;
+        if (maxCount != null) {
+            url += '&max=' + maxCount;
+        }
+
         if (query != null && query.length > 0) {
-            url += '?q=' + query;
-            addQuestion = false;
+            url += '&q=' + query;
         }
         if (drilldown != null && drilldown.length > 0) {
-            url += addQuestion ? '?' : '&';
-            url += 'drilldown=' + drilldown;
+            url += '&drilldown=' + drilldown;
         }
 
         return this._http.get(url)
@@ -91,8 +92,13 @@ export class SearchService {
             .catch(this.handleError);
     }
 
-    indexFieldValuesByDay(fieldName: string, month: number, day: number, drilldown: string) {
-        let url = '/api/index/fields/' + fieldName + '?month=' + month + '&day=' + day;
+    indexFieldValuesByDay(fieldName: [string], month: number, day: number, drilldown: string, maxCount: number) {
+        let url = '/api/index/fieldvalues?fields=' + fieldName.join(',') + '&month=' + month + '&day=' + day;
+
+        if (maxCount != null) {
+            url += '&max=' + maxCount;
+        }
+
         if (drilldown != null && drilldown.length > 0) {
             url += '&drilldown=' + drilldown;
         }

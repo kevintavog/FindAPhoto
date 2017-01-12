@@ -72,8 +72,10 @@ func run(devolopmentMode bool, indexOverride string) {
 	serveIndexHtmlFn := func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, contentDir+"/index.html")
 	}
+
 	l.Get("/byday", serveIndexHtmlFn)
 	l.Get("/bylocation", serveIndexHtmlFn)
+	l.Get("/fieldvalues", serveIndexHtmlFn)
 	l.Get("/info", serveIndexHtmlFn)
 	l.Get("/map", serveIndexHtmlFn)
 	l.Get("/singleitem", serveIndexHtmlFn)

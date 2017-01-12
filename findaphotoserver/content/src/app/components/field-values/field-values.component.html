@@ -1,0 +1,63 @@
+<app-header></app-header>
+
+<p style="margin-bottom:.5em;" >
+<form>
+    <div class="o-container o-container--large" >
+        <div class="c-input-group">
+            <div class="o-field">
+                <input class="c-field" type="text" autofocus [(ngModel)]="searchResultsProvider.searchRequest.searchText" [ngModelOptions]="{standalone: true}" >
+            </div>
+            <button class="c-button c-button--info" type="submit" (click)="userSearch()" >Search</button>
+        </div>
+    </div>
+</form>
+
+<app-alerts></app-alerts>
+
+<h1>Field values {{currentSearch}}
+</h1>
+<div *ngIf="searchResultsProvider.searchResults">
+  There are {{searchResultsProvider.searchResults.totalMatches}} total matching items.
+
+  <app-field-count-panel [field]=apertureField ></app-field-count-panel>
+  <app-field-count-panel [field]=cameraMakeField ></app-field-count-panel>
+  <app-field-count-panel [field]=cameraModelField ></app-field-count-panel>
+  <app-field-count-panel [field]=cityNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=countryNameField ></app-field-count-panel>
+
+  <h3 class="field-panel" *ngIf="fieldValuesProvider.showField('Dates') != true" (click)="fieldValuesProvider.toggleField('Dates')" >
+      <div > {{datesFieldName()}} <i class="fa fa-caret-right filter-toggle-glyph"></i> </div>
+  </h3>
+  <div class="field-panel" *ngIf="fieldValuesProvider.showField('Dates')" >
+      <h3 (click)="fieldValuesProvider.toggleField('Dates')"> {{datesFieldName()}} <i class="fa fa-caret-down filter-toggle-glyph"></i> </h3>
+      <div *ngIf="dateCategories">
+          <app-category-tree-view [caption]="Dates" [category]=dateCategories [disableCheckbox]=true>
+          </app-category-tree-view>
+      </div>
+  </div>
+
+  <app-field-count-panel [field]=displayNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=durationSecondsField ></app-field-count-panel>
+  <app-field-count-panel [field]=exposureTimeField ></app-field-count-panel>
+  <app-field-count-panel [field]=focalLengthField ></app-field-count-panel>
+  <app-field-count-panel [field]=hierarchicalNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=isoField ></app-field-count-panel>
+  <app-field-count-panel [field]=keywordsField ></app-field-count-panel>
+  <app-field-count-panel [field]=lensModelField ></app-field-count-panel>
+
+  <h3 class="field-panel" *ngIf="fieldValuesProvider.showField('Location') != true" (click)="fieldValuesProvider.toggleField('Location')" >
+      <div >{{locationFieldName()}} <i class="fa fa-caret-right filter-toggle-glyph"></i> </div>
+  </h3>
+  <div class="field-panel" *ngIf="fieldValuesProvider.showField('Location')" >
+      <h3 (click)="fieldValuesProvider.toggleField('Location')"> {{locationFieldName()}} <i class="fa fa-caret-down filter-toggle-glyph"></i> </h3>
+      <div *ngIf="locationCategories">
+          <app-category-tree-view [caption]="Locations" [category]=locationCategories [disableCheckbox]=true>
+          </app-category-tree-view>
+      </div>
+  </div>
+
+  <app-field-count-panel [field]=placeNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=siteNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=stateNameField ></app-field-count-panel>
+  <app-field-count-panel [field]=tagsField ></app-field-count-panel>
+</div>

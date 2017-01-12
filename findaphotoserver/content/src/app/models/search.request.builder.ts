@@ -13,8 +13,16 @@ export class SearchRequestBuilder {
     constructor(private displayer: DataDisplayer) {}
 
     toReadableString(searchRequest: SearchRequest) {
+        if (searchRequest == null) {
+            return 'for all items';
+        }
+
         switch (searchRequest.searchType) {
             case 's':
+                if (searchRequest.searchText.length === 0) {
+                    return 'for all items';
+                }
+
                 return 'for \'' + searchRequest.searchText + '\'';
             case 'd':
                 let activeDate = new Date(
@@ -23,7 +31,7 @@ export class SearchRequestBuilder {
                     searchRequest.day, 0, 0, 0, 0);
                 return 'on ' + SearchRequestBuilder.monthNames[activeDate.getMonth()] + ' ' + searchRequest.day;
             case 'l':
-                return 'Nearby ' + this.displayer.latitudeDms(searchRequest.latitude) 
+                return 'near ' + this.displayer.latitudeDms(searchRequest.latitude) 
                     + ', ' + this.displayer.longitudeDms(searchRequest.longitude);
             default:
                 return 'Unknown search type: ' + searchRequest.searchType;

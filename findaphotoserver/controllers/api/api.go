@@ -43,8 +43,7 @@ func ConfigureRouting(l *lars.LARS) {
 	api.Get("/media/:id", MediaById)
 
 	index := api.Group("/index")
-	index.Get("/fields/:field", IndexFieldValues)
-	index.Get("/fields", IndexFields)
+	index.Get("/fieldvalues", IndexFieldValues)
 	index.Get("/duplicates", DuplicateMedia)
 	index.Get("/", Index)
 }

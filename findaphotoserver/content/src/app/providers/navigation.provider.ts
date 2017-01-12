@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { NavigationExtras, Router } from '@angular/router';
+import { NavigationExtras, Params, Router } from '@angular/router';
 
 import { SearchRequestBuilder } from '../models/search.request.builder';
 import { SearchResultsProvider } from '../providers/search-results.provider';
@@ -19,8 +19,28 @@ export class NavigationProvider {
     initialize() {
     }
 
+    hasSameQueryParams(newParams: Params) {
+        let startingUrlTree = this._router.parseUrl(this._router.url);
+        for (let key in newParams) {
+            if (newParams.hasOwnProperty(key)) {
+                let val = String(newParams[key]);
+                if (val !== startingUrlTree.queryParams[key]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     info() {
         this._router.navigate( ['info'] );
+    }
+
+    fieldValues() {
+        let params = this._searchRequestBuilder.toLinkParametersObject(this._searchResultsProvider.searchRequest);
+        let navigationExtras: NavigationExtras = { queryParams: params };
+        this._router.navigate( ['fieldvalues'], navigationExtras );
     }
 
     home() {

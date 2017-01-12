@@ -55,3 +55,13 @@ export class SearchCategoryDetail {
     selected: boolean;
     isOpen: boolean;
 }
+
+export interface FieldValue {
+    name: string;
+    values: [FieldAndCount];
+}
+
+export interface FieldAndCount {
+    value: string;
+    count: number;
+}
