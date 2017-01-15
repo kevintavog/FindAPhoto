@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
-import { Circle, Handler, Icon, LatLngTuple, LocationEvent, Map, Marker } from 'leaflet';
+import * as leaflet from 'leaflet';
 import { MarkerClusterGroup } from 'leaflet.markercluster';
 
 import { SearchItem } from '../../models/search-results';
@@ -29,23 +29,28 @@ export class MapComponent implements OnInit {
     searchBarVisible: boolean;
     resultsSearchText: string;  // The last search text
 
-    markerIcon: Icon;
-    selectedMarkerIcon: Icon;
+    markerIcon: leaflet.Icon;
+    selectedMarkerIcon: leaflet.Icon;
 
 
     choosingLocation: boolean;
-    choosingLocationMarker: Marker;
+    choosingLocationMarker: leaflet.Marker;
 
-    map: Map;
-    defaultDoubleClickZoom: Handler;
+    map: leaflet.Map;
+    defaultDoubleClickZoom: leaflet.Handler;
     cluster: MarkerClusterGroup;
-    selectedMarker: Marker;
-    currentLocationCircle: Circle;
+    selectedMarker: leaflet.Marker;
+    currentLocationCircle: leaflet.Circle;
+
+    allRoutes = new Map();
+    currentRouteLayer: L.Polyline;
+    activeRouteList: leaflet.LatLngTuple[];
+    lastRouteItem: SearchItem;
 
     currentItem: SearchItem;
 
-    southWestCornerLatLng: LatLngTuple;
-    northEastCornerLatLng: LatLngTuple;
+    southWestCornerLatLng: leaflet.LatLngTuple;
+    northEastCornerLatLng: leaflet.LatLngTuple;
 
     isLoading: boolean;
     pageError: string;
@@ -56,6 +61,7 @@ export class MapComponent implements OnInit {
 
     locationAccuracy: FPLocationAccuracy;
 
+    get routeKeys() { return Array.from(this.allRoutes.keys()); }
 
     get percentageLoadedWidth() {
         return this.percentageLoaded.toString() + '%';
@@ -147,6 +153,10 @@ export class MapComponent implements OnInit {
         this.closeImage();
         this.cluster.clearLayers();
 
+        this.allRoutes.clear();
+        this.activeRouteList = [];
+        this.lastRouteItem = null;
+
         this.currentItem = null;
         this.pageError = null;
         this.southWestCornerLatLng = [90, 180];
@@ -162,34 +172,20 @@ export class MapComponent implements OnInit {
 
     mapSearchCompleted() {
         if (this.searchResultsProvider.searchResults) {
-            let markers = new Array<Marker>();
+            let markers = new Array<leaflet.Marker>();
 
             for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
                     if (item.latitude && item.longitude) {
 
-                        if (item.latitude < this.southWestCornerLatLng[0]) { this.southWestCornerLatLng[0] = item.latitude; }
-                        if (item.longitude < this.southWestCornerLatLng[1]) { this.southWestCornerLatLng[1] = item.longitude; }
+                        this.updateBounds(item);
 
-                        if (item.latitude > this.northEastCornerLatLng[0]) { this.northEastCornerLatLng[0] = item.latitude; }
-                        if (item.longitude > this.northEastCornerLatLng[1]) { this.northEastCornerLatLng[1] = item.longitude; }
+                        let latLng: leaflet.LatLngTuple = [item.latitude, item.longitude];
 
-                        let marker = L.marker(
-                            [item.latitude, item.longitude],
-                            {
-                                icon: this.markerIcon
-                            });
-
-                        marker.on('mouseover', () => {
-                            this.currentItem = item;
-                            this.selectMarker(marker);
-                        });
-
-                        marker.on('click', () => {
-                            this.currentItem = item;
-                            this.selectMarker(marker);
-                        });
+                        let marker = this.createMarker(item, latLng);
                         markers.push(marker);
+
+                        this.updateRoute(item, latLng);
                     }
                 }
             }
@@ -216,8 +212,91 @@ export class MapComponent implements OnInit {
                 this.searchResultsProvider.searchRequest.first = request.first + request.pageCount;
                 this.searchResultsProvider.search(null);
             } else {
+                this.addRouteFromActiveList(this.lastRouteItem);
                 this.isLoading = false;
             }
+        }
+    }
+
+    createMarker(item: SearchItem, latLng: leaflet.LatLngTuple) {
+        let marker = L.marker(
+            latLng,
+            {
+                icon: this.markerIcon
+            });
+
+        marker.on('mouseover', () => {
+            this.currentItem = item;
+            this.selectMarker(marker);
+        });
+
+        marker.on('click', () => {
+            this.currentItem = item;
+            this.selectMarker(marker);
+        });
+
+        return marker;
+    }
+
+    updateRoute(item: SearchItem, latLng: leaflet.LatLngTuple) {
+
+        let newRoute = !this.lastRouteItem;
+        if (this.lastRouteItem) {
+            newRoute = this.displayer.getItemLocaleDate(item) !== this.displayer.getItemLocaleDate(this.lastRouteItem);
+            if (this.lastRouteItem.latitude === item.latitude && this.lastRouteItem.longitude === item.longitude) {
+                return;
+            }
+        }
+
+        if (newRoute) {
+            this.addRouteFromActiveList(item);
+        }
+
+        this.activeRouteList.push(latLng);
+        this.lastRouteItem = item;
+    }
+
+    addRouteFromActiveList(item: SearchItem) {
+        if (this.activeRouteList.length > 1) {
+
+            let key = this.displayer.getItemLocaleDate(item);
+            if (this.lastRouteItem) {
+                key = this.displayer.getItemLocaleDate(this.lastRouteItem);
+            }
+
+            let route = L.polyline(this.activeRouteList, {color: 'red' } );
+            this.allRoutes.set(key, route);
+        }
+
+        this.activeRouteList = [];
+    }
+
+    updateBounds(item: SearchItem) {
+        if (item.latitude < this.southWestCornerLatLng[0]) {
+            this.southWestCornerLatLng[0] = item.latitude;
+        }
+        if (item.longitude < this.southWestCornerLatLng[1]) {
+            this.southWestCornerLatLng[1] = item.longitude;
+        }
+
+        if (item.latitude > this.northEastCornerLatLng[0]) {
+            this.northEastCornerLatLng[0] = item.latitude;
+        }
+        if (item.longitude > this.northEastCornerLatLng[1]) {
+            this.northEastCornerLatLng[1] = item.longitude;
+        }
+    }
+
+    selectRoute(key: string) {
+        if (this.currentRouteLayer) {
+            this.currentRouteLayer.removeFrom(this.map);
+        }
+
+        let p = this.allRoutes.get(key);
+        if (p) {
+            this.currentRouteLayer = p;
+            this.currentRouteLayer.addTo(this.map);
+            this.map.fitBounds(this.currentRouteLayer.getBounds(), null);
         }
     }
 
@@ -234,7 +313,7 @@ export class MapComponent implements OnInit {
         this.choosingLocationMarker.setLatLng(this.map.getCenter());
         this.choosingLocationMarker.addTo(this.map);
 
-        this.map.on('dblclick', (le: LocationEvent) => {
+        this.map.on('dblclick', (le: leaflet.LocationEvent) => {
             this.map.panTo(le.latlng);
             this.choosingLocationMarker.setLatLng(le.latlng);
         });

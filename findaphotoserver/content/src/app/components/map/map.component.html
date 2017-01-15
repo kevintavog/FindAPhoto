@@ -25,6 +25,10 @@
             <button *ngIf="choosingLocation" class="c-button c-button--rounded c-button--ghost-success u-small" (click)="endChooseLocation()">
                 End choose
             </button>
+            <select *ngIf="!isLoading && allRoutes.size > 0" (change)="selectRoute($event.target.value)" >
+                <option value="" > &lt; No route selected &gt; </option>
+                <option *ngFor="let k of routeKeys"> {{k}} </option>
+            </select>
         </div>
 
 
