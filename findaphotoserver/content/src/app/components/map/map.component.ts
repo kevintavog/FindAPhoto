@@ -48,6 +48,7 @@ export class MapComponent implements OnInit {
     lastRouteItem: SearchItem;
 
     currentItem: SearchItem;
+    currentIndex: number;
 
     southWestCornerLatLng: leaflet.LatLngTuple;
     northEastCornerLatLng: leaflet.LatLngTuple;
@@ -174,19 +175,22 @@ export class MapComponent implements OnInit {
         if (this.searchResultsProvider.searchResults) {
             let markers = new Array<leaflet.Marker>();
 
+            let index = 0;
             for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
-                    if (item.latitude && item.longitude) {
 
+                    if (item.latitude && item.longitude) {
                         this.updateBounds(item);
 
                         let latLng: leaflet.LatLngTuple = [item.latitude, item.longitude];
 
-                        let marker = this.createMarker(item, latLng);
+                        let marker = this.createMarker(item, latLng, this.searchResultsProvider.searchRequest.first + index);
                         markers.push(marker);
 
                         this.updateRoute(item, latLng);
                     }
+
+                    ++index;
                 }
             }
 
@@ -218,7 +222,7 @@ export class MapComponent implements OnInit {
         }
     }
 
-    createMarker(item: SearchItem, latLng: leaflet.LatLngTuple) {
+    createMarker(item: SearchItem, latLng: leaflet.LatLngTuple, index: number) {
         let marker = L.marker(
             latLng,
             {
@@ -227,11 +231,13 @@ export class MapComponent implements OnInit {
 
         marker.on('mouseover', () => {
             this.currentItem = item;
+            this.currentIndex = index;
             this.selectMarker(marker);
         });
 
         marker.on('click', () => {
             this.currentItem = item;
+            this.currentIndex = index;
             this.selectMarker(marker);
         });
 
@@ -413,7 +419,16 @@ export class MapComponent implements OnInit {
             this.selectedMarker = null;
         }
         this.currentItem = null;
+        this.currentIndex = -1;
     }
+
+    singleItemSearchLinkParameters(item: SearchItem, imageIndex: number) {
+        let properties = this.searchRequestBuilder.toLinkParametersObject(this.searchResultsProvider.searchRequest);
+        properties['id'] = item.id;
+        properties['i'] = imageIndex;
+        return properties;
+    }
+
 
     initializeMap() {
         if (this.map) { return; }

@@ -71,7 +71,10 @@
         </main>
 
         <div *ngIf="currentItem" class="info-container" >
-            <img class="info-image" src="{{currentItem.thumbUrl}}" />
+            <a [routerLink]="['/singleitem']" [queryParams]="singleItemSearchLinkParameters(currentItem, currentIndex)">
+                <img class="info-image" src="{{currentItem.thumbUrl}}" >
+            </a>
+
             <div class="info-text-container">
                 <button class="c-button c-button--close info-close-button" (click)="closeImage()" >×</button>
                 <div class="c-paragraph info-text"> <i class="fa fa-file"></i> {{currentItem.imageName}} </div>
