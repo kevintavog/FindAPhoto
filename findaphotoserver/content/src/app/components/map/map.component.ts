@@ -14,6 +14,11 @@ import { FPLocationAccuracy, LocationProvider } from '../../providers/location.p
 import { NavigationProvider } from '../../providers/navigation.provider';
 import { SearchResultsProvider } from '../../providers/search-results.provider';
 
+interface SelectedItem {
+    key: string;
+    selected: boolean;
+}
+
 
 @Component({
     selector: 'app-map',
@@ -42,8 +47,14 @@ export class MapComponent implements OnInit {
     selectedMarker: leaflet.Marker;
     currentLocationCircle: leaflet.Circle;
 
-    allRoutes = new Map();
-    currentRouteLayer: L.Polyline;
+    activeClusterList: leaflet.Marker[];
+    allClusterLayerGroups = new Map<string, leaflet.LayerGroup>();
+
+    routeListOpen: boolean;
+    selectedRouteKeys: SelectedItem[];
+    selectedRoutesLayer: L.FeatureGroup;
+
+    allRoutes = new Map<string, L.Polyline>();
     activeRouteList: leaflet.LatLngTuple[];
     lastRouteItem: SearchItem;
 
@@ -61,8 +72,6 @@ export class MapComponent implements OnInit {
     fitBoundsOnFirstResults: boolean;
 
     locationAccuracy: FPLocationAccuracy;
-
-    get routeKeys() { return Array.from(this.allRoutes.keys()); }
 
     get percentageLoadedWidth() {
         return this.percentageLoaded.toString() + '%';
@@ -131,6 +140,16 @@ export class MapComponent implements OnInit {
         );
     }
 
+    toggleRouteList() {
+        this.routeListOpen = !this.routeListOpen;
+    }
+
+    autoCloseForDropdownMenu(event) {
+        if (!event.target.closest('.route-list-container')) {
+            this.routeListOpen = false;
+        }
+    }
+
     startSearch(updateUrl: boolean) {
         if (updateUrl) {
             let params = this.searchRequestBuilder.toLinkParametersObject(this.searchResultsProvider.searchRequest);
@@ -154,9 +173,13 @@ export class MapComponent implements OnInit {
         this.closeImage();
         this.cluster.clearLayers();
 
+        this.selectedRouteKeys = [];
         this.allRoutes.clear();
         this.activeRouteList = [];
         this.lastRouteItem = null;
+
+        this.activeClusterList = [];
+        this.allClusterLayerGroups.clear();
 
         this.currentItem = null;
         this.pageError = null;
@@ -173,8 +196,6 @@ export class MapComponent implements OnInit {
 
     mapSearchCompleted() {
         if (this.searchResultsProvider.searchResults) {
-            let markers = new Array<leaflet.Marker>();
-
             let index = 0;
             for (let group of this.searchResultsProvider.searchResults.groups) {
                 for (let item of group.items) {
@@ -185,7 +206,7 @@ export class MapComponent implements OnInit {
                         let latLng: leaflet.LatLngTuple = [item.latitude, item.longitude];
 
                         let marker = this.createMarker(item, latLng, this.searchResultsProvider.searchRequest.first + index);
-                        markers.push(marker);
+                        this.updateCluster(item, marker);
 
                         this.updateRoute(item, latLng);
                     }
@@ -193,8 +214,6 @@ export class MapComponent implements OnInit {
                     ++index;
                 }
             }
-
-            this.cluster.addLayer(L.layerGroup(markers));
 
             let results = this.searchResultsProvider.searchResults;
             let request = this.searchResultsProvider.searchRequest;
@@ -216,7 +235,13 @@ export class MapComponent implements OnInit {
                 this.searchResultsProvider.searchRequest.first = request.first + request.pageCount;
                 this.searchResultsProvider.search(null);
             } else {
+                this.addClusterFromActiveList(this.lastRouteItem)
                 this.addRouteFromActiveList(this.lastRouteItem);
+
+                for (let key of Array.from(this.allRoutes.keys())) {
+                    this.selectedRouteKeys.push( { key: key, selected: false});
+                }
+
                 this.isLoading = false;
             }
         }
@@ -244,8 +269,32 @@ export class MapComponent implements OnInit {
         return marker;
     }
 
-    updateRoute(item: SearchItem, latLng: leaflet.LatLngTuple) {
+    updateCluster(item: SearchItem, marker: leaflet.Marker) {
+        let newCluster = !this.lastRouteItem;
+        if (this.lastRouteItem) {
+            newCluster = this.displayer.getItemLocaleDate(item) !== this.displayer.getItemLocaleDate(this.lastRouteItem);
+        }
 
+        if (newCluster) {
+            this.addClusterFromActiveList(item);
+        }
+
+        this.activeClusterList.push(marker);
+    }
+
+    addClusterFromActiveList(item: SearchItem) {
+        if (this.activeClusterList.length > 1) {
+            let lg = L.layerGroup(this.activeClusterList);
+            this.cluster.addLayer(lg);
+
+            let key = this.routeKeyFromItem(item);
+            this.allClusterLayerGroups.set(key, lg);
+        }
+
+        this.activeClusterList = [];
+    }
+
+    updateRoute(item: SearchItem, latLng: leaflet.LatLngTuple) {
         let newRoute = !this.lastRouteItem;
         if (this.lastRouteItem) {
             newRoute = this.displayer.getItemLocaleDate(item) !== this.displayer.getItemLocaleDate(this.lastRouteItem);
@@ -264,17 +313,20 @@ export class MapComponent implements OnInit {
 
     addRouteFromActiveList(item: SearchItem) {
         if (this.activeRouteList.length > 1) {
-
-            let key = this.displayer.getItemLocaleDate(item);
-            if (this.lastRouteItem) {
-                key = this.displayer.getItemLocaleDate(this.lastRouteItem);
-            }
-
+            let key = this.routeKeyFromItem(item);
             let route = L.polyline(this.activeRouteList, {color: 'red' } );
             this.allRoutes.set(key, route);
         }
 
         this.activeRouteList = [];
+    }
+
+    routeKeyFromItem(item: SearchItem) {
+        let key = this.displayer.getItemLocaleDate(item);
+        if (this.lastRouteItem) {
+            key = this.displayer.getItemLocaleDate(this.lastRouteItem);
+        }
+        return key;
     }
 
     updateBounds(item: SearchItem) {
@@ -293,16 +345,40 @@ export class MapComponent implements OnInit {
         }
     }
 
-    selectRoute(key: string) {
-        if (this.currentRouteLayer) {
-            this.currentRouteLayer.removeFrom(this.map);
+    selectedRoutesChanged(si: SelectedItem) {
+        const colors = ['#F44336', '#9C27B0', '#3F51B5', '#2196F3', '#009688', '#FF9800', '#795548'];
+
+        this.selectedRoutesLayer.clearLayers();
+
+        si.selected = !si.selected;
+
+        // Remove all layers from Cluster
+        this.cluster.clearLayers();
+
+        let selectedCount = 0;
+        for (let k of this.selectedRouteKeys) {
+            if (k.selected) {
+                let route = this.allRoutes.get(k.key);
+                if (route) {
+                    route.setStyle({color: colors[selectedCount % colors.length]});
+                    this.selectedRoutesLayer.addLayer(route);
+                    ++selectedCount;
+
+                    let lg = this.allClusterLayerGroups.get(k.key);
+                    if (lg) {
+                        this.cluster.addLayer(lg);
+                    }
+                }
+            }
         }
 
-        let p = this.allRoutes.get(key);
-        if (p) {
-            this.currentRouteLayer = p;
-            this.currentRouteLayer.addTo(this.map);
-            this.map.fitBounds(this.currentRouteLayer.getBounds(), null);
+        if (selectedCount > 0) {
+            this.map.fitBounds(this.selectedRoutesLayer.getBounds(), null);
+        } else {
+            // Nothing is selected, add all layergroups to cluster
+            for (let lg of Array.from(this.allClusterLayerGroups.values())) {
+                this.cluster.addLayer(lg);
+            }
         }
     }
 
@@ -452,5 +528,8 @@ export class MapComponent implements OnInit {
 
         this.cluster = L.markerClusterGroup( { showCoverageOnHover: false } );
         this.map.addLayer(this.cluster);
+
+        this.selectedRoutesLayer = L.featureGroup();
+        this.map.addLayer(this.selectedRoutesLayer);
     }
 }

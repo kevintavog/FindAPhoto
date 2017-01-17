@@ -48,3 +48,23 @@
 .info-close-button {
   pointer-events: auto;  
 }
+
+.routeListHeader {
+  display:inline;
+  line-height: 2em;
+}
+.route-list-container {
+    position: relative;
+    display: inline-block;
+    top: 0em;
+    right: -3em;
+}
+.route-list-menu {
+    background-color: #000000;
+    right: 0;
+    display: block;
+    position: absolute;
+    min-width: 160px;
+    z-index: 10000;
+
+}
