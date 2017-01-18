@@ -37,6 +37,16 @@
                 </ul>
             </div>
 
+            <div *ngIf="totalMatches > 0" style="display:inline" >
+                <button class="c-button c-button--rounded c-button--ghost u-small u-color-yellow" (click)="previousImage()">
+                    <i class="fa fa-arrow-left fa-1g"></i>
+                </button>
+                {{currentlySelectedIndex}}
+                <button class="c-button c-button--rounded c-button--ghost u-small u-color-yellow" (click)="nextImage()">
+                    <i class="fa fa-arrow-right fa-1g"></i>
+                </button>
+            </div>
+
         </div>
 
 
@@ -79,7 +89,7 @@
         </main>
 
         <div *ngIf="currentItem" class="info-container" >
-            <a [routerLink]="['/singleitem']" [queryParams]="singleItemSearchLinkParameters(currentItem, currentIndex)">
+            <a [routerLink]="['/singleitem']" [queryParams]="singleItemSearchLinkParameters(currentItem, currentSearchIndex)">
                 <img class="info-image" src="{{currentItem.thumbUrl}}" >
             </a>
 

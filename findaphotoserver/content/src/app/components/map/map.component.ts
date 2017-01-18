@@ -49,6 +49,7 @@ export class MapComponent implements OnInit {
 
     activeClusterList: leaflet.Marker[];
     allClusterLayerGroups = new Map<string, leaflet.LayerGroup>();
+    visibleMarkerCount: number;
 
     routeListOpen: boolean;
     selectedRouteKeys: SelectedItem[];
@@ -59,7 +60,8 @@ export class MapComponent implements OnInit {
     lastRouteItem: SearchItem;
 
     currentItem: SearchItem;
-    currentIndex: number;
+    currentSearchIndex: number;
+    selectedIndex: number;
 
     southWestCornerLatLng: leaflet.LatLngTuple;
     northEastCornerLatLng: leaflet.LatLngTuple;
@@ -180,8 +182,10 @@ export class MapComponent implements OnInit {
 
         this.activeClusterList = [];
         this.allClusterLayerGroups.clear();
+        this.visibleMarkerCount = 0;
 
         this.currentItem = null;
+        this.selectedIndex = 0;
         this.pageError = null;
         this.southWestCornerLatLng = [90, 180];
         this.northEastCornerLatLng = [-90, -180];
@@ -239,7 +243,7 @@ export class MapComponent implements OnInit {
                 this.addRouteFromActiveList(this.lastRouteItem);
 
                 for (let key of Array.from(this.allRoutes.keys())) {
-                    this.selectedRouteKeys.push( { key: key, selected: false});
+                    this.selectedRouteKeys.push( { key: key, selected: false} );
                 }
 
                 this.isLoading = false;
@@ -256,13 +260,13 @@ export class MapComponent implements OnInit {
 
         marker.on('mouseover', () => {
             this.currentItem = item;
-            this.currentIndex = index;
+            this.currentSearchIndex = index;
             this.selectMarker(marker);
         });
 
         marker.on('click', () => {
             this.currentItem = item;
-            this.currentIndex = index;
+            this.currentSearchIndex = index;
             this.selectMarker(marker);
         });
 
@@ -289,6 +293,8 @@ export class MapComponent implements OnInit {
 
             let key = this.routeKeyFromItem(item);
             this.allClusterLayerGroups.set(key, lg);
+
+            this.updateVisibleClusterCount();
         }
 
         this.activeClusterList = [];
@@ -378,6 +384,27 @@ export class MapComponent implements OnInit {
             // Nothing is selected, add all layergroups to cluster
             for (let lg of Array.from(this.allClusterLayerGroups.values())) {
                 this.cluster.addLayer(lg);
+            }
+        }
+
+        this.updateVisibleClusterCount();
+    }
+
+    updateVisibleClusterCount() {
+        this.visibleMarkerCount = 0;
+
+        let anySelected = false;
+        for (let k of this.selectedRouteKeys) {
+            let lg = this.allClusterLayerGroups.get(k.key);
+            if (k.selected && lg) {
+                anySelected = true;
+                this.visibleMarkerCount += lg.getLayers().length;
+            }
+        }
+
+        if (!anySelected) {
+            for (let lg of Array.from(this.allClusterLayerGroups.values())) {
+                this.visibleMarkerCount += lg.getLayers().length;
             }
         }
     }
@@ -477,6 +504,97 @@ export class MapComponent implements OnInit {
 
     }
 
+    setSelectedIndexFromMarker(marker: L.Marker) {
+        let anySelected = false;
+        let allKeys = this.selectedRouteKeys;
+        for (let si of allKeys) {
+            if (si.selected) {
+                anySelected = true;
+            }
+        }
+        if (!anySelected) {
+            allKeys = Array.from(this.allClusterLayerGroups.keys()).map( (k) => { return { key: k, selected: true}; });
+        }
+
+        let count = 1;
+        for (let si of allKeys) {
+            if (si.selected) {
+                let lg = this.allClusterLayerGroups.get(si.key);
+                if (lg) {
+                    for (let m of  <leaflet.Marker[]>lg.getLayers()) {
+                        if (m === marker) {
+                            this.selectedIndex = count;
+                            break;
+                        }
+                        ++count;
+                    }
+                }
+            }
+        }
+    }
+
+    get currentlySelectedIndex() {
+        if (this.selectedIndex < 1 || this.selectedIndex > this.visibleMarkerCount) {
+            return ' ';
+        }
+        return String(this.selectedIndex);
+    }
+
+    previousImage() {
+        this.selectedIndex -= 1;
+        if (this.selectedIndex < 1 || this.selectedIndex > this.visibleMarkerCount) {
+            this.selectedIndex = this.visibleMarkerCount;
+        }
+
+        this.selectImage(this.selectedIndex);
+    }
+
+    nextImage() {
+        this.selectedIndex += 1;
+        if (this.selectedIndex > this.visibleMarkerCount || this.selectedIndex < 1) {
+            this.selectedIndex = 1;
+        }
+
+        this.selectImage(this.selectedIndex);
+    }
+
+    selectImage(index: number) {
+        let count = 1;
+
+        let anySelected = false;
+        let allKeys = this.selectedRouteKeys;
+        for (let si of allKeys) {
+            if (si.selected) {
+                anySelected = true;
+            }
+        }
+        if (!anySelected) {
+            allKeys = Array.from(this.allClusterLayerGroups.keys()).map( (k) => { return { key: k, selected: true}; });
+        }
+
+        for (let si of allKeys) {
+            if (si.selected) {
+                let lg = this.allClusterLayerGroups.get(si.key);
+                if (lg) {
+                    let markers = <leaflet.Marker[]>lg.getLayers();
+                    if (count + markers.length <= index) {
+                        count += markers.length;
+                    } else if (index < count + markers.length) {
+                        // Must be in this set
+                        let mk = markers[index - count];
+                        mk.fireEvent('click');
+                        this.map.panTo(mk.getLatLng());
+
+                        if (this.map.getZoom() < 18) {
+                            this.map.setZoom(18, null);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     selectMarker(marker: L.Marker) {
         if (this.selectedMarker) {
             this.selectedMarker.setIcon(this.markerIcon);
@@ -486,6 +604,7 @@ export class MapComponent implements OnInit {
         if (marker) {
             this.selectedMarker = marker;
             this.selectedMarker.setIcon(this.selectedMarkerIcon);
+            this.setSelectedIndexFromMarker(marker);
         }
     }
 
@@ -495,7 +614,7 @@ export class MapComponent implements OnInit {
             this.selectedMarker = null;
         }
         this.currentItem = null;
-        this.currentIndex = -1;
+        this.currentSearchIndex = -1;
     }
 
     singleItemSearchLinkParameters(item: SearchItem, imageIndex: number) {
