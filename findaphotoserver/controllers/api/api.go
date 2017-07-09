@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/lars"
 	"gopkg.in/olivere/elastic.v5"
 
+	"github.com/kevintavog/findaphoto/common"
 	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
@@ -244,7 +245,7 @@ func property(name string, mh *search.MediaHit) interface{} {
 	case "createddate":
 		return mh.Media.DateTime
 	case "country":
-		return mh.Media.LocationCountryCode
+		return common.ConvertToCountryName(mh.Media.LocationCountryCode)
 	case "distancekm":
 		if mh.DistanceKm != nil {
 			return mh.DistanceKm

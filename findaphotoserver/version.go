@@ -6,7 +6,7 @@ import (
 
 var majorVersion = 1
 var minorVersion = 0
-var buildVersion = 9
+var buildVersion = 10
 
 func versionString() string {
 	return fmt.Sprintf("%d.%d.%d", majorVersion, minorVersion, buildVersion)
