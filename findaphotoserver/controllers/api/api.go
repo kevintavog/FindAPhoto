@@ -243,6 +243,8 @@ func property(name string, mh *search.MediaHit) interface{} {
 		return mh.Media.LocationCityName
 	case "createddate":
 		return mh.Media.DateTime
+	case "country":
+		return mh.Media.LocationCountryCode
 	case "distancekm":
 		if mh.DistanceKm != nil {
 			return mh.DistanceKm
