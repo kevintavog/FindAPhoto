@@ -8,21 +8,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
-	"time"
 )
 
 func NewClarifaiError(statusCode int, textCode string, message string) error {
 	return &ClarifaiError{StatusCode: statusCode, TextCode: textCode, Message: message}
 }
 
-type PredictRequest struct {
-	Inputs []PredictInputRequest `json:"inputs"`
+type ImagePredictRequest struct {
+	Inputs []ImagePredictInputRequest `json:"inputs"`
 }
 
-type PredictInputRequest struct {
+type ImagePredictInputRequest struct {
 	Data struct {
 		Image struct {
 			Base64 string `json:"base64"`
@@ -30,18 +27,32 @@ type PredictInputRequest struct {
 	} `json:"data"`
 }
 
-func createPredictRequest() *PredictRequest {
-
-	p := make([]PredictInputRequest, 0)
-
-	return &PredictRequest{Inputs: p}
+type VideoPredictRequest struct {
+	Inputs []VideoPredictInputRequest `json:"inputs"`
 }
 
-func (pr *PredictRequest) addFileInput(base64 string) {
-	input := PredictInputRequest{}
-	input.Data.Image.Base64 = base64
+type VideoPredictInputRequest struct {
+	Data struct {
+		Video struct {
+			Base64 string `json:"base64"`
+		} `json:"video"`
+	} `json:"data"`
+}
 
-	pr.Inputs = append(pr.Inputs, input)
+func createPredictRequest(isImage bool, base64 string) ([]byte, error) {
+	if isImage {
+		req := &ImagePredictRequest{Inputs: make([]ImagePredictInputRequest, 0)}
+		input := ImagePredictInputRequest{}
+		input.Data.Image.Base64 = base64
+		req.Inputs = append(req.Inputs, input)
+		return json.Marshal(req)
+	} else {
+		req := &VideoPredictRequest{Inputs: make([]VideoPredictInputRequest, 0)}
+		input := VideoPredictInputRequest{}
+		input.Data.Video.Base64 = base64
+		req.Inputs = append(req.Inputs, input)
+		return json.Marshal(req)
+	}
 }
 
 type ClarifaiError struct {
@@ -56,57 +67,35 @@ func (e *ClarifaiError) Error() string {
 
 // Configurations
 const (
-	version1 = "v1"
 	version2 = "v2"
 	rootURL  = "https://api.clarifai.com"
 )
 
 // Client contains scoped variables forindividual clients
 type Client struct {
-	ClientID     string
-	ClientSecret string
-	AccessToken  string
-	APIRoot      string
-	Throttled    bool
+	ApiKey    string
+	APIRoot   string
+	Throttled bool
 }
-
-// TokenResp is the expected response from /token/
-type TokenResp struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope"`
-	TokenType   string `json:"token_type"`
-}
-
-var cachedToken *TokenResp = nil
-var cachedTokenExpireTimestamp time.Time
 
 // NewClient initializes a new Clarifai client
-func NewClient(clientID, clientSecret string) *Client {
-	return &Client{clientID, clientSecret, "", rootURL, false}
+func NewClient(apiKey string) *Client {
+	return &Client{apiKey, rootURL, false}
 }
 
 // Predict on a single photo/video
-func (client *Client) Predict(filePath string) ([]byte, error) {
+func (client *Client) Predict(isImage bool, filePath string) ([]byte, error) {
 	// Use the generic model (aaa03c23b3724a16a56b629203edc62c)
-	return client.fileHTTPRequest(filePath, "models/aaa03c23b3724a16a56b629203edc62c/outputs")
+	return client.fileHTTPRequest(isImage, filePath, "models/aaa03c23b3724a16a56b629203edc62c/outputs")
 }
 
-func (client *Client) fileHTTPRequest(filePath string, endpoint string) ([]byte, error) {
-	err := client.requestAccessToken()
-	if err != nil {
-		return nil, err
-	}
-
+func (client *Client) fileHTTPRequest(isImage bool, filePath string, endpoint string) ([]byte, error) {
 	fileContents, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	request := createPredictRequest()
-	request.addFileInput(base64.StdEncoding.EncodeToString(fileContents))
-
-	jsonRequest, err := json.Marshal(request)
+	jsonRequest, err := createPredictRequest(isImage, base64.StdEncoding.EncodeToString(fileContents))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +105,7 @@ func (client *Client) fileHTTPRequest(filePath string, endpoint string) ([]byte,
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+client.AccessToken)
+	req.Header.Set("Authorization", "Key "+client.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	httpClient := &http.Client{}
@@ -149,68 +138,9 @@ func (client *Client) fileHTTPRequest(filePath string, endpoint string) ([]byte,
 	}
 }
 
-func (client *Client) requestAccessToken() error {
-	if cachedToken != nil && time.Now().Before(cachedTokenExpireTimestamp) {
-		client.setAccessToken(cachedToken.AccessToken)
-		return nil
-	}
-
-	fmt.Printf("%s Getting access token\n", time.Now())
-	form := url.Values{}
-	form.Set("grant_type", "client_credentials")
-	form.Set("client_id", client.ClientID)
-	form.Set("client_secret", client.ClientSecret)
-	formData := strings.NewReader(form.Encode())
-
-	req, err := http.NewRequest("POST", client.buildV1URL("token"), formData)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Authorization", "Bearer "+client.AccessToken)
-	req.Header.Set("Content-Length", strconv.Itoa(len(form.Encode())))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	httpClient := &http.Client{}
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-
-	token := new(TokenResp)
-	err = json.Unmarshal(body, token)
-	if err != nil {
-		return err
-	}
-
-	cachedToken = token
-	cachedTokenExpireTimestamp = time.Now().Add(time.Duration(cachedToken.ExpiresIn) * time.Second)
-	client.setAccessToken(token.AccessToken)
-
-	fmt.Printf("Token expires at %s\n", cachedTokenExpireTimestamp)
-	return nil
-}
-
-func (client *Client) buildV1URL(endpoint string) string {
-	parts := []string{client.APIRoot, version1, endpoint}
-	return strings.Join(parts, "/")
-}
-
 func (client *Client) buildV2URL(endpoint string) string {
 	parts := []string{client.APIRoot, version2, endpoint}
 	return strings.Join(parts, "/")
-}
-
-// SetAccessToken will set accessToken to a new value
-func (client *Client) setAccessToken(token string) {
-	client.AccessToken = token
 }
 
 func (client *Client) setAPIRoot(root string) {

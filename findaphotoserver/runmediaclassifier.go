@@ -14,8 +14,7 @@ func runMediaClassifier(devMode bool) {
 	var args = []string{
 		"-e", configuration.Current.ElasticSearchUrl,
 		"-r", configuration.Current.RedisUrl,
-		"-c", configuration.Current.ClarifaiClientId,
-		"-s", configuration.Current.ClarifaiClientSecret}
+		"-a", configuration.Current.ClarifaiApiKey}
 
 	if devMode {
 		args = append(args, "-i")

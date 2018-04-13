@@ -3,11 +3,10 @@ package clarifaifp
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"sort"
 	"time"
 
-	"github.com/ian-kent/go-log/log"
+	//	"github.com/ian-kent/go-log/log"
 )
 
 type ClarifaiTag struct {
@@ -57,14 +56,27 @@ type PredictResponse struct {
 			} `json:"data"`
 		} `json:"input"`
 		Data struct {
-			Concepts []struct {
-				Id    string  `json:"id"`
-				Name  string  `json:"name"`
-				Appid string  `json:"app_id,omitempty"`
-				Value float32 `json:"value"`
-			} `json:"concepts"`
+			Concepts []ClarifaiConcept `json:"concepts,omitempty"`
+			Frames   []struct {
+				FrameInfo ClarifaiFrameInfo `json:"frame_info"`
+				Data      struct {
+					Concepts []ClarifaiConcept `json:"concepts"`
+				} `json:"data"`
+			} `json:"frames,omitempty"`
 		} `json:"data"`
 	} `json:"outputs"`
+}
+
+type ClarifaiFrameInfo struct {
+	Index int `json:"index"`
+	Time  int `json:"time"`
+}
+
+type ClarifaiConcept struct {
+	Id    string  `json:"id"`
+	Name  string  `json:"name"`
+	Appid string  `json:"app_id,omitempty"`
+	Value float32 `json:"value"`
 }
 
 type ClarifaiStatus struct {
@@ -72,124 +84,53 @@ type ClarifaiStatus struct {
 	Description string `json:"description"`
 }
 
-// Hackily included here to better handle the different way Classes & Probs are represented in
-// JSON for images versus videos.
-// TagResp represents the expected JSON response from /tag/
-type ClarifAiTagResp struct {
-	StatusCode    string `json:"status_code"`
-	StatusMessage string `json:"status_msg"`
-	Meta          struct {
-		Tag struct {
-			Timestamp json.Number `json:"timestamp"`
-			Model     string      `json:"model"`
-			Config    string      `json:"config"`
-		}
-	}
-	Results []ClarifAiTagResult
-}
-
-// TagResult represents the expected data for a single tag result
-type ClarifAiTagResult struct {
-	DocID         *big.Int `json:"docid"`
-	URL           string   `json:"url"`
-	StatusCode    string   `json:"status_code"`
-	StatusMessage string   `json:"status_msg"`
-	LocalID       string   `json:"local_id"`
-	Result        struct {
-		Tag struct {
-			Classes []interface{} `json:"classes"` // []string for images and [][]string for videos
-			CatIDs  []string      `json:"catids"`
-			Probs   []interface{} `json:"probs"` // []float64 for images and [][]float64 for videos
-		}
-	}
-	DocIDString string `json:"docid_str"`
-}
-
 func TagsAndProbabilitiesFromJson(clarifaiJson string, minProbability int8) ([]ClarifaiTag, int, error) {
-	tags, count, err := tagsFromV2Json(clarifaiJson, minProbability)
-	if err != nil {
-		tags, count, err = tagsFromV1Json(clarifaiJson, minProbability)
-	}
-	return tags, count, err
+	return tagsFromV2Json(clarifaiJson, minProbability)
 }
 
 func tagsFromV2Json(clarifaiJson string, minProbability int8) ([]ClarifaiTag, int, error) {
+
+	// We skipped this item, there's nothing to do
+	if len(clarifaiJson) == 0 {
+		return nil, 0, nil
+	}
+
 	predictResponse := &PredictResponse{}
 	err := json.Unmarshal([]byte(clarifaiJson), predictResponse)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Mismatched JSON - perhaps v1?
 	if predictResponse.Status.Code == 0 {
 		return nil, 0, fmt.Errorf("Mismatched JSON, status is 0")
 	}
 
 	unitCount := 0
-	tags := make([]ClarifaiTag, 0)
 
+	// Retain the highest rated probability for each tag - for images, there's only one but for
+	// video, there is a set for every second of video.
+	uniqueTags := make(map[string]int8)
 	for _, outputs := range predictResponse.Outputs {
 		unitCount++
-		tags = make([]ClarifaiTag, len(outputs.Data.Concepts))
-		for idx, concept := range outputs.Data.Concepts {
-			tags[idx] = ClarifaiTag{Name: concept.Name, Probability: int8(concept.Value * 100)}
+		for _, concept := range outputs.Data.Concepts {
+			prob := int8(concept.Value * 100)
+			uniqueTags[concept.Name] = prob
 		}
-	}
-
-	sort.Sort(sort.Reverse(ClarifaiTagSort(tags)))
-	return tags, unitCount, nil
-}
-
-func tagsFromV1Json(clarifaiJson string, minProbability int8) ([]ClarifaiTag, int, error) {
-	tagResponse := new(ClarifAiTagResp)
-	err := json.Unmarshal([]byte(clarifaiJson), tagResponse)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	uniqueTags := make(map[string]int8)
-	unitCount := 0
-
-	for _, doc := range tagResponse.Results {
-
-		switch doc.Result.Tag.Classes[0].(type) {
-		case string:
-			unitCount += 1
-		case []interface{}:
-			unitCount += len(doc.Result.Tag.Classes)
-		}
-
-		for imageIndex, c := range doc.Result.Tag.Classes {
-
-			switch c.(type) {
-			case string:
-				prob := int8(doc.Result.Tag.Probs[imageIndex].(float64) * 100)
-				uniqueTags[c.(string)] = prob
-			case []interface{}:
-				probs := doc.Result.Tag.Probs[imageIndex].([]interface{})
-				for videoIndex, i := range c.([]interface{}) {
-					p := int8(probs[videoIndex].(float64) * 100)
-					n := i.(string)
-					if value, exists := uniqueTags[n]; !exists || value < p {
-						uniqueTags[n] = p
-					}
+		for _, frame := range outputs.Data.Frames {
+			for _, concept := range frame.Data.Concepts {
+				prob := int8(concept.Value * 100)
+				if value, exists := uniqueTags[concept.Name]; !exists || value < prob {
+					uniqueTags[concept.Name] = prob
 				}
-			default:
-				log.Error("  Unexpected tag class type for %#v", c)
 			}
 		}
 	}
 
-	tags := make([]ClarifaiTag, len(uniqueTags))
-	idx := 0
-	for n, p := range uniqueTags {
-
-		if p >= minProbability {
-			tags[idx] = ClarifaiTag{Name: n, Probability: p}
-			idx++
-		}
+	tags := make([]ClarifaiTag, 0)
+	for name, prob := range uniqueTags {
+		tags = append(tags, ClarifaiTag{Name: name, Probability: prob})
 	}
-	tags = tags[0:idx]
+
 	sort.Sort(sort.Reverse(ClarifaiTagSort(tags)))
 	return tags, unitCount, nil
 }

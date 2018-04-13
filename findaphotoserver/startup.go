@@ -20,6 +20,7 @@ import (
 func run(devolopmentMode bool, indexOverride string) {
 	listenPort := 2000
 	easyExit := false
+	skipMediaClassifier := false
 	api.FindAPhotoVersionNumber = versionString()
 	log.Info("FindAPhoto %s", api.FindAPhotoVersionNumber)
 
@@ -35,6 +36,7 @@ func run(devolopmentMode bool, indexOverride string) {
 		common.MediaIndexName = "dev-" + common.MediaIndexName
 		listenPort = 5000
 		easyExit = true
+		skipMediaClassifier = true
 	} else {
 		if !common.IsExecWorking(common.IndexerPath, "-v") {
 			log.Fatal("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
@@ -87,8 +89,10 @@ func run(devolopmentMode bool, indexOverride string) {
 	files.ConfigureRouting(l)
 
 	mediaClassifierFunc := func() {
-		if !devolopmentMode {
+		if !skipMediaClassifier {
 			runMediaClassifier(devolopmentMode)
+		} else {
+			log.Info("Skipping media classifier")
 		}
 	}
 

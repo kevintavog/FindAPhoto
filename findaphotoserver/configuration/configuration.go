@@ -13,14 +13,13 @@ import (
 )
 
 type Configuration struct {
-	ElasticSearchUrl     string
-	RedisUrl             string
-	OpenMapUrl           string
-	OpenMapKey           string
-	VipsExists           bool
-	DefaultIndexPath     string
-	ClarifaiClientId     string
-	ClarifaiClientSecret string
+	ElasticSearchUrl string
+	RedisUrl         string
+	OpenMapUrl       string
+	OpenMapKey       string
+	VipsExists       bool
+	DefaultIndexPath string
+	ClarifaiApiKey   string
 }
 
 var Current Configuration
@@ -34,12 +33,11 @@ func ReadConfiguration() {
 	_, err := os.Stat(configFile)
 	if err != nil {
 		defaults := &Configuration{
-			ElasticSearchUrl:     "elastic search url (http://somehost:9200)",
-			RedisUrl:             "redis url (redis://somehost:6379)",
-			OpenMapUrl:           "open map cache url (http://localhost:2000)",
-			OpenMapKey:           "key goes here",
-			ClarifaiClientId:     "clarifai.com client id goes here",
-			ClarifaiClientSecret: "clarifai.com secret goes here",
+			ElasticSearchUrl: "elastic search url (http://somehost:9200)",
+			RedisUrl:         "redis url (redis://somehost:6379)",
+			OpenMapUrl:       "open map cache url (http://localhost:2000)",
+			OpenMapKey:       "key goes here",
+			ClarifaiApiKey:   "clarifai.com api key goes here",
 		}
 		json, jerr := json.Marshal(defaults)
 		if jerr != nil {

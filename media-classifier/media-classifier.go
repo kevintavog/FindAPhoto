@@ -25,19 +25,17 @@ func main() {
 	common.ConfigureLogging(common.LogDirectory, "findaphoto-media-classifier")
 
 	app := cli.App("media-classifier", "The FindAPhoto media classifier")
-	app.Spec = "-r -e [-i] [-v] -c -s"
+	app.Spec = "-r -e [-i] [-v] -a"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	elasticSearchServer := app.StringOpt("e", "", "The URL for the ElasticSearch server")
 	redisServer := app.StringOpt("r", "", "The URL for the redis server")
-	clarisClientId := app.StringOpt("c", "", "The clarifai.com client id")
-	clarisSecret := app.StringOpt("s", "", "The clarifai.com secret")
+	clarifaiApiKeyArg := app.StringOpt("a", "", "The clarifai.com API key")
 	app.Version("v", "Show the version and exit")
 	app.Action = func() {
 
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 		common.ElasticSearchServer = *elasticSearchServer
-		ClientId = *clarisClientId
-		ClientSecret = *clarisSecret
+		ClarifaiApiKey = *clarifaiApiKeyArg
 
 		log.Info("FindAPhoto media classifier")
 		log.Info("  Redis server: %s; ElasticSearch server: %s, using index %s; ", *redisServer, common.ElasticSearchServer, common.MediaIndexName)
@@ -63,12 +61,13 @@ func main() {
 			log.Fatal("The index does not exist: %s", common.MediaIndexName)
 		}
 
-		err = checkClarifai()
-		if err != nil {
-			log.Fatal("Failed checking clarifai.com: %s", err)
-		}
+		//		fakeClassifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/Image.JPG")
+		//		fakeClassifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8866_V.MP4")
 
 		//		classifyFile("/Users/goatboy/Pictures/Master/1999/1999-07 Crested Butte/Image-12.JPG")
+		//		classifyFile("/Users/goatboy/Pictures/Master/2018/2018-01-01 Seattle/IMG_0475.jpg")
+		//		classifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8866_V.MP4")
+		//		classifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8865_V.MP4")
 
 		getClassifyMessages(*redisServer, esClient)
 	}
@@ -82,36 +81,32 @@ func asJson(object interface{}) string {
 }
 
 func classifyFile(filePath string) {
+	json, err := classifyV2(filePath)
+	if err != nil {
+		log.Fatal("Failed: %s", err)
+	}
+
+	tags, unitCount, err := clarifaifp.TagsAndProbabilitiesFromJson(json, 0)
+	if err != nil {
+		log.Fatalf("Getting v2 tags failed: %s", err)
+	}
+
+	log.Info("V2 tags, %d (unit count=%d): %s", len(tags), unitCount, filePath)
+	for _, t := range tags {
+		log.Info("  %s : %d", t.Name, t.Probability)
+	}
+}
+
+func fakeClassifyFile(filePath string) {
 
 	v2, _ := fakeClassifyV2(filePath)
-	//	log.Info("V2: '%s'", v2)
 	tags, unitCount, err := clarifaifp.TagsAndProbabilitiesFromJson(v2, 0)
 	if err != nil {
 		log.Fatalf("Getting v2 tags failed: %s", err)
 	}
 
-	log.Info("V2 tags, %d (unit count=%d)", len(tags), unitCount)
+	log.Info("Fake V2 image tags, %d (unit count=%d): %s", len(tags), unitCount, filePath)
 	for _, t := range tags {
 		log.Info("  %s : %d", t.Name, t.Probability)
 	}
-
-	v1, _ := fakeClassify(filePath)
-	//	log.Info("V1: '%s'", v1)
-	tags, unitCount, err = clarifaifp.TagsAndProbabilitiesFromJson(v1, 0)
-	if err != nil {
-		log.Fatalf("Getting v1 tags failed: %s", err)
-	}
-
-	log.Info("V1 tags, %d (unit count=%d)", len(tags), unitCount)
-	for _, t := range tags {
-		log.Info("  %s : %d", t.Name, t.Probability)
-	}
-
-	//	response, err := classifyV2(filePath)
-	//	if err != nil {
-	//		log.Fatalf("Predict failed: %s", err)
-	//	}
-
-	//	log.Info("Response:")
-	//	log.Info(string(response))
 }
