@@ -36,6 +36,7 @@ func (ie *InternalError) Error() string {
 
 func ConfigureRouting(l *lars.LARS) {
 	l.Use(handleErrors)
+	l.Use(Cors)
 
 	api := l.Group("/api")
 	api.Get("/search", Search)

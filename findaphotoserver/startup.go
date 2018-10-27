@@ -70,7 +70,7 @@ func run(devolopmentMode bool, indexOverride string) {
 
 	l := configureApplicationGlobals()
 
-	// For the Angular2 app, ensure the supported routes are redirected so refreshing and pasting URLs work as expected.
+	// For the web app, ensure the supported routes are redirected so refreshing and pasting URLs work as expected.
 	serveIndexHtmlFn := func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, contentDir+"/index.html")
 	}
