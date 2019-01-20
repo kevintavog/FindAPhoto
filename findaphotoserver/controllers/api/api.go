@@ -47,7 +47,7 @@ func ConfigureRouting(l *lars.LARS) {
 	index := api.Group("/index")
 	index.Get("/fieldvalues", IndexFieldValues)
 	index.Get("/duplicates", DuplicateMedia)
-	index.Get("/", Index)
+	index.Get("/info", Index)
 }
 
 func handleErrors(c lars.Context) {

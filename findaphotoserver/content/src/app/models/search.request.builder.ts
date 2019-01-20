@@ -3,7 +3,7 @@ import { Params } from '@angular/router';
 
 import { SearchRequest } from './search-request';
 // import { DataDisplayer } from '../providers/data-displayer';
-import { DataDisplayer } from '../providers/data-displayer';
+import { DataDisplayer } from '../providers/data-displayer'
 
 @Injectable()
 export class SearchRequestBuilder {
@@ -31,7 +31,7 @@ export class SearchRequestBuilder {
                     searchRequest.day, 0, 0, 0, 0);
                 return 'on ' + SearchRequestBuilder.monthNames[activeDate.getMonth()] + ' ' + searchRequest.day;
             case 'l':
-                return 'near ' + this.displayer.latitudeDms(searchRequest.latitude) 
+                return 'near ' + this.displayer.latitudeDms(searchRequest.latitude)
                     + ', ' + this.displayer.longitudeDms(searchRequest.longitude);
             default:
                 return 'Unknown search type: ' + searchRequest.searchType;

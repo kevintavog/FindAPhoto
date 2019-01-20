@@ -33,7 +33,7 @@ func run(devolopmentMode bool, indexOverride string) {
 
 	if devolopmentMode {
 		fmt.Println("*** Using development mode ***")
-		common.MediaIndexName = "dev-" + common.MediaIndexName
+		// common.MediaIndexName = "dev-" + common.MediaIndexName
 		listenPort = 5000
 		easyExit = true
 		skipMediaClassifier = true
@@ -59,32 +59,8 @@ func run(devolopmentMode bool, indexOverride string) {
 	checkElasticServerAndIndex()
 	checkOpenMapServer()
 
-	contentDir := common.ExecutingDirectory + "/content/dist"
-	log.Info("Serving site content from %s", contentDir)
-	httpContent := http.Dir(contentDir)
-	_, e := httpContent.Open("index.html")
-	if e != nil {
-		log.Fatal("Unable to get files from the '%s' folder: %s\n", contentDir, e.Error())
-	}
-	fs := http.FileServer(httpContent)
-
 	l := configureApplicationGlobals()
 
-	// For the web app, ensure the supported routes are redirected so refreshing and pasting URLs work as expected.
-	serveIndexHtmlFn := func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, contentDir+"/index.html")
-	}
-
-	l.Get("/byday", serveIndexHtmlFn)
-	l.Get("/bylocation", serveIndexHtmlFn)
-	l.Get("/fieldvalues", serveIndexHtmlFn)
-	l.Get("/info", serveIndexHtmlFn)
-	l.Get("/map", serveIndexHtmlFn)
-	l.Get("/singleitem", serveIndexHtmlFn)
-	l.Get("/search", serveIndexHtmlFn)
-
-	l.Get("/", fs)
-	l.Get("/*", fs)
 	api.ConfigureRouting(l)
 	files.ConfigureRouting(l)
 

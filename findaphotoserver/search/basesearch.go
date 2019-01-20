@@ -466,7 +466,7 @@ func getDateFieldQuery(name string) string {
 	case "dateday":
 		return "doc['datetime'].date.toString('dd') == params.dateValue"
 	default:
-		fmt.Errorf("Unhandled date field name: '%s'\n", name)
+		_ = fmt.Errorf("Unhandled date field name: '%s'\n", name)
 		return ""
 	}
 }
