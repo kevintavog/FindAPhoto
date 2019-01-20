@@ -14,11 +14,12 @@ func main() {
 	common.ConfigureLogging(common.LogDirectory, "findaphotoserver")
 
 	app := cli.App("findaphotoserver", "The FindAPhoto server")
-	app.Spec = "[-d] [-i]"
+	app.Spec = "[-d] [-i] [-a]"
 	developmentMode := app.BoolOpt("d", false, "Development mode (hit <enter> to exit, listen on a different port, use a different index)")
 	indexOverride := app.StringOpt("i", "", "The index to use")
+	aliasOverride := app.StringOpt("a", "", "The path to use for the alias")
 
-	app.Action = func() { run(*developmentMode, *indexOverride) }
+	app.Action = func() { run(*developmentMode, *indexOverride, *aliasOverride) }
 
 	app.Run(os.Args)
 }

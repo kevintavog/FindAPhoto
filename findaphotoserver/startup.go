@@ -17,7 +17,7 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
 )
 
-func run(devolopmentMode bool, indexOverride string) {
+func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 	listenPort := 2000
 	easyExit := false
 	skipMediaClassifier := false
@@ -25,10 +25,10 @@ func run(devolopmentMode bool, indexOverride string) {
 	log.Info("FindAPhoto %s", api.FindAPhotoVersionNumber)
 
 	if !common.IsExecWorking(common.ExifToolPath, "-ver") {
-		log.Fatal("exiftool isn't usable (path is '%s')", common.ExifToolPath)
+		log.Fatalf("exiftool isn't usable (path is '%s')", common.ExifToolPath)
 	}
 	if !common.IsExecWorking(common.FfmpegPath, "-version") {
-		log.Fatal("ffmpeg isn't usable (path is '%s')", common.FfmpegPath)
+		log.Fatalf("ffmpeg isn't usable (path is '%s')", common.FfmpegPath)
 	}
 
 	if devolopmentMode {
@@ -37,12 +37,15 @@ func run(devolopmentMode bool, indexOverride string) {
 		listenPort = 5000
 		easyExit = true
 		skipMediaClassifier = true
+		if len(aliasOverride) > 0 {
+			common.AliasPathOverride = aliasOverride
+		}
 	} else {
 		if !common.IsExecWorking(common.IndexerPath, "-v") {
-			log.Fatal("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
+			log.Fatalf("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
 		}
 		if !common.IsExecWorking(common.MediaClassifierPath, "-v") {
-			log.Fatal("The FindAPhoto Media Classifier isn't usable (path is '%s')", common.MediaClassifierPath)
+			log.Fatalf("The FindAPhoto Media Classifier isn't usable (path is '%s')", common.MediaClassifierPath)
 		}
 	}
 
@@ -85,7 +88,7 @@ func run(devolopmentMode bool, indexOverride string) {
 
 		err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), l.Serve())
 		if err != nil {
-			log.Fatal("Failed starting the service: %s", err.Error())
+			log.Fatalf("Failed starting the service: %s", err.Error())
 		}
 	}
 
@@ -116,24 +119,24 @@ func checkElasticServerAndIndex() {
 		elastic.SetSniff(false))
 
 	if err != nil {
-		log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
+		log.Fatalf("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
 	}
 
 	exists, err := client.IndexExists(common.MediaIndexName).Do(context.TODO())
 	if err != nil {
-		log.Fatal("Failed querying index: %s", err.Error())
+		log.Fatalf("Failed querying index: %s", err.Error())
 	}
 	if !exists {
 		log.Warn("The index '%s' doesn't exist", common.MediaIndexName)
 		err = common.CreateFindAPhotoIndex(client)
 		if err != nil {
-			log.Fatal("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
+			log.Fatalf("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
 		}
 	}
 
 	err = common.InitializeAliases(client)
 	if err != nil {
-		log.Fatal("Failed initializing aliases: %s", err.Error())
+		log.Fatalf("Failed initializing aliases: %s", err.Error())
 	}
 }
 
@@ -143,6 +146,6 @@ func checkOpenMapServer() {
 
 	_, err := http.Get(url)
 	if err != nil {
-		log.Fatal("The open street map values seem to be wrong, a location lookup failed: %s", err.Error())
+		log.Fatalf("The open street map values seem to be wrong, a location lookup failed: %s", err.Error())
 	}
 }

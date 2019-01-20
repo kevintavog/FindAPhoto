@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"path"
 	"strconv"
@@ -13,6 +12,8 @@ import (
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 )
+
+var AliasPathOverride = ""
 
 // Artificially limits the number of aliases - can easily handle more, but the search needs to be updated
 const maxAliasCount = 100
@@ -64,7 +65,7 @@ func AliasForPath(path string) (string, error) {
 
 	ad = findViaPath(path)
 	if ad == nil {
-		return "", errors.New(fmt.Sprintf("Can't find just added alias for '%s", path))
+		return "", fmt.Errorf("Can't find just added alias for '%s", path)
 	}
 	return ad.Alias, nil
 }
@@ -94,7 +95,7 @@ func FullPathForAliasedPath(aliased string) (string, error) {
 		return path.Join(ad.Path, partialPath), nil
 	}
 
-	return "", errors.New(fmt.Sprintf("Unable to find path for %s", alias))
+	return "", fmt.Errorf("Unable to find path for %s", alias)
 }
 
 func PathForAlias(alias string) (string, error) {
@@ -112,7 +113,7 @@ func PathForAlias(alias string) (string, error) {
 		return ad.Path, nil
 	}
 
-	return "", errors.New(fmt.Sprintf("Unable to find path for %s", alias))
+	return "", fmt.Errorf("Unable to find path for %s", alias)
 }
 
 func UpdateLastIndexed(alias string) error {
@@ -131,7 +132,7 @@ func UpdateLastIndexed(alias string) error {
 			return err
 		}
 	} else {
-		return errors.New(fmt.Sprintf("Failed updating alias: Cannot find alias '%s'", alias))
+		return fmt.Errorf("Failed updating alias: Cannot find alias '%s'", alias)
 	}
 
 	return nil
@@ -149,7 +150,6 @@ func extactAlias(aliasAndPath string) (string, string) {
 
 func findViaPath(path string) *AliasDocument {
 	for _, ad := range aliasAndPath {
-		//		log.Error("findViaPath: '%s': '%s'", ad.Alias, ad.Path)
 		if strings.EqualFold(path, ad.Path) {
 			return &ad
 		}
@@ -161,7 +161,6 @@ func findViaPath(path string) *AliasDocument {
 func findViaAlias(alias string) *AliasDocument {
 	// Given an alias, return the associated path
 	for _, ad := range aliasAndPath {
-		//		log.Error("findViaAlias: '%s': '%s'", ad.Alias, ad.Path)
 		if strings.EqualFold(alias, ad.Alias) {
 			return &ad
 		}
@@ -184,9 +183,8 @@ func loadAliases(client *elastic.Client) error {
 	}
 
 	numAliases := result.TotalHits()
-	//	log.Error("Load aliases - %d matches found", numAliases)
 	if numAliases > maxAliasCount {
-		log.Fatal("There are more aliases than can currently be handled: %d", numAliases)
+		log.Fatalf("There are more aliases than can currently be handled: %d", numAliases)
 	}
 
 	aliasList := make([]AliasDocument, 0)
@@ -195,9 +193,13 @@ func loadAliases(client *elastic.Client) error {
 			alias := &AliasDocument{}
 			err := json.Unmarshal(*hit.Source, alias)
 			if err != nil {
-				log.Fatal("Unable to parse alias: %s", err.Error())
+				log.Fatalf("Unable to parse alias: %s", err.Error())
 			}
 
+			if len(aliasList) == 0 && len(AliasPathOverride) > 0 {
+				log.Info("Overriding the alias path from '%s' to '%s'", alias.Path, AliasPathOverride)
+				alias.Path = AliasPathOverride
+			}
 			log.Info("Alias '%s' maps to '%s', last indexed: %s", alias.Alias, alias.Path, alias.DateLastIndexed)
 			aliasList = append(aliasList, *alias)
 		}
@@ -228,7 +230,7 @@ func addNewAlias(path string) error {
 		if err != nil {
 			return err
 		}
-		newAliasNumber += 1
+		newAliasNumber++
 	}
 
 	ad := &AliasDocument{
@@ -247,7 +249,7 @@ func addNewAlias(path string) error {
 		return err
 	}
 	if !response.Created {
-		return errors.New(fmt.Sprintf("Failed creating alias entry for new path '%s'", path))
+		return fmt.Errorf("Failed creating alias entry for new path '%s'", path)
 	}
 
 	aliasAndPath = append(aliasAndPath, *ad)
