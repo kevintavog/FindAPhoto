@@ -7,6 +7,8 @@ import (
 
 var MediaIndexName = "media-index"
 
+var AliasIndexName = "fp-aliases"
+
 const MediaTypeName = "media"
 const (
 	MediaTypeImage   = "image"

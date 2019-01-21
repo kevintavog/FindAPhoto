@@ -27,7 +27,7 @@ var ChecksMade int64
 
 var ForceIndex bool
 
-const numConsumers = 8
+const numConsumers = 4
 const numBytesForSignature = 20 * 1024
 
 var queue = make(chan *common.CandidateFile, numConsumers)

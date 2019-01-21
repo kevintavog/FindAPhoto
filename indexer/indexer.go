@@ -38,20 +38,21 @@ func main() {
 	generatethumbnail.VipsExists = common.IsExecWorking(common.VipsThumbnailPath, "--vips-version")
 
 	app := cli.App("indexer", "The FindAPhoto indexer")
-	app.Spec = "-p -s -o -k -r [-i] [-c] [--reindex] [-v]"
+	app.Spec = "-p -s -r -l [-a] [-i] [--reindex] [-v]"
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	scanPath := app.StringOpt("p path", "", "The path to recursively index")
 	server := app.StringOpt("s server", "", "The URL for the ElasticSearch server")
 	redisServer := app.StringOpt("r", "", "The URL for the Redis server")
-	openStreetMapServer := app.StringOpt("o osm", "", "The URL for the OpenStreetMap server")
-	cachedLocationsServer := app.StringOpt("c", "", "The URL for the cached location server (optional)")
+	locationLookupUrl := app.StringOpt("l", "", "The URL for the location lookup (ReverseNameLookup)")
 	forceIndex := app.BoolOpt("reindex", false, "Force everything to be re-indexed; current index not deleted. (optional)")
-	key := app.StringOpt("k key", "", "The OpenStreetMap/MapQuest key")
+	aliasPathOverride := app.StringOpt("a", "", "The alias path override, for development")
 	app.Version("v", "Show the version and exit")
 	app.Action = func() {
 
+		// common.IndexMakeNoChanges = true
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 		common.RedisServer = *redisServer
+		common.AliasPathOverride = *aliasPathOverride
 
 		log.Info("%s: FindAPhoto scanning %s, and indexing to %s/%s; using %d/%d CPU's",
 			time.Now().Format("2006-01-02"),
@@ -60,23 +61,27 @@ func main() {
 			common.MediaIndexName,
 			runtime.NumCPU(),
 			runtime.GOMAXPROCS(0))
-		log.Info("Using %s to resolve locations to placename", *openStreetMapServer)
+		log.Info("Using %s to resolve locations to placename", *locationLookupUrl)
+
+		if common.IndexMakeNoChanges {
+			log.Info("NOT making any changes")
+		}
 
 		checkindex.ForceIndex = *forceIndex
 		if checkindex.ForceIndex {
 			log.Warn("Re-indexing all documents")
 		}
 
-		c, err := redis.DialURL(*redisServer)
-		if err != nil {
-			log.Fatalf("Unable to connect to Redis server: %s", err)
+		if !common.IndexMakeNoChanges {
+			c, err := redis.DialURL(*redisServer)
+			if err != nil {
+				log.Fatalf("Unable to connect to Redis server: %s [%s]", err, *redisServer)
+			}
+			defer c.Close()
 		}
-		defer c.Close()
 
 		common.ElasticSearchServer = *server
-		resolveplacename.OpenStreetMapUrl = *openStreetMapServer
-		resolveplacename.OpenStreetMapKey = *key
-		resolveplacename.CachedLocationsUrl = *cachedLocationsServer
+		resolveplacename.LocationLookupUrl = *locationLookupUrl
 
 		checkServerAndIndex()
 		alias, err := common.AliasForPath(*scanPath)
@@ -94,9 +99,12 @@ func main() {
 		scanner.Scan(*scanPath, alias)
 		scanDuration := time.Now().Sub(scanStartTime).Seconds()
 		emitStats(scanDuration)
-		err = common.UpdateLastIndexed(alias)
-		if err != nil {
-			log.Warn("Failed updating indexed date: '%s'", err.Error())
+
+		if !common.IndexMakeNoChanges {
+			err = common.UpdateLastIndexed(alias)
+			if err != nil {
+				log.Warn("Failed updating indexed date: '%s'", err.Error())
+			}
 		}
 	}
 
@@ -143,11 +151,14 @@ func checkServerAndIndex() {
 		log.Fatal("Failed querying index: %s", err.Error())
 	}
 	if !exists {
-		log.Warn("The index '%s' doesn't exist", common.MediaIndexName)
-		err = common.CreateFindAPhotoIndex(client)
-		if err != nil {
-			log.Fatal("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
-		}
+		log.Fatal("The index '%s' doesn't exist", common.MediaIndexName)
+	}
+	exists, err = client.IndexExists(common.AliasIndexName).Do(context.TODO())
+	if err != nil {
+		log.Fatal("Failed querying index: %s", err.Error())
+	}
+	if !exists {
+		log.Fatal("The index '%s' doesn't exist", common.AliasIndexName)
 	}
 
 	err = common.InitializeAliases(client)

@@ -35,9 +35,13 @@ func NewContext(l *lars.LARS) lars.Context {
 }
 
 func (fc *FpContext) WriteResponse(m map[string]interface{}) {
-
 	fc.Ctx.Response().Header().Set(lars.ContentType, lars.ApplicationJSON)
 	fc.Ctx.Response().WriteString(fc.ToJson(m))
+}
+
+func (fc *FpContext) WriteStatus(httpCode int) {
+	fc.Ctx.Response().Header().Set(lars.ContentType, lars.ApplicationJSON)
+	fc.Ctx.Response().WriteHeader(httpCode)
 }
 
 func (fc *FpContext) ToJson(m map[string]interface{}) string {

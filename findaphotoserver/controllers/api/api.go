@@ -48,6 +48,7 @@ func ConfigureRouting(l *lars.LARS) {
 	index.Get("/fieldvalues", IndexFieldValues)
 	index.Get("/duplicates", DuplicateMedia)
 	index.Get("/info", Index)
+	index.Post("/reindex", Reindex)
 }
 
 func handleErrors(c lars.Context) {
@@ -171,7 +172,7 @@ func boolFromQuery(ctx *lars.Ctx, name string, defaultValue bool) bool {
 	if s != "" {
 		v, err := strconv.ParseBool(s)
 		if err != nil {
-			panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not an int: %s", name, s)})
+			panic(&InvalidRequest{message: fmt.Sprintf("'%s' is not a bool: %s", name, s)})
 		}
 		return v
 	}

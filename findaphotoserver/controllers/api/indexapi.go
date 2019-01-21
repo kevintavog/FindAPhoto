@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -15,6 +16,9 @@ import (
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
 )
 
+type ReindexMediaFunction func(bool)
+
+var ReindexMedia ReindexMediaFunction
 var FindAPhotoVersionNumber string
 
 type PathAndDate struct {
@@ -66,6 +70,20 @@ func Index(c lars.Context) {
 		}
 
 		fc.WriteResponse(props)
+	})
+}
+
+func Reindex(c lars.Context) {
+	fc := c.(*applicationglobals.FpContext)
+	err := fc.Ctx.ParseForm()
+	if err != nil {
+		panic(&InvalidRequest{message: "parseFormError", err: err})
+	}
+
+	fc.AppContext.FieldLogger.Time("reindex", func() {
+		force := boolFromQuery(fc.Ctx, "force", false)
+		ReindexMedia(force)
+		fc.WriteStatus(http.StatusNoContent)
 	})
 }
 
@@ -162,7 +180,6 @@ func getCountsSearch(client *elastic.Client, query string) string {
 	result, err := search.Do(context.TODO())
 	if err != nil {
 		return ""
-		panic(&InvalidRequest{message: fmt.Sprintf("Failed searching for count (%s)", query), err: err})
 	}
 	return fmt.Sprintf("%d", result.TotalHits())
 }

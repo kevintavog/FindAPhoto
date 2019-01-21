@@ -1,8 +1,6 @@
 package resolveplacename
 
 import (
-	"strings"
-
 	"github.com/kevintavog/findaphoto/common"
 
 	"github.com/Jeffail/gabs"
@@ -27,16 +25,6 @@ func generatePlacename(media *common.Media, address *gabs.Container, displayName
 	if displayName != nil {
 		media.LocationDisplayName = *displayName
 	}
-}
-
-func joinSkipEmpty(separator string, items ...string) string {
-	list := []string{}
-	for _, s := range items {
-		if s != "" {
-			list = append(list, s)
-		}
-	}
-	return strings.Join(list, ", ")
 }
 
 func firstMatch(list []string, address *gabs.Container) string {

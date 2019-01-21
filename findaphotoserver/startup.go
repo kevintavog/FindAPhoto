@@ -40,6 +40,7 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 		if len(aliasOverride) > 0 {
 			common.AliasPathOverride = aliasOverride
 		}
+		common.IndexMakeNoChanges = true
 	} else {
 		if !common.IsExecWorking(common.IndexerPath, "-v") {
 			log.Fatalf("The FindAPhoto Indexer isn't usable (path is '%s')", common.IndexerPath)
@@ -55,15 +56,18 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 	}
 
 	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
-	log.Info(" Using %s for OpenStreetMap reverse lookups", configuration.Current.OpenMapUrl)
+	log.Info(" Using %s for reverse name lookups", configuration.Current.LocationLookupUrl)
 
 	common.ElasticSearchServer = configuration.Current.ElasticSearchUrl
 
 	checkElasticServerAndIndex()
-	checkOpenMapServer()
+	checkLocationLookupServer()
 
 	l := configureApplicationGlobals()
 
+	api.ReindexMedia = func(force bool) {
+		go runIndexer(force, false)
+	}
 	api.ConfigureRouting(l)
 	files.ConfigureRouting(l)
 
@@ -78,7 +82,7 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 	delayThenIndexFunc := func() {
 		if !devolopmentMode {
 			time.Sleep(1 * time.Second)
-			runIndexer(devolopmentMode)
+			runIndexer(false, devolopmentMode)
 		}
 	}
 
@@ -128,9 +132,21 @@ func checkElasticServerAndIndex() {
 	}
 	if !exists {
 		log.Warn("The index '%s' doesn't exist", common.MediaIndexName)
-		err = common.CreateFindAPhotoIndex(client)
+		err = common.CreateMediaIndex(client)
 		if err != nil {
 			log.Fatalf("Failed creating index '%s': %+v", common.MediaIndexName, err.Error())
+		}
+	}
+
+	exists, err = client.IndexExists(common.AliasIndexName).Do(context.TODO())
+	if err != nil {
+		log.Fatalf("Failed querying index: %s", err.Error())
+	}
+	if !exists {
+		log.Warn("The index '%s' doesn't exist", common.AliasIndexName)
+		err = common.CreateAliasIndex(client)
+		if err != nil {
+			log.Fatalf("Failed creating index '%s': %+v", common.AliasIndexName, err.Error())
 		}
 	}
 
@@ -140,12 +156,11 @@ func checkElasticServerAndIndex() {
 	}
 }
 
-func checkOpenMapServer() {
-	url := fmt.Sprintf("%s/nominatim/v1/reverse?key=%s&format=json&lat=%f&lon=%f&addressdetails=1&zoom=18&accept-language=en-us",
-		configuration.Current.OpenMapUrl, configuration.Current.OpenMapKey, 47.6216, -122.348133)
+func checkLocationLookupServer() {
+	url := fmt.Sprintf("%s/api/v1/name?lat=%f&lon=%f", configuration.Current.LocationLookupUrl, 47.6216, -122.348133)
 
 	_, err := http.Get(url)
 	if err != nil {
-		log.Fatalf("The open street map values seem to be wrong, a location lookup failed: %s", err.Error())
+		log.Fatalf("The location lookup server values seem to be wrong, a location lookup failed: %s", err.Error())
 	}
 }

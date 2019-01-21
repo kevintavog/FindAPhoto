@@ -54,37 +54,44 @@ func dequeue() {
 			continue
 		}
 
-		response, err := client.Index().
-			Index(common.MediaIndexName).
-			Type(common.MediaTypeName).
-			Id(media.Path).
-			BodyJson(media).
-			Do(context.TODO())
+		if common.IndexMakeNoChanges {
+			log.Info("WOULD index %v", media.Path)
+		} else {
+			response, err := client.Index().
+				Index(common.MediaIndexName).
+				Type(common.MediaTypeName).
+				Id(media.Path).
+				BodyJson(media).
+				Do(context.TODO())
 
-		if err != nil {
-			atomic.AddInt64(&FailedIndexAttempts, 1)
-			if elasticErr, ok := err.(*elastic.Error); ok {
-				log.Error("Failed indexing %s: status=%d; %s", media.Path, elasticErr.Status, elasticErr.Details)
-			} else {
-				log.Error("Failed indexing %s: %q", media.Path, err.Error())
+			if err != nil {
+				atomic.AddInt64(&FailedIndexAttempts, 1)
+				if elasticErr, ok := err.(*elastic.Error); ok {
+					log.Error("Failed indexing %s: status=%d; %s", media.Path, elasticErr.Status, elasticErr.Details)
+				} else {
+					log.Error("Failed indexing %s: %q", media.Path, err.Error())
+				}
+				continue
 			}
-			continue
+
+			if !response.Created {
+				atomic.AddInt64(&ChangedFiles, 1)
+			}
 		}
 
 		atomic.AddInt64(&IndexedFiles, 1)
-		if !response.Created {
-			atomic.AddInt64(&ChangedFiles, 1)
-		}
 
 		if IndexedFiles%1000 == 0 {
 			log.Info("Indexed [%d] for %s", IndexedFiles, media.Path)
 		}
 
-		fullPath, err := common.FullPathForAliasedPath(media.Path)
-		if err != nil {
-			log.Error("Failed getting full path from alias: %s: (%s)", media.Path, err)
-		} else {
-			classifymedia.Enqueue(fullPath, media.Path, nil)
+		if !common.IndexMakeNoChanges {
+			fullPath, err := common.FullPathForAliasedPath(media.Path)
+			if err != nil {
+				log.Error("Failed getting full path from alias: %s: (%s)", media.Path, err)
+			} else {
+				classifymedia.Enqueue(fullPath, media.Path, nil)
+			}
 		}
 	}
 }

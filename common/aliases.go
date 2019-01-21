@@ -31,7 +31,7 @@ var aliasAndPath []AliasDocument
 
 // Load all aliases
 func InitializeAliases(client *elastic.Client) error {
-	log.Info("Loading aliases from '%s'", MediaIndexName)
+	log.Info("Loading aliases from '%s'", AliasIndexName)
 	return loadAliases(client)
 }
 
@@ -123,7 +123,7 @@ func UpdateLastIndexed(alias string) error {
 
 		client := CreateClient()
 		_, err := client.Update().
-			Index(MediaIndexName).
+			Index(AliasIndexName).
 			Type(AliasTypeName).
 			Id(aliasDocument.Alias).
 			Doc(aliasDocument).
@@ -171,12 +171,12 @@ func findViaAlias(alias string) *AliasDocument {
 
 func loadAliases(client *elastic.Client) error {
 	search := client.Search().
-		Index(MediaIndexName).
+		Index(AliasIndexName).
 		Type(AliasTypeName).
 		Pretty(true).
 		Query(elastic.NewMatchAllQuery()).
-		Size(maxAliasCount).
-		Sort("datetime", false) // Sort by created date, descending
+		Size(maxAliasCount) //.
+		// Sort("datetime", false) // Sort by created date, descending
 	result, err := search.Do(context.TODO())
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func addNewAlias(path string) error {
 
 	log.Warn("Adding alias '%s' for '%s'", ad.Alias, ad.Path)
 	response, err := client.Index().
-		Index(MediaIndexName).
+		Index(AliasIndexName).
 		Type(AliasTypeName).
 		Id(ad.Alias).
 		BodyJson(ad).

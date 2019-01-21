@@ -8,12 +8,11 @@ import (
 	"gopkg.in/olivere/elastic.v5"
 )
 
-func CreateFindAPhotoIndex(client *elastic.Client) error {
-	log.Warn("Creating index '%s'", MediaIndexName)
+func CreateAliasIndex(client *elastic.Client) error {
+	log.Warn("Creating index '%s'", AliasIndexName)
 
 	mapping := `{
 		"settings": {
-			"max_result_window": 100000,
 			"number_of_shards": 1,
 	        "number_of_replicas": 0
 		},
@@ -48,9 +47,31 @@ func CreateFindAPhotoIndex(client *elastic.Client) error {
 				    "type" : "date"
 				  }
 				}
-			},
+			}
+		}
+	}`
 
+	response, err := client.CreateIndex(AliasIndexName).BodyString(mapping).Do(context.TODO())
+	if err != nil {
+		return err
+	}
 
+	if response.Acknowledged != true {
+		return errors.New("Index creation not acknowledged")
+	}
+	return nil
+}
+
+func CreateMediaIndex(client *elastic.Client) error {
+	log.Warn("Creating index '%s'", MediaIndexName)
+
+	mapping := `{
+		"settings": {
+			"max_result_window": 100000,
+			"number_of_shards": 1,
+	        "number_of_replicas": 0
+		},
+		"mappings": {
 			"media": {
 				"_all": {
 					"enabled": false

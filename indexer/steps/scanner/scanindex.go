@@ -37,7 +37,7 @@ func RemoveFiles() {
 				continue
 			}
 
-			MediaScanned += 1
+			MediaScanned++
 			removeDocument := false
 			if !common.IsValidAliasedPath(media.Path) {
 				removeDocument = true
@@ -54,16 +54,20 @@ func RemoveFiles() {
 			}
 
 			if removeDocument {
-				MediaRemoved += 1
-				deleteResponse, err := client.Delete().
-					Index(common.MediaIndexName).
-					Type(common.MediaTypeName).
-					Id(media.Path).
-					Do(context.TODO())
-				if err != nil {
-					log.Error("Failed removing document '%s' from index: %s", media.Path, err.Error())
-				} else if deleteResponse.Found != true {
-					log.Error("Delete of document '%s' failed", media.Path)
+				MediaRemoved++
+				if common.IndexMakeNoChanges {
+					log.Info("WOULD remove %v", media.Path)
+				} else {
+					deleteResponse, err := client.Delete().
+						Index(common.MediaIndexName).
+						Type(common.MediaTypeName).
+						Id(media.Path).
+						Do(context.TODO())
+					if err != nil {
+						log.Error("Failed removing document '%s' from index: %s", media.Path, err.Error())
+					} else if deleteResponse.Found != true {
+						log.Error("Delete of document '%s' failed", media.Path)
+					}
 				}
 			}
 		}

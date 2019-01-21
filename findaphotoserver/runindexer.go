@@ -13,15 +13,18 @@ import (
 	"gopkg.in/olivere/elastic.v5"
 )
 
-func runIndexer(devMode bool) {
+func runIndexer(force bool, devMode bool) {
 	log.Info("Starting indexing")
 
 	var args = []string{
 		"-s", configuration.Current.ElasticSearchUrl,
-		"-o", configuration.Current.OpenMapUrl,
-		"-k", configuration.Current.OpenMapKey,
-		"-c", configuration.Current.OpenMapUrl,
-		"-r", configuration.Current.RedisUrl}
+		"-l", configuration.Current.LocationLookupUrl,
+		"-r", configuration.Current.RedisUrl,
+		"-a", common.AliasPathOverride}
+
+	if force {
+		args = append(args, "--reindex")
+	}
 
 	if devMode {
 		args = append(args, "-i")
@@ -30,7 +33,7 @@ func runIndexer(devMode bool) {
 
 	countPaths := 0
 	common.VisitAllPaths(func(alias common.AliasDocument) {
-		countPaths += 1
+		countPaths++
 		timeAndRunIndexer(args, alias.Path)
 	})
 
@@ -50,7 +53,7 @@ func runIndexer(devMode bool) {
 		elastic.SetSniff(false))
 
 	if err != nil {
-		log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
+		log.Fatalf("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
 	}
 	_, err = client.Refresh(common.MediaIndexName).Do(context.TODO())
 	if err != nil {

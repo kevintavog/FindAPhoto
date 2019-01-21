@@ -1,11 +1,11 @@
 package resolveplacename
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -21,9 +21,7 @@ var FailedLookups int64
 var Failures int64
 var ServerErrors int64
 
-var OpenStreetMapUrl = ""
-var OpenStreetMapKey = ""
-var CachedLocationsUrl = ""
+var LocationLookupUrl = ""
 
 const numConsumers = 8
 
@@ -58,9 +56,7 @@ func Enqueue(media *common.Media) {
 
 func dequeue() {
 	for media := range queue {
-		if !lookupInCache(media) {
-			resolvePlacename(media)
-		}
+		resolvePlacename(media)
 		indexmedia.Enqueue(media)
 	}
 }
@@ -68,78 +64,6 @@ func dequeue() {
 func addWarning(media *common.Media, warning string) {
 	log.Warn("%q - %q; %f, %f", media.Path, warning, media.Location.Latitude, media.Location.Longitude)
 	media.Warnings = append(media.Warnings, warning)
-}
-
-func lookupInCache(media *common.Media) bool {
-	if media.Location == nil {
-		return false
-	}
-	if media.Location.Latitude == 0 && media.Location.Longitude == 0 {
-		return false
-	}
-
-	if CachedLocationsUrl == "" {
-		return false
-	}
-
-	url := fmt.Sprintf("%s/cache/find-nearest?lat=%f&lon=%f", CachedLocationsUrl, media.Location.Latitude, media.Location.Longitude)
-	response, err := http.Get(url)
-	if err != nil {
-		addWarning(media, fmt.Sprintf("Failed getting cached placename (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
-		return false
-	}
-	defer response.Body.Close()
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		addWarning(media, fmt.Sprintf("Failed reading body of cached location response (%f, %f): %s", media.Location.Latitude, media.Location.Longitude, err.Error()))
-		return false
-	}
-
-	json, err := gabs.ParseJSON(body)
-	if err != nil {
-		addWarning(media, fmt.Sprintf(
-			"Failed deserializing cached location json: %s: ('%s', %f, %f in %s)",
-			err.Error(), body, media.Location.Latitude, media.Location.Longitude, media.Path))
-		return false
-	}
-
-	if !json.Exists("matchedLocation") || !json.Exists("placename") {
-		return false
-	}
-
-	jsonPlacename, err := gabs.ParseJSON(bytes.NewBufferString(json.Path("placename").Data().(string)).Bytes())
-	if err != nil {
-		addWarning(media, fmt.Sprintf(
-			"Failed deserializing cached location placename: %s: ('%s', %f, %f in %s)",
-			err.Error(), json.Path("placename").Data().(string), media.Location.Latitude, media.Location.Longitude, media.Path))
-		return false
-	}
-	if !jsonPlacename.Exists(("address")) {
-		log.Warn("Unable to find cached address in '%q'", jsonPlacename)
-		return false
-	}
-
-	lat, ok := json.Path("matchedLocation.latitude").Data().(float64)
-	if !ok {
-		log.Warn("Can't find latitude in '%q'", json)
-		return false
-	}
-	lon, ok := json.Path("matchedLocation.longitude").Data().(float64)
-	if !ok {
-		log.Warn("Can't find longitude")
-		return false
-	}
-
-	displayName, _ := jsonPlacename.Path("display_name").Data().(string)
-	if len(displayName) < 1 {
-		log.Warn("No cached display_name for %f, %f (%s)", media.Location.Latitude, media.Location.Longitude, media.Path)
-	}
-
-	atomic.AddInt64(&PlacenameLookups, 1)
-	media.CachedLocationDistanceMeters = int(calcDistance(media.Location.Latitude, media.Location.Longitude, lat, lon))
-	generatePlacename(media, jsonPlacename.Path("address"), &displayName)
-	return true
 }
 
 func resolvePlacename(media *common.Media) {
@@ -151,9 +75,7 @@ func resolvePlacename(media *common.Media) {
 	}
 
 	atomic.AddInt64(&PlacenameLookups, 1)
-	url := fmt.Sprintf("%s/nominatim/v1/reverse?key=%s&format=json&lat=%f&lon=%f&addressdetails=1&zoom=18&accept-language=en-us",
-		OpenStreetMapUrl, OpenStreetMapKey, media.Location.Latitude, media.Location.Longitude)
-
+	url := fmt.Sprintf("%s/api/v1/name?lat=%f&lon=%f", LocationLookupUrl, media.Location.Latitude, media.Location.Longitude)
 	response, err := http.Get(url)
 	if err != nil {
 		atomic.AddInt64(&FailedLookups, 1)
@@ -182,31 +104,51 @@ func placenameFromText(media *common.Media, blob []byte) {
 		return
 	}
 
-	if json.Exists("error") {
+	if !json.Exists("fullDescription") {
 		atomic.AddInt64(&ServerErrors, 1)
-		addWarning(media, fmt.Sprintf("Reverse lookup returned an error: %s", json.Path("error").Data().(string)))
+		addWarning(media, fmt.Sprintf("Reverse lookup didn't return a description: %v", json))
 		return
 	}
 
-	if json.Exists("apiStatusCode") {
-		atomic.AddInt64(&ServerErrors, 1)
-		addWarning(media, fmt.Sprintf("Reverse lookup failed: %s", json.Path("apiStatusCode").Data().(string), json.Path("apiMessage").Data().(string)))
-		return
-	}
+	atomic.AddInt64(&PlacenameLookups, 1)
+	media.CachedLocationDistanceMeters = 0
 
-	if !json.Exists("address") {
-		atomic.AddInt64(&ServerErrors, 1)
-		addWarning(media, fmt.Sprintf("Reverse lookup didn't return an address: %v", json))
-		return
+	val, ok := json.Path("countryCode").Data().(string)
+	if ok {
+		media.LocationCountryCode = val
 	}
-
-	address := json.Path("address")
-	displayName, _ := json.Path("display_name").Data().(string)
-	if len(displayName) < 1 {
-		log.Warn("No display_name for %f, %f (%s)", media.Location.Latitude, media.Location.Longitude, media.Path)
+	val, ok = json.Path("countryName").Data().(string)
+	if ok {
+		media.LocationCountryName = val
 	}
+	val, ok = json.Path("state").Data().(string)
+	if ok {
+		media.LocationStateName = val
+	}
+	val, ok = json.Path("city").Data().(string)
+	if ok {
+		media.LocationCityName = val
+	}
+	sites := []string{}
+	jsonSites, err := json.Search("sites").Children()
+	for _, s := range jsonSites {
+		sites = append(sites, s.Data().(string))
+	}
+	media.LocationSiteName = strings.Join(sites, ", ")
 
-	generatePlacename(media, address, &displayName)
+	media.LocationHierarchicalName = joinSkipEmpty(",", media.LocationSiteName, media.LocationCityName, media.LocationStateName, media.LocationCountryName)
+	media.LocationPlaceName = media.LocationHierarchicalName
+	media.LocationDisplayName = media.LocationHierarchicalName
+}
+
+func joinSkipEmpty(separator string, items ...string) string {
+	list := []string{}
+	for _, s := range items {
+		if s != "" {
+			list = append(list, s)
+		}
+	}
+	return strings.Join(list, ", ")
 }
 
 //// FROM https://gist.github.com/cdipaolo/d3f8db3848278b49db68
