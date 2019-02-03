@@ -27,8 +27,9 @@ func countMatchesCommand(cmd *cli.Cmd) {
 	}
 }
 
-func countKeyMatches(c redis.Conn, key string, value string) {
-	matchingKeyCount += 1
+func countKeyMatches(c redis.Conn, key string, value string) bool {
+	matchingKeyCount++
+	return true
 }
 
 func countKeyMatchesComplete() {

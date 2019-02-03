@@ -32,7 +32,7 @@ func Enqueue(fullPath string, alias string, tags *[]string) {
 
 		details, err := json.Marshal(classifyMessage)
 		if err != nil {
-			log.Error("Failed converting to JSON for publishing to redis: %s", err)
+			log.Error("Failed converting to JSON for publishing to redis: %s [%s]", err, fullPath)
 		} else {
 			_, err = conn.Do("PUBLISH", "classify", string(details))
 			if err != nil {

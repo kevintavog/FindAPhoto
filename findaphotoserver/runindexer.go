@@ -17,9 +17,9 @@ func runIndexer(force bool, devMode bool) {
 	log.Info("Starting indexing")
 
 	var args = []string{
-		"-s", configuration.Current.ElasticSearchUrl,
-		"-l", configuration.Current.LocationLookupUrl,
-		"-r", configuration.Current.RedisUrl,
+		"-s", configuration.Current.ElasticSearchURL,
+		"-l", configuration.Current.LocationLookupURL,
+		"-r", configuration.Current.RedisURL,
 		"-a", common.AliasPathOverride}
 
 	if force {

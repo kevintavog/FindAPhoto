@@ -8,6 +8,8 @@ import (
 var MediaIndexName = "media-index"
 
 var AliasIndexName = "fp-aliases"
+var ClarifaiCacheIndexName = "clarifai_cache"
+var ClarifaiTypeName = "document"
 
 const MediaTypeName = "media"
 const (

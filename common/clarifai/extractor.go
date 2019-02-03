@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	//	"github.com/ian-kent/go-log/log"
+	"github.com/ian-kent/go-log/log"
 )
 
 type ClarifaiTag struct {
@@ -29,29 +29,29 @@ func (s ClarifaiTagSort) Less(i, j int) bool {
 type PredictResponse struct {
 	Status  ClarifaiStatus `json:"status"`
 	Outputs []struct {
-		Id        string         `json:"id"`
+		ID        string         `json:"id"`
 		Status    ClarifaiStatus `json:"status"`
 		CreatedAt time.Time      `json:"created_at"`
 		Model     struct {
 			Name       string    `json:"name"`
-			Id         string    `json:"id"`
+			ID         string    `json:"id"`
 			CreatedAt  time.Time `json:"created_at"`
-			AppId      string    `json:"app_id,omitempty"`
+			AppID      string    `json:"app_id,omitempty"`
 			OutputInfo struct {
 				Message string `json:"message"`
 				Type    string `json:"type"`
 			} `json:"output_info"`
 			ModelVersion struct {
-				Id        string         `json:"id"`
+				ID        string         `json:"id"`
 				CreatedAt time.Time      `json:"created_at"`
 				Status    ClarifaiStatus `json:"status"`
 			} `json:"model_version"`
 		} `json:"model"`
 		Input struct {
-			Id   string `json:"id"`
+			ID   string `json:"id"`
 			Data struct {
 				Image struct {
-					Url string `json:"url"`
+					URL string `json:"url"`
 				} `json:"image"`
 			} `json:"data"`
 		} `json:"input"`
@@ -73,7 +73,7 @@ type ClarifaiFrameInfo struct {
 }
 
 type ClarifaiConcept struct {
-	Id    string  `json:"id"`
+	ID    string  `json:"id"`
 	Name  string  `json:"name"`
 	Appid string  `json:"app_id,omitempty"`
 	Value float32 `json:"value"`
@@ -84,25 +84,34 @@ type ClarifaiStatus struct {
 	Description string `json:"description"`
 }
 
-func TagsAndProbabilitiesFromJson(clarifaiJson string, minProbability int8) ([]ClarifaiTag, int, error) {
-	return tagsFromV2Json(clarifaiJson, minProbability)
+func TagsAndProbabilitiesFromJSON(clarifaiJSON string, minProbability int8) ([]ClarifaiTag, int, error) {
+	return tagsFromV2Json(clarifaiJSON, minProbability)
 }
 
-func tagsFromV2Json(clarifaiJson string, minProbability int8) ([]ClarifaiTag, int, error) {
+func tagsFromV2Json(clarifaiJSON string, minProbability int8) ([]ClarifaiTag, int, error) {
 
 	// We skipped this item, there's nothing to do
-	if len(clarifaiJson) == 0 {
+	if len(clarifaiJSON) == 0 {
 		return nil, 0, nil
 	}
 
 	predictResponse := &PredictResponse{}
-	err := json.Unmarshal([]byte(clarifaiJson), predictResponse)
+	err := json.Unmarshal([]byte(clarifaiJSON), predictResponse)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if predictResponse.Status.Code == 0 {
+	switch predictResponse.Status.Code {
+	case 0:
 		return nil, 0, fmt.Errorf("Mismatched JSON, status is 0")
+	case 10000:
+		break
+	case 10010:
+		log.Warn("Mixed success response: %v", predictResponse.Status.Code)
+	case 10020:
+		return nil, 0, fmt.Errorf("Failure: %v", predictResponse.Status.Code)
+	default:
+		return nil, 0, fmt.Errorf("API error: %v", predictResponse.Status.Code)
 	}
 
 	unitCount := 0
@@ -126,7 +135,7 @@ func tagsFromV2Json(clarifaiJson string, minProbability int8) ([]ClarifaiTag, in
 		}
 	}
 
-	tags := make([]ClarifaiTag, 0)
+	var tags []ClarifaiTag
 	for name, prob := range uniqueTags {
 		tags = append(tags, ClarifaiTag{Name: name, Probability: prob})
 	}

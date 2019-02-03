@@ -8,13 +8,33 @@ import (
 	"gopkg.in/olivere/elastic.v5"
 )
 
+func CreateClarifaiClassifyIndex(client *elastic.Client) error {
+	log.Warn("Creating index '%s'", ClarifaiCacheIndexName)
+
+	mapping := `{
+		"settings": {
+			"number_of_shards": 1,
+			"number_of_replicas": 0
+		}
+	}`
+	response, err := client.CreateIndex(ClarifaiCacheIndexName).BodyString(mapping).Do(context.TODO())
+	if err != nil {
+		return err
+	}
+
+	if response.Acknowledged != true {
+		return errors.New("Index creation not acknowledged")
+	}
+	return nil
+}
+
 func CreateAliasIndex(client *elastic.Client) error {
 	log.Warn("Creating index '%s'", AliasIndexName)
 
 	mapping := `{
 		"settings": {
 			"number_of_shards": 1,
-	        "number_of_replicas": 0
+			"number_of_replicas": 0
 		},
 		"mappings": {
 			"alias" : {

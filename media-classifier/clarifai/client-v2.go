@@ -71,9 +71,9 @@ const (
 	rootURL  = "https://api.clarifai.com"
 )
 
-// Client contains scoped variables forindividual clients
+// Client contains scoped variables for individual clients
 type Client struct {
-	ApiKey    string
+	APIKey    string
 	APIRoot   string
 	Throttled bool
 }
@@ -105,7 +105,7 @@ func (client *Client) fileHTTPRequest(isImage bool, filePath string, endpoint st
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Key "+client.ApiKey)
+	req.Header.Set("Authorization", "Key "+client.APIKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	httpClient := &http.Client{}
@@ -131,6 +131,8 @@ func (client *Client) fileHTTPRequest(isImage bool, filePath string, endpoint st
 		return nil, NewClarifaiError(res.StatusCode, "THROTTLED", string(responseBody))
 	case 400:
 		return nil, NewClarifaiError(res.StatusCode, "ALL_ERROR", string(responseBody))
+	case 402:
+		return nil, NewClarifaiError(res.StatusCode, "EXCEEDED_ACCOUNT_LIMITS", string(responseBody))
 	case 500:
 		return nil, NewClarifaiError(res.StatusCode, "CLARIFAI_ERROR", string(responseBody))
 	default:

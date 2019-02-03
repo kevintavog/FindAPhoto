@@ -75,7 +75,7 @@ func resolvePlacename(media *common.Media) {
 	}
 
 	atomic.AddInt64(&PlacenameLookups, 1)
-	url := fmt.Sprintf("%s/api/v1/name?lat=%f&lon=%f", LocationLookupUrl, media.Location.Latitude, media.Location.Longitude)
+	url := fmt.Sprintf("%s/api/v1/name?country=true&lat=%f&lon=%f", LocationLookupUrl, media.Location.Latitude, media.Location.Longitude)
 	response, err := http.Get(url)
 	if err != nil {
 		atomic.AddInt64(&FailedLookups, 1)

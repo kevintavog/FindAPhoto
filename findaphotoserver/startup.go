@@ -55,10 +55,10 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 		fmt.Printf("*** Using index %s ***\n", common.MediaIndexName)
 	}
 
-	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchUrl, common.MediaIndexName)
-	log.Info(" Using %s for reverse name lookups", configuration.Current.LocationLookupUrl)
+	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchURL, common.MediaIndexName)
+	log.Info(" Using %s for reverse name lookups", configuration.Current.LocationLookupURL)
 
-	common.ElasticSearchServer = configuration.Current.ElasticSearchUrl
+	common.ElasticSearchServer = configuration.Current.ElasticSearchURL
 
 	checkElasticServerAndIndex()
 	checkLocationLookupServer()
@@ -154,10 +154,22 @@ func checkElasticServerAndIndex() {
 	if err != nil {
 		log.Fatalf("Failed initializing aliases: %s", err.Error())
 	}
+
+	exists, err = client.IndexExists(common.ClarifaiCacheIndexName).Do(context.TODO())
+	if err != nil {
+		log.Fatalf("Failed querying index: %s", err.Error())
+	}
+	if !exists {
+		log.Warn("The index '%s' doesn't exist", common.ClarifaiCacheIndexName)
+		err = common.CreateClarifaiClassifyIndex(client)
+		if err != nil {
+			log.Fatalf("Failed creating index '%s': %+v", common.ClarifaiCacheIndexName, err.Error())
+		}
+	}
 }
 
 func checkLocationLookupServer() {
-	url := fmt.Sprintf("%s/api/v1/name?lat=%f&lon=%f", configuration.Current.LocationLookupUrl, 47.6216, -122.348133)
+	url := fmt.Sprintf("%s/api/v1/name?lat=%f&lon=%f", configuration.Current.LocationLookupURL, 47.6216, -122.348133)
 
 	_, err := http.Get(url)
 	if err != nil {

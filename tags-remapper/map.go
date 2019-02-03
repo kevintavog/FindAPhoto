@@ -56,10 +56,10 @@ func mapCommand(cmd *cli.Cmd) {
 	}
 }
 
-func mapKey(c redis.Conn, key string, value string) {
+func mapKey(c redis.Conn, key string, value string) bool {
 	if !strings.HasPrefix(key, sourcePrefix) {
 		log.Warn("Key doesn't match the prefix? %s -- %s", key, sourcePrefix)
-		return
+		return false
 	}
 
 	node := key[len(sourcePrefix):]
@@ -87,6 +87,8 @@ func mapKey(c redis.Conn, key string, value string) {
 			}
 		}
 	}
+
+	return true
 }
 
 func mapKeysComplete() {

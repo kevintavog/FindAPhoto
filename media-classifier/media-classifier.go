@@ -20,6 +20,8 @@ import (
 // The raw response from Clarafai is stored in Redis, which has a persistent store - calls are
 // made to Clarafai only if the media does NOT exist in Redis
 
+var esClient *elastic.Client
+
 func main() {
 	common.InitDirectories("FindAPhoto")
 	common.ConfigureLogging(common.LogDirectory, "findaphoto-media-classifier")
@@ -29,13 +31,13 @@ func main() {
 	indexPrefix := app.StringOpt("i", "", "The prefix for the index (for development) (optional)")
 	elasticSearchServer := app.StringOpt("e", "", "The URL for the ElasticSearch server")
 	redisServer := app.StringOpt("r", "", "The URL for the redis server")
-	clarifaiApiKeyArg := app.StringOpt("a", "", "The clarifai.com API key")
+	clarifaiAPIKeyArg := app.StringOpt("a", "", "The clarifai.com API key")
 	app.Version("v", "Show the version and exit")
 	app.Action = func() {
 
 		common.MediaIndexName = *indexPrefix + common.MediaIndexName
 		common.ElasticSearchServer = *elasticSearchServer
-		ClarifaiApiKey = *clarifaiApiKeyArg
+		ClarifaiAPIKey = *clarifaiAPIKeyArg
 
 		log.Info("FindAPhoto media classifier")
 		log.Info("  Redis server: %s; ElasticSearch server: %s, using index %s; ", *redisServer, common.ElasticSearchServer, common.MediaIndexName)
@@ -46,67 +48,102 @@ func main() {
 		}
 		defer c.Close()
 
-		esClient, err := elastic.NewSimpleClient(
+		esClient, err = elastic.NewSimpleClient(
 			elastic.SetURL(common.ElasticSearchServer),
 			elastic.SetSniff(false))
 		if err != nil {
-			log.Fatal("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
+			log.Fatalf("Unable to connect to '%s': %s", common.ElasticSearchServer, err.Error())
 		}
 
 		exists, err := esClient.IndexExists(common.MediaIndexName).Do(context.TODO())
 		if err != nil {
-			log.Fatal("Failed querying index: %s", err.Error())
+			log.Fatalf("Failed querying index: %s", err.Error())
 		}
 		if !exists {
-			log.Fatal("The index does not exist: %s", common.MediaIndexName)
+			log.Fatalf("The index does not exist: %s", common.MediaIndexName)
 		}
 
-		//		fakeClassifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/Image.JPG")
-		//		fakeClassifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8866_V.MP4")
+		// data := `{
+		// 	"file": "/mnt/mediafiles/2018/2018-01-01 Seattle/IMG_0475.jpg",
+		// 	"alias": "1\\2018\\2018-01-01 Seattle\\IMG_0475.jpg"
+		// }`
+		// err = handleRedisMessage([]byte(data))
+		// if err != nil {
+		// 	log.Fatalf("error: %s", err)
+		// }
 
-		//		classifyFile("/Users/goatboy/Pictures/Master/1999/1999-07 Crested Butte/Image-12.JPG")
-		//		classifyFile("/Users/goatboy/Pictures/Master/2018/2018-01-01 Seattle/IMG_0475.jpg")
-		//		classifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8866_V.MP4")
-		//		classifyFile("/Users/goatboy/Pictures/master/2017/2017-01-16 Troy and Lucas/IMG_8865_V.MP4")
-
-		getClassifyMessages(*redisServer, esClient)
+		getClassifyMessages(*redisServer, handleRedisMessage)
 	}
 
 	app.Run(os.Args)
 }
 
-func asJson(object interface{}) string {
-	json, _ := json.MarshalIndent(object, "", "    ")
-	return string(json)
-}
-
-func classifyFile(filePath string) {
-	json, err := classifyV2(filePath)
+// Dequeue from Redis; if the document hasn't been tagged, first try to retrieve
+// the classification from the cache, otherwise call the Clarifai API.
+// Add the result to the queue and update the media document.
+func handleRedisMessage(rawMessage []byte) error {
+	var classifyMessage common.ClassifyMessage
+	err := json.Unmarshal(rawMessage, &classifyMessage)
 	if err != nil {
-		log.Fatal("Failed: %s", err)
+		log.Error("Failed converting classify message: %s (%s)", err, string(rawMessage[:]))
+		return nil
 	}
 
-	tags, unitCount, err := clarifaifp.TagsAndProbabilitiesFromJson(json, 0)
+	// Does the ElasticSearch document exist? And have the proper field already?
+	exists, err := doesTagsFieldExistInElasticSearch(esClient, classifyMessage.Alias)
 	if err != nil {
-		log.Fatalf("Getting v2 tags failed: %s", err)
+		log.Error("Failed checking ElasticSearch for %s: %s", classifyMessage.Alias, err)
+		return nil
+	}
+	if exists {
+		return nil
 	}
 
-	log.Info("V2 tags, %d (unit count=%d): %s", len(tags), unitCount, filePath)
-	for _, t := range tags {
-		log.Info("  %s : %d", t.Name, t.Probability)
+	if _, err := os.Stat(classifyMessage.File); err != nil {
+		if os.IsNotExist(err) {
+			log.Error("The file '%s' does not exist", classifyMessage.File)
+		} else {
+			log.Error("Unable to access file '%s': %s", classifyMessage.File, err)
+		}
+		return nil
 	}
-}
 
-func fakeClassifyFile(filePath string) {
+	// Is the Clarifai response in the cache?
+	json, err := getCachedClassification(esClient, classifyMessage.File)
+	if err != nil || len(json) < 1 {
+		json, err := classifyV2(classifyMessage.File)
+		if err != nil {
+			log.Error("Classification error for %s: %s (%s)\n", classifyMessage.File, err, json)
+			return err
+		}
 
-	v2, _ := fakeClassifyV2(filePath)
-	tags, unitCount, err := clarifaifp.TagsAndProbabilitiesFromJson(v2, 0)
+		if len(json) == 0 {
+			return nil
+		}
+
+		// Add the response to the cache.
+		_, err = esClient.Index().
+			Index(common.ClarifaiCacheIndexName).
+			Type(common.ClarifaiTypeName).
+			Id(classifyMessage.File).
+			BodyJson(json).
+			Do(context.TODO())
+		if err != nil {
+			return err
+		}
+	}
+
+	tags, _, err := clarifaifp.TagsAndProbabilitiesFromJSON(json, 0)
 	if err != nil {
-		log.Fatalf("Getting v2 tags failed: %s", err)
+		log.Error("Failed getting tags from JSON [%s] (%s): %s", classifyMessage.File, json, err)
+		return nil
 	}
 
-	log.Info("Fake V2 image tags, %d (unit count=%d): %s", len(tags), unitCount, filePath)
-	for _, t := range tags {
-		log.Info("  %s : %d", t.Name, t.Probability)
+	// Add it to the ElasticSearch document
+	err = addToElasticSearch(esClient, classifyMessage.Alias, tags)
+	if err != nil {
+		log.Error("Failed updating ElasticSearch: %s -- %s", classifyMessage.Alias, err)
 	}
+
+	return nil
 }

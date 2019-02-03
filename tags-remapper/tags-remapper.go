@@ -13,7 +13,7 @@ import (
 
 const appIntro = "FindAPhoto tags-remapper"
 
-type visitKey func(redis.Conn, string, string)
+type visitKey func(redis.Conn, string, string) bool
 type visitComplete func()
 
 func main() {
@@ -34,6 +34,7 @@ func scanKeys(c redis.Conn, matchPrefix string, visitFn visitKey, visitCompleteF
 	scanCursor := 0
 
 	var keys []string
+	var endScan = false
 	for {
 		var result []interface{}
 		var err error
@@ -65,11 +66,14 @@ func scanKeys(c redis.Conn, matchPrefix string, visitFn visitKey, visitCompleteF
 			if err != redis.ErrNil && err != nil {
 				log.Error("Unable to get value for key: %s (%s)", k, err)
 			} else {
-				visitFn(c, k, value)
+				if !visitFn(c, k, value) {
+					endScan = true
+					break
+				}
 			}
 		}
 
-		if scanCursor == 0 {
+		if scanCursor == 0 || endScan {
 			break
 		}
 	}
