@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/common/clarifai"
-	"github.com/kevintavog/findaphoto/media-classifier/clarifai"
+	clarifaifp "github.com/kevintavog/findaphoto/common/clarifai"
+	clarifaiv2 "github.com/kevintavog/findaphoto/media-classifier/clarifai"
 
 	"github.com/ian-kent/go-log/log"
 	"github.com/twinj/uuid"
