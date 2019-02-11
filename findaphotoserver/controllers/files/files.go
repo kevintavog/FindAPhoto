@@ -7,16 +7,15 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-playground/lars"
-
 	"github.com/kevintavog/findaphoto/common"
+	"github.com/labstack/echo"
 )
 
-func ConfigureRouting(l *lars.LARS) {
-	files := l.Group("/files")
-	files.Get("/thumbs/*", Thumbs)
-	files.Get("/slides/*", Slides)
-	files.Get("/media/*", Media)
+func ConfigureRouting(e *echo.Echo) {
+	files := e.Group("/files")
+	files.GET("/thumbs/*", thumbFiles)
+	files.GET("/slides/*", slideFiles)
+	files.GET("/media/*", mediaFiles)
 }
 
 func toRepositoryId(itemUrl string) (string, error) {

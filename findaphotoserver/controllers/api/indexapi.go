@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/lars"
+	"github.com/labstack/echo"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
 )
 
 type ReindexMediaFunction func(bool)
@@ -50,15 +50,11 @@ var fieldsNotExposed = map[string]bool{
 	"originalcameramodel": true,
 }
 
-func Index(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-	propertiesFilter := getStatsPropertiesFilter(fc.Ctx.Request().Form.Get("properties"))
+func indexAPI(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	propertiesFilter := getStatsPropertiesFilter(c.QueryParam("properties"))
 
-	fc.AppContext.FieldLogger.Time("index", func() {
+	return fc.Time("index", func() error {
 		props := make(map[string]interface{})
 		client := common.CreateClient()
 
@@ -69,46 +65,37 @@ func Index(c lars.Context) {
 			}
 		}
 
-		fc.WriteResponse(props)
+		return c.JSON(http.StatusOK, props)
 	})
 }
 
-func Reindex(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-
-	fc.AppContext.FieldLogger.Time("reindex", func() {
-		force := boolFromQuery(fc.Ctx, "force", false)
+func reindexAPI(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("reindex", func() error {
+		force := fc.BoolFromQuery("force", false)
+		fc.LogBool("force", force)
 		ReindexMedia(force)
-		fc.WriteStatus(http.StatusNoContent)
+		return c.NoContent(http.StatusNoContent)
 	})
 }
 
-func IndexFieldValues(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-
-	fc.AppContext.FieldLogger.Time("", func() {
+func indexFieldValuesAPI(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("", func() error {
 		fieldNames := make([]string, 0)
-		field := fc.Ctx.Request().Form.Get("fields")
+		field := c.QueryParam("fields")
 		if len(field) < 1 {
-			panic(&InvalidRequest{message: "'fields' query parameter missing"})
+			panic(&util.InvalidRequest{Message: "'fields' query parameter missing"})
 		} else {
 			fieldNames = strings.Split(field, ",")
 		}
 
-		searchText := fc.Ctx.Request().Form.Get("q")
-		month := fc.Ctx.Request().Form.Get("month")
-		day := fc.Ctx.Request().Form.Get("day")
-		maxCount := intFromQuery(fc.Ctx, "max", 20)
+		searchText := c.QueryParam("q")
+		month := c.QueryParam("month")
+		day := c.QueryParam("day")
+		maxCount := fc.IntFromQuery("max", 20)
 
-		fc.AppContext.FieldLogger.Add("fields", strings.Join(fieldNames, ","))
+		fc.LogStringArray("fields", fieldNames)
 
 		drilldownOptions := search.NewDrilldownOptions()
 		populateDrilldownOptions(fc, drilldownOptions)
@@ -117,8 +104,7 @@ func IndexFieldValues(c lars.Context) {
 
 		response := make(map[string]interface{})
 		response["fields"] = fieldsAndValues
-
-		fc.WriteResponse(response)
+		return c.JSON(http.StatusOK, response)
 	})
 }
 
@@ -150,7 +136,7 @@ func getValue(name string, client *elastic.Client) interface{} {
 		return getCountsSearch(client, "warnings:*")
 	}
 
-	panic(&InvalidRequest{message: fmt.Sprintf("Unknown property: '%s'", name)})
+	panic(&util.InvalidRequest{Message: fmt.Sprintf("Unknown property: '%s'", name)})
 }
 
 func getAliasedPaths() []PathAndDate {
@@ -241,7 +227,7 @@ func getMappedFields() []string {
 		Type(common.MediaTypeName).
 		Do(context.TODO())
 	if err != nil {
-		panic(&InvalidRequest{message: "Failed searching for mappings", err: err})
+		panic(&util.InvalidRequest{Message: "Failed searching for mappings", Err: err})
 	}
 
 	allFields := make([]string, 0)
@@ -251,7 +237,7 @@ func getMappedFields() []string {
 	mappings := index["mappings"].(map[string]interface{})
 	mediaType := mappings[common.MediaTypeName].(map[string]interface{})
 	properties := mediaType["properties"].(map[string]interface{})
-	for k, _ := range properties {
+	for k := range properties {
 		if _, ignored := fieldsNotExposed[k]; !ignored {
 			allFields = append(allFields, k)
 		}
@@ -267,11 +253,11 @@ func getTopFieldValues(fieldNames []string, maxCount int, searchText string, mon
 	var query elastic.Query
 	if len(monthString) > 0 || len(dayString) > 0 {
 		if len(searchText) > 0 {
-			panic(&InvalidRequest{message: "Either 'q' OR 'month' & 'day' should be specified, not both"})
+			panic(&util.InvalidRequest{Message: "Either 'q' OR 'month' & 'day' should be specified, not both"})
 		}
 
-		month := intFromString("month", monthString)
-		day := intFromString("day", dayString)
+		month := util.IntFromString("month", monthString)
+		day := util.IntFromString("day", dayString)
 
 		query = elastic.NewTermQuery("dayofyear", common.DayOfYear(month, day))
 	} else {
@@ -317,7 +303,7 @@ func getTopFieldValues(fieldNames []string, maxCount int, searchText string, mon
 	result, err := searchService.Do(context.TODO())
 
 	if err != nil {
-		panic(&InvalidRequest{message: "Failed searching for field values", err: err})
+		panic(&util.InvalidRequest{Message: "Failed searching for field values", Err: err})
 	}
 
 	for _, name := range fieldNames {

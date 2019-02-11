@@ -4,24 +4,18 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-playground/lars"
-
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
+	"github.com/labstack/echo"
 )
 
-func MediaById(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-
-	fc.AppContext.FieldLogger.Time("mediabyid", func() {
-		id := fc.Ctx.Request().Form.Get("id")
+func mediaByIdAPI(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("mediabyid", func() error {
+		id := c.Param("id")
 
 		client := common.CreateClient()
 		result, err := client.Search().
@@ -31,21 +25,21 @@ func MediaById(c lars.Context) {
 			Do(context.TODO())
 
 		if err != nil {
-			panic(&InternalError{message: "SearchFailed", err: err})
+			panic(&util.InvalidRequest{Message: "SearchFailed", Err: err})
 		}
 
 		if result.TotalHits() == 0 {
-			fc.Error(http.StatusNotFound, "NoSuchId", "", nil)
+			return util.ErrorJSON(c, http.StatusNotFound, "NoSuchId", "", nil)
 		} else if result.TotalHits() > 1 {
-			fc.Error(http.StatusInternalServerError, "DuplicateIdFound", "", nil)
+			return util.ErrorJSON(c, http.StatusInternalServerError, "DuplicateIdFound", "", nil)
 		} else {
 			source := make(map[string]interface{})
 			hit := result.Hits.Hits[0]
 			err := json.Unmarshal(*hit.Source, &source)
 			if err != nil {
-				panic(&InternalError{message: "JsonUnmarshallFailed", err: err})
+				panic(&util.InvalidRequest{Message: "JsonUnmarshallFailed", Err: err})
 			}
-			fc.WriteResponse(source)
+			return c.JSON(http.StatusOK, source)
 		}
 	})
 }

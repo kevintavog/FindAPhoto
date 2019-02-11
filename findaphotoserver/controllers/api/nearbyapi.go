@@ -2,57 +2,49 @@ package api
 
 import (
 	"fmt"
-	"strconv"
+	"net/http"
 
-	"github.com/go-playground/lars"
-
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/search"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
+	"github.com/labstack/echo"
 )
 
-func Nearby(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
+func nearbyAPI(c echo.Context) error {
+	fc := c.(*util.FpContext)
 	nearbyOptions := populateNearbyOptions(fc)
-	propertiesFilter := getPropertiesFilter(fc.Ctx.Request().Form.Get("properties"))
+	propertiesFilter := getPropertiesFilter(c.QueryParam("properties"))
 
-	fc.AppContext.FieldLogger.Time("nearby", func() {
+	return fc.Time("nearby", func() error {
 		searchResult, err := nearbyOptions.Search()
 		if err != nil {
-			panic(&InternalError{message: "SearchFailed", err: err})
+			panic(&util.InvalidRequest{Message: "SearchFailed", Err: err})
 		}
 
-		fc.AppContext.FieldLogger.Add("itemCount", strconv.Itoa(searchResult.ResultCount))
-		fc.WriteResponse(filterResults(searchResult, propertiesFilter))
+		fc.LogInt("itemCount", searchResult.ResultCount)
+		return c.JSON(http.StatusOK, filterResults(searchResult, propertiesFilter))
 	})
 }
 
-func populateNearbyOptions(fc *applicationglobals.FpContext) *search.NearbyOptions {
+func populateNearbyOptions(fc *util.FpContext) *search.NearbyOptions {
 
-	// TODO: Is this a LARS bug? The examples don't show a call to ParseForm being required to get query parameters
-	// Even with this, the query param example isn't working for me
-	err := fc.Ctx.ParseForm()
-	if err != nil {
-		panic(&InvalidRequest{message: "parseFormError", err: err})
-	}
-
-	lat := float64FromQuery(fc.Ctx, "lat")
-	lon := float64FromQuery(fc.Ctx, "lon")
+	lat := fc.Float64FromQuery("lat")
+	lon := fc.Float64FromQuery("lon")
 	// The intent of this api is to return the top few closest items - even if they're on the other side of the world
 	nearbyOptions := search.NewNearbyOptions(lat, lon, "13000km")
-	nearbyOptions.MaxCount = intFromQuery(fc.Ctx, "count", 5)
+	nearbyOptions.MaxCount = fc.IntFromQuery("count", 5)
 
-	maxKilometers := optionalFloat64FromQuery(fc.Ctx, "maxKilometers", 13000)
+	maxKilometers := fc.OptionalFloat64FromQuery("maxKilometers", 13000)
 	if maxKilometers < 1 || maxKilometers > 20000 {
-		panic(&InvalidRequest{message: "maxKilometers must be between 1 and 20,000, inclusive"})
+		panic(&util.InvalidRequest{Message: "maxKilometers must be between 1 and 20,000, inclusive"})
 	}
 	nearbyOptions.Distance = fmt.Sprintf("%fkm", maxKilometers)
 
-	nearbyOptions.Count = intFromQuery(fc.Ctx, "count", nearbyOptions.Count)
+	nearbyOptions.Count = fc.IntFromQuery("count", nearbyOptions.Count)
 	if nearbyOptions.Count < 1 || nearbyOptions.Count > 100 {
-		panic(&InvalidRequest{message: "count must be between 1 and 100, inclusive"})
+		panic(&util.InvalidRequest{Message: "count must be between 1 and 100, inclusive"})
 	}
 
-	nearbyOptions.Index = intFromQuery(fc.Ctx, "first", 1) - 1
+	nearbyOptions.Index = fc.IntFromQuery("first", 1) - 1
 	populateCategoryOptions(fc, nearbyOptions.CategoryOptions)
 	populateDrilldownOptions(fc, nearbyOptions.DrilldownOptions)
 

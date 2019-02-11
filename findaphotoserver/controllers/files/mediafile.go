@@ -5,12 +5,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-playground/lars"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
+	"github.com/labstack/echo"
 )
 
 const baseMediaUrl = "/files/media/"
@@ -19,54 +19,48 @@ func ToMediaUrl(aliasedPath string) string {
 	return baseMediaUrl + url.QueryEscape(strings.Replace(aliasedPath, "\\", "/", -1))
 }
 
-func Media(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	fc.AppContext.FieldLogger.Time("media", func() {
-		mediaUrl := fc.Ctx.Request().URL.Path
-		if !strings.HasPrefix(strings.ToLower(mediaUrl), baseMediaUrl) {
-			fc.AppContext.FieldLogger.Add("missingMediaPrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+func mediaFiles(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("media", func() error {
+		mediaURL := c.Request().URL.Path
+		if !strings.HasPrefix(strings.ToLower(mediaURL), baseMediaUrl) {
+			fc.LogBool("missingMediaPrefix", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		// The path must exist in the repository
-		mediaPath := mediaUrl[len(baseMediaUrl):]
-		mediaId, err := toRepositoryId(mediaPath)
+		mediaPath := mediaURL[len(baseMediaUrl):]
+		mediaID, err := toRepositoryId(mediaPath)
 		if err != nil {
-			fc.Error(http.StatusNotFound, "invalidMediaId", "", err)
-			return
+			return util.ErrorJSON(c, http.StatusNotFound, "invalidMediaId", "", err)
 		}
 
 		client := common.CreateClient()
 		searchResult, err := client.Search().
 			Index(common.MediaIndexName).
 			Type(common.MediaTypeName).
-			Query(elastic.NewTermQuery("_id", mediaId)).
+			Query(elastic.NewTermQuery("_id", mediaID)).
 			Do(context.TODO())
 		if err != nil {
-			fc.AppContext.FieldLogger.Add("invalidMediaPrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("invalidMediaPrefix", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		if searchResult.TotalHits() == 0 {
-			fc.AppContext.FieldLogger.Add("notInRepository", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("notInRepository", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		mediaFilename, err := aliasedToFullPath(mediaPath)
 		if err != nil {
-			fc.Error(http.StatusNotFound, "badAlias", "", err)
-			return
+			return util.ErrorJSON(c, http.StatusNotFound, "badAlias", "", err)
 		}
 
 		if exists, _ := common.FileExists(mediaFilename); !exists {
-			fc.AppContext.FieldLogger.Add("missingMedia", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("missingMedia", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
-		http.ServeFile(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), mediaFilename)
+		return c.File(mediaFilename)
 	})
 }

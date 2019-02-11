@@ -12,16 +12,15 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/go-playground/lars"
+	"github.com/labstack/echo"
 	"github.com/nfnt/resize"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
 	"github.com/twinj/uuid"
 )
 
@@ -32,53 +31,47 @@ func ToSlideUrl(aliasedPath string) string {
 	return baseSlideUrl + url.QueryEscape(strings.Replace(aliasedPath, "\\", "/", -1))
 }
 
-func Slides(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	fc.AppContext.FieldLogger.Time("slide", func() {
-		slideUrl := fc.Ctx.Request().URL.Path
-		if !strings.HasPrefix(strings.ToLower(slideUrl), baseSlideUrl) {
-			fc.AppContext.FieldLogger.Add("missingSlidePrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+func slideFiles(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("slide", func() error {
+		slideURL := c.Request().URL.Path
+		if !strings.HasPrefix(strings.ToLower(slideURL), baseSlideUrl) {
+			fc.LogBool("missingSlidePrefix", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		// The path must exist in the repository
-		slidePath := slideUrl[len(baseSlideUrl):]
-		slideId, err := toRepositoryId(slidePath)
+		slidePath := slideURL[len(baseSlideUrl):]
+		slideID, err := toRepositoryId(slidePath)
 		if err != nil {
-			fc.Error(http.StatusNotFound, "invalidSlideId", "", err)
-			return
+			return util.ErrorJSON(c, http.StatusNotFound, "invalidSlideId", "", err)
 		}
 
 		client := common.CreateClient()
 		searchResult, err := client.Search().
 			Index(common.MediaIndexName).
 			Type(common.MediaTypeName).
-			Query(elastic.NewTermQuery("_id", slideId)).
+			Query(elastic.NewTermQuery("_id", slideID)).
 			Do(context.TODO())
 		if err != nil {
-			fc.AppContext.FieldLogger.Add("invalidSlidePrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("invalidSlidePrefix", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		if searchResult.TotalHits() == 0 {
-			fc.AppContext.FieldLogger.Add("notInRepository", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("notInRepository", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		// Convert alias to filename, generate temporary slide, return it
 		slideFilename, err := aliasedToFullPath(slidePath)
 		if err != nil {
-			fc.Error(http.StatusNotFound, "badAlias", "", err)
-			return
+			return util.ErrorJSON(c, http.StatusNotFound, "badAlias", "", err)
 		}
 
 		if exists, _ := common.FileExists(slideFilename); !exists {
-			fc.AppContext.FieldLogger.Add("missingMedia", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("missingMedia", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		var buffer bytes.Buffer
@@ -89,11 +82,10 @@ func Slides(c lars.Context) {
 		}
 
 		if err != nil {
-			fc.Error(http.StatusInternalServerError, "failedSlideGeneration", "", err)
-			return
+			return util.ErrorJSON(c, http.StatusInternalServerError, "failedSlideGeneration", "", err)
 		}
 
-		http.ServeContent(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), slideFilename, time.Unix(0, 0), bytes.NewReader(buffer.Bytes()))
+		return c.Stream(http.StatusOK, "", bytes.NewReader(buffer.Bytes()))
 	})
 }
 

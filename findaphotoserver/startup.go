@@ -5,16 +5,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-playground/lars"
 	"github.com/ian-kent/go-log/log"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"golang.org/x/net/context"
 	"gopkg.in/olivere/elastic.v5"
 
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
 	"github.com/kevintavog/findaphoto/findaphotoserver/configuration"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/api"
 	"github.com/kevintavog/findaphoto/findaphotoserver/controllers/files"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
 )
 
 func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
@@ -63,13 +64,14 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 	checkElasticServerAndIndex()
 	checkLocationLookupServer()
 
-	l := configureApplicationGlobals()
+	e := configureEcho()
 
 	api.ReindexMedia = func(force bool) {
 		go runIndexer(force, false)
 	}
-	api.ConfigureRouting(l)
-	files.ConfigureRouting(l)
+
+	api.ConfigureRouting(e)
+	files.ConfigureRouting(e)
 
 	mediaClassifierFunc := func() {
 		if !skipMediaClassifier {
@@ -90,7 +92,7 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 		go mediaClassifierFunc()
 		go delayThenIndexFunc()
 
-		err := http.ListenAndServe(fmt.Sprintf(":%d", listenPort), l.Serve())
+		err := e.Start(fmt.Sprintf(":%d", listenPort))
 		if err != nil {
 			log.Fatalf("Failed starting the service: %s", err.Error())
 		}
@@ -111,10 +113,34 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 	}
 }
 
-func configureApplicationGlobals() *lars.LARS {
-	l := lars.New()
-	l.RegisterContext(applicationglobals.NewContext)
-	return l
+func configureEcho() *echo.Echo {
+	e := echo.New()
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			return h(util.NewFpContext(c))
+		}
+	})
+
+	e.Use(fpLogger())
+
+	e.Use(util.Recover())
+	e.Use(middleware.CORS())
+	e.HidePort = true
+	e.HideBanner = true
+	return e
+}
+
+func fpLogger() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			fc := c.(*util.FpContext)
+			if err := next(c); err != nil {
+				c.Error(err)
+			}
+			fc.RequestComplete()
+			return nil
+		}
+	}
 }
 
 func checkElasticServerAndIndex() {

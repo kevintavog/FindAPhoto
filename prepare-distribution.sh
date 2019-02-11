@@ -9,4 +9,6 @@ GOOS=linux GOARCH=amd64 go build -o ../dist/media-classifier
 cd ../findaphotoserver
 GOOS=linux GOARCH=amd64 go build -o ../dist/findaphotoserver
 
+cp -R content/ ../dist/content
+
 cd ../..

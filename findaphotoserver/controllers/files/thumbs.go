@@ -6,10 +6,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-playground/lars"
-
 	"github.com/kevintavog/findaphoto/common"
-	"github.com/kevintavog/findaphoto/findaphotoserver/applicationglobals"
+	"github.com/kevintavog/findaphoto/findaphotoserver/util"
+	"github.com/labstack/echo"
 )
 
 const baseThumbUrl = "/files/thumbs/"
@@ -22,37 +21,33 @@ func ToThumbUrl(aliasedPath string) string {
 	return thumbUrl
 }
 
-func Thumbs(c lars.Context) {
-	fc := c.(*applicationglobals.FpContext)
-	fc.AppContext.FieldLogger.Time("thumb", func() {
-		thumbFilename := fc.Ctx.Request().URL.Path
+func thumbFiles(c echo.Context) error {
+	fc := c.(*util.FpContext)
+	return fc.Time("thumb", func() error {
+		thumbFilename := c.Request().URL.Path
 		if !strings.HasPrefix(strings.ToLower(thumbFilename), baseThumbUrl) {
-			fc.AppContext.FieldLogger.Add("missingThumbPrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			// fc.AppContext.FieldLogger.Add("missingThumbPrefix", "true")
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		thumbFilename = thumbFilename[len(baseThumbUrl):]
 		thumbFilename = path.Clean(path.Join(common.ThumbnailDirectory, thumbFilename))
 		if !strings.HasPrefix(thumbFilename, common.ThumbnailDirectory) {
-			fc.AppContext.FieldLogger.Add("invalidThumbPrefix", "true")
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("invalidThumbPrefix", true)
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		thumbFilename, err := url.QueryUnescape(thumbFilename)
 		if err != nil {
-			fc.AppContext.FieldLogger.Add("badlyEscaped", "true")
-			fc.AppContext.FieldLogger.Add("badlyEscapedError", err.Error())
-			fc.Ctx.Response().WriteHeader(http.StatusNotFound)
-			return
+			fc.LogBool("badlyEscaped", true)
+			fc.Log("badlyEscapedError", err.Error())
+			return c.NoContent(http.StatusNotFound)
 		}
 
 		if exists, _ := common.FileExists(thumbFilename); !exists {
-			fc.AppContext.FieldLogger.Add("missingThumbnail", "true")
-			http.ServeFile(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), "./content/images/MissingThumbnail.png")
-			return
+			fc.LogBool("missingThumbnail", true)
+			return c.File("./content/MissingThumbnail.png")
 		}
-		http.ServeFile(fc.Ctx.Response().ResponseWriter, fc.Ctx.Request(), thumbFilename)
+		return c.File(thumbFilename)
 	})
 }
