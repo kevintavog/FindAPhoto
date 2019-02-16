@@ -48,5 +48,5 @@ func (so *SearchOptions) Search() (*SearchResult, error) {
 	search.Query(query)
 
 	search.From(so.Index).Size(so.Count).Sort("datetime", false)
-	return invokeSearch(search, &query, GroupByPath, so.CategoryOptions, so.DrilldownOptions, nil)
+	return invokeSearch(search, &query, GroupByDate, so.CategoryOptions, so.DrilldownOptions, nil)
 }
