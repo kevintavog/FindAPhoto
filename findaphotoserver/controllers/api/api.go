@@ -11,6 +11,39 @@ import (
 	"github.com/labstack/echo"
 )
 
+type groupLocations struct {
+	Countries []locationCountries `json:"countries"`
+}
+
+type locationCountries struct {
+	Country string           `json:"country"`
+	Count   int              `json:"count"`
+	States  []locationStates `json:"states"`
+}
+
+type locationStates struct {
+	State  string           `json:"state"`
+	Count  int              `json:"count"`
+	Cities []locationCities `json:"cities"`
+}
+
+type locationCities struct {
+	City  string          `json:"city"`
+	Count int             `json:"count"`
+	Sites []locationSites `json:"sites"`
+}
+
+type locationSites struct {
+	Site  string `json:"site"`
+	Count int    `json:"count"`
+}
+
+type locationInfo struct {
+	name     string
+	count    int
+	children map[string]locationInfo
+}
+
 func ConfigureRouting(e *echo.Echo) {
 	api := e.Group("/api")
 	api.GET("/search", searchAPI)
@@ -59,21 +92,70 @@ func filteredGroups(groups []*search.SearchGroup, propertiesFilter []string) int
 		list[index] = listItem
 		listItem["name"] = group.Name
 		listItem["items"] = filteredItems(group.Items, propertiesFilter)
-		// listItem["locations"] = aggregateLocations(group.Items)
+		listItem["locations"] = aggregateLocations(group.Items)
 	}
 	return list
 }
 
 func aggregateLocations(items []*search.MediaHit) interface{} {
-	list := make([]map[string]interface{}, 0)
+	locations := make(map[string]locationInfo, 0)
 	for _, mh := range items {
 		if mh.Media.Location != nil {
-			fmt.Printf("site: %s, city: %s, state: %s, country: %s\n",
-				mh.Media.LocationSiteName, mh.Media.LocationCityName,
-				mh.Media.LocationStateName, mh.Media.LocationCountryName)
+			country, ok := locations[mh.Media.LocationCountryName]
+			if !ok {
+				country = locationInfo{name: mh.Media.LocationCountryName, count: 1, children: make(map[string]locationInfo, 0)}
+			} else {
+				country.count++
+			}
+			locations[mh.Media.LocationCountryName] = country
+
+			state, ok := country.children[mh.Media.LocationStateName]
+			if !ok {
+				state = locationInfo{name: mh.Media.LocationStateName, count: 1, children: make(map[string]locationInfo, 0)}
+			} else {
+				state.count++
+			}
+			country.children[mh.Media.LocationStateName] = state
+			city, ok := state.children[mh.Media.LocationCityName]
+			if !ok {
+				city = locationInfo{name: mh.Media.LocationCityName, count: 1, children: make(map[string]locationInfo, 0)}
+			} else {
+				city.count++
+			}
+			state.children[mh.Media.LocationCityName] = city
+			if len(mh.Media.LocationSiteName) > 0 {
+				for _, c := range strings.Split(mh.Media.LocationSiteName, ",") {
+					trimmed := strings.TrimSpace(c)
+					site, ok := city.children[trimmed]
+					if !ok {
+						site = locationInfo{name: trimmed, count: 1, children: make(map[string]locationInfo, 0)}
+					} else {
+						site.count++
+					}
+					city.children[trimmed] = site
+				}
+			}
 		}
 	}
-	return list
+
+	var countries []locationCountries
+	for countryKey, countryValue := range locations {
+		states := make([]locationStates, 0)
+		for stateKey, stateValue := range countryValue.children {
+			cities := make([]locationCities, 0)
+			for cityKey, cityValue := range stateValue.children {
+				sites := make([]locationSites, 0)
+				for siteKey, siteValue := range cityValue.children {
+					sites = append(sites, locationSites{Site: siteKey, Count: siteValue.count})
+				}
+				cities = append(cities, locationCities{City: cityKey, Count: cityValue.count, Sites: sites})
+			}
+			states = append(states, locationStates{State: stateKey, Count: stateValue.count, Cities: cities})
+		}
+		countries = append(countries, locationCountries{Country: countryKey, Count: countryValue.count, States: states})
+	}
+
+	return countries
 }
 
 func filteredItems(items []*search.MediaHit, propertiesFilter []string) interface{} {
