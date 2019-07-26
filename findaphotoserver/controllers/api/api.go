@@ -257,6 +257,8 @@ func property(name string, mh *search.MediaHit) interface{} {
 		return mh.Media.Path
 	case "signature":
 		return mh.Media.Signature
+	case "sitename":
+		return mh.Media.LocationSiteName
 	case "slideurl":
 		return files.ToSlideUrl(mh.Media.Path)
 	case "tags":

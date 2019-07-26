@@ -56,8 +56,9 @@ func run(devolopmentMode bool, indexOverride string, aliasOverride string) {
 		fmt.Printf("*** Using index %s ***\n", common.MediaIndexName)
 	}
 
-	log.Info("Listening at http://localhost:%d/, For ElasticSearch, using: %s/%s", listenPort, configuration.Current.ElasticSearchURL, common.MediaIndexName)
-	log.Info(" Using %s for reverse name lookups", configuration.Current.LocationLookupURL)
+	log.Info("Listening at http://localhost:%d/", listenPort)
+	log.Info(" ElasticSearch:: %s/%s", configuration.Current.ElasticSearchURL, common.MediaIndexName)
+	log.Info(" Reverse name lookups: %s", configuration.Current.LocationLookupURL)
 
 	common.ElasticSearchServer = configuration.Current.ElasticSearchURL
 
